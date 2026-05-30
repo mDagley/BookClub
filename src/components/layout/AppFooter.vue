@@ -1,18 +1,16 @@
 <template>
   <footer class="app-footer">
-    <a :href="discordUrl" target="_blank" rel="noopener" v-if="discordUrl">Discord Server</a>
-    <span class="footer-sep" v-if="discordUrl && goodreadsUrl">·</span>
-    <a :href="goodreadsUrl" target="_blank" rel="noopener" v-if="goodreadsUrl">Goodreads Group</a>
-    <span class="footer-sep" v-if="goodreadsUrl && audiobookUrl">·</span>
-    <a :href="audiobookUrl" target="_blank" rel="noopener" v-if="audiobookUrl">Audiobookshelf</a>
+    <a v-if="discordGuildUrl" :href="discordGuildUrl" target="_blank" rel="noopener">Discord Server</a>
+    <span v-if="discordGuildUrl && goodreadsGroupUrl" class="footer-sep">·</span>
+    <a v-if="goodreadsGroupUrl" :href="goodreadsGroupUrl" target="_blank" rel="noopener">Goodreads Group</a>
+    <span v-if="goodreadsGroupUrl && audiobookServerUrl" class="footer-sep">·</span>
+    <a v-if="audiobookServerUrl" :href="audiobookServerUrl" target="_blank" rel="noopener">Audiobookshelf</a>
   </footer>
 </template>
 
 <script setup>
-// Will be wired to useConfig() in Phase 4; hardcode empty for now
-const discordUrl = ''
-const goodreadsUrl = ''
-const audiobookUrl = ''
+import { useConfig } from '../../composables/useConfig.js'
+const { discordGuildUrl, goodreadsGroupUrl, audiobookServerUrl } = useConfig()
 </script>
 
 <style scoped>
