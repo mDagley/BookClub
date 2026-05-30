@@ -17,13 +17,21 @@ const router = createRouter({
   routes,
 })
 
-// Phase 3: auth store must expose a `loading` flag; guard must await auth
-// resolution before checking user, or hard-reload to /admin will redirect
-// authenticated users (Firebase Auth is async on cold start).
 router.beforeEach(async (to, _from, next) => {
   if (to.meta.requiresAuth) {
     const { useAuthStore } = await import('../stores/auth.js')
     const authStore = useAuthStore()
+    // Wait for Firebase Auth to resolve (handles hard refresh to /admin)
+    if (authStore.loading) {
+      await new Promise(resolve => {
+        const unwatch = authStore.$subscribe(() => {
+          if (!authStore.loading) {
+            unwatch()
+            resolve()
+          }
+        })
+      })
+    }
     if (!authStore.user) {
       next('/')
       return
