@@ -21,15 +21,14 @@ router.beforeEach(async (to, _from, next) => {
   if (to.meta.requiresAuth) {
     const { useAuthStore } = await import('../stores/auth.js')
     const authStore = useAuthStore()
-    // Wait for Firebase Auth to resolve (handles hard refresh to /admin)
+    // Wait for Firebase Auth to resolve (handles hard refresh to /admin).
+    // Re-check after subscribe in case loading flipped before subscribe registered.
     if (authStore.loading) {
       await new Promise(resolve => {
         const unwatch = authStore.$subscribe(() => {
-          if (!authStore.loading) {
-            unwatch()
-            resolve()
-          }
+          if (!authStore.loading) { unwatch(); resolve() }
         })
+        if (!authStore.loading) { unwatch(); resolve() }
       })
     }
     if (!authStore.user) {
