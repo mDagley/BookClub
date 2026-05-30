@@ -6,6 +6,7 @@
       <RouterLink to="/book">This Book</RouterLink>
       <RouterLink to="/suggestions">Suggestions</RouterLink>
       <RouterLink to="/past-books">Past Books</RouterLink>
+      <!-- Phase 3: add v-if="authStore.user" + login/logout button with Discord avatar -->
       <RouterLink to="/admin" class="nav-admin">Admin</RouterLink>
     </div>
   </nav>
