@@ -1,0 +1,26 @@
+:root {
+  /* Colors */
+  --bg: #111d14;
+  --surface: #1a2d1f;
+  --surface-subtle: #0f1f12;
+  --border: #2d5a35;
+  --border-hover: #4a8a52;
+  --accent: #2d5a35;
+  --gold: #c8963c;
+  --discord-blue: #5865F2;
+
+  /* Text */
+  --text-primary: #c8e6c9;
+  --text-secondary: #a8c4a8;
+  --text-muted: #7a9c7a;
+  --text-dim: #5a8a5a;
+
+  /* Typography */
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-sans: system-ui, -apple-system, sans-serif;
+
+  /* Spacing */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}

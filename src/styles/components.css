@@ -1,0 +1,177 @@
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+}
+
+/* Chips / Tags */
+.chip {
+  display: inline-block;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.btn:hover {
+  border-color: var(--border-hover);
+  background: var(--accent);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.btn-primary:hover {
+  background: var(--border-hover);
+}
+
+.btn-discord {
+  background: var(--discord-blue);
+  border-color: var(--discord-blue);
+  color: #fff;
+}
+
+.btn-discord:hover {
+  background: #4752c4;
+  border-color: #4752c4;
+}
+
+.btn-gold {
+  background: transparent;
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.btn-gold:hover {
+  background: var(--gold);
+  color: var(--bg);
+}
+
+/* Vote badge */
+.vote-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(10, 20, 12, 0.88);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+  backdrop-filter: blur(2px);
+  z-index: 2;
+  cursor: pointer;
+}
+
+/* Read badge */
+.read-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(10, 20, 12, 0.88);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  backdrop-filter: blur(2px);
+  z-index: 2;
+}
+
+/* Genre icon strip */
+.genre-strip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%);
+  padding: 1.5rem 0.5rem 0.5rem;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  z-index: 2;
+}
+
+.genre-icon {
+  font-size: 1rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9));
+  cursor: default;
+  position: relative;
+}
+
+.genre-icon::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0d1a10;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  border: 1px solid var(--border);
+}
+
+.genre-icon:hover::after {
+  opacity: 1;
+}
+
+/* Skeleton loading shimmer */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-subtle) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Section title */
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--gold);
+  font-style: italic;
+  margin-bottom: 1rem;
+}
