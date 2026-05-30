@@ -29,10 +29,11 @@ export function useVoting(upvoteSuggestion) {
 
   async function castVote(id) {
     if (hasVoted(id)) return
-    await upvoteSuggestion(id)
+    // Optimistic update before await prevents double-vote on rapid taps
     votedIds.value = new Set([...votedIds.value, id])
     saveVotedIds(votedIds.value)
+    await upvoteSuggestion(id)
   }
 
-  return { votedIds, hasVoted, castVote }
+  return { hasVoted, castVote }
 }
