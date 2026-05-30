@@ -37,6 +37,7 @@
         rows="2"
         class="form-input"
       />
+      <p v-if="requestError" class="request-error">{{ requestError }}</p>
       <button type="submit" class="btn btn-primary" :disabled="submitting">
         {{ submitting ? 'Sending…' : 'Send Request' }}
       </button>
@@ -46,10 +47,10 @@
 
 <script setup>
 import { ref } from 'vue'
+import { getFunctions, httpsCallable } from 'firebase/functions'
 
-const props = defineProps({
+defineProps({
   audiobookServer: { type: Object, default: null },
-  webhookUrl: { type: String, default: '' },
 })
 
 const showForm = ref(false)
@@ -57,22 +58,22 @@ const requestName = ref('')
 const requestMessage = ref('')
 const submitting = ref(false)
 const requestSent = ref(false)
+const requestError = ref('')
 
 async function submitRequest() {
-  if (!props.webhookUrl) return
   submitting.value = true
+  requestError.value = ''
   try {
-    await fetch(props.webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content: `📚 **Audiobook Access Request**\n**Name:** ${requestName.value}\n**Message:** ${requestMessage.value || '(none)'}`,
-      }),
-    })
+    const fns = getFunctions()
+    const sendWebhook = httpsCallable(fns, 'sendWebhook')
+    await sendWebhook({ name: requestName.value, message: requestMessage.value })
     requestSent.value = true
     showForm.value = false
   } catch (err) {
-    console.error('Webhook POST failed:', err)
+    requestError.value = err.code === 'functions/not-found'
+      ? 'Access requests are not set up yet. Please contact an admin.'
+      : 'Failed to send request. Please try again.'
+    console.error('sendWebhook failed:', err)
   } finally {
     submitting.value = false
   }
@@ -98,6 +99,12 @@ async function submitRequest() {
   font-family: var(--font-sans);
   font-size: 0.85rem;
   color: #7ab87a;
+}
+
+.request-error {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: #f28b82;
 }
 
 .request-form {

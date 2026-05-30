@@ -95,3 +95,40 @@ exports.discordAuth = functions.https.onCall(async (data) => {
 
   return { token }
 })
+
+// Proxy Discord webhook POST to avoid CORS restrictions in the browser.
+// Reads the webhook URL from Firestore so it's never exposed client-side.
+exports.sendWebhook = functions.https.onCall(async (data) => {
+  const { name, message } = data
+
+  if (!name || typeof name !== 'string' || name.trim().length === 0) {
+    throw new functions.https.HttpsError('invalid-argument', 'name is required')
+  }
+
+  const configDoc = await admin.firestore().doc('config/main').get()
+  const webhookUrl = configDoc.exists ? configDoc.data().discordWebhookUrl : null
+
+  if (!webhookUrl) {
+    throw new functions.https.HttpsError('not-found', 'Webhook not configured')
+  }
+
+  // Strip Discord @mentions to prevent ping abuse
+  const safeName = name.replace(/@/g, '@ ').trim().slice(0, 100)
+  const safeMessage = (message || '').replace(/@/g, '@ ').trim().slice(0, 500)
+
+  const res = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      content: `📚 **Audiobook Access Request**\n**Name:** ${safeName}\n**Message:** ${safeMessage || '(none)'}`,
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    console.error('Discord webhook failed:', err)
+    throw new functions.https.HttpsError('internal', 'Failed to send webhook')
+  }
+
+  return { ok: true }
+})

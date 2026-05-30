@@ -17,10 +17,7 @@
         @open-suggest="showSuggestModal = true"
       />
       <PastBooksWidget :past-books="recentPastBooks" />
-      <AudiobookWidget
-        :audiobook-server="audiobookServer"
-        :webhook-url="discordWebhookUrl"
-      />
+      <AudiobookWidget :audiobook-server="audiobookServer" />
     </div>
 
     <!-- Suggest modal (opens from TopSuggestions) -->
@@ -39,7 +36,7 @@ import PastBooksWidget from '../components/dashboard/PastBooksWidget.vue'
 import AudiobookWidget from '../components/dashboard/AudiobookWidget.vue'
 import SuggestModal from '../components/suggestions/SuggestModal.vue'
 
-const { currentBook, audiobookServer, discordWebhookUrl, loading: configLoading } = useConfig()
+const { currentBook, audiobookServer, loading: configLoading } = useConfig()
 const { suggestions } = useSuggestions()
 const { pastBooks } = usePastBooks()
 
