@@ -1,6 +1,7 @@
 {
   "name": "family-book-club-functions",
   "version": "1.0.0",
+  "private": true,
   "engines": { "node": "18" },
   "main": "index.js",
   "dependencies": {
