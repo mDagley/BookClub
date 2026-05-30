@@ -39,6 +39,7 @@ A family book club website called "The Family That Reads Together." Serves as a 
 | Route | Page | Auth |
 |-------|------|------|
 | `/` | Dashboard | Public |
+| `/book` | Current Book Detail | Public |
 | `/suggestions` | Full Suggestions List | Public |
 | `/past-books` | Past Books Archive | Public |
 | `/admin` | Admin Panel | Discord login required |
@@ -54,8 +55,9 @@ A family book club website called "The Family That Reads Together." Serves as a 
 - "Now Reading" eyebrow label
 - Title, author, genre chips
 - Short synopsis
-- "Discussion Thread" button → links to Discord thread URL for this book
+- "Discussion Thread" button → links to the primary Discord thread for this book
 - "View on Goodreads" button → links to Goodreads page for this book
+- "More about this book →" link → navigates to `/book`
 - **Meeting info card** (right side of hero, one meeting per book):
   - Date and time
   - Location (text, e.g. "Mom & Dad's")
@@ -80,6 +82,43 @@ A family book club website called "The Family That Reads Together." Serves as a 
    - "Request Access →" button: opens a small form (name + optional message) that POSTs to a configured Discord webhook, sending the request to a designated channel
 
 **Footer:** Discord Server link · Goodreads Group link · Audiobookshelf Server link
+
+---
+
+### `/book` — Current Book Detail
+
+A dedicated page for the current book with richer content than the dashboard hero. Organized into collapsible sections so the page doesn't feel overwhelming.
+
+**Header:**
+- Large cover image, title, author, genre chips, full description (longer than the dashboard synopsis)
+- Meeting info summary (date, location, Discord voice link)
+
+**Spoiler Filter (sticky, top of content area):**
+- "I'm on chapter ___" number input, persisted in `localStorage`
+- When set, any timeline event or character note tagged to a chapter beyond that number is hidden and replaced with a blurred "Spoiler — set your chapter above to reveal" placeholder
+- Default (unset) shows all content
+
+**Supplemental Materials:**
+- List of curated links: articles, author interviews, videos, podcasts, maps, or other resources
+- Each entry: title, type badge (Article / Video / Podcast / Map / Other), external link
+- Managed entirely by admin — no public submissions
+
+**Characters:**
+- Card grid of named characters
+- Each card: name, brief description, first appearance label (e.g. "Introduced in Chapter 3")
+- Cards for characters introduced after the user's current chapter are hidden/blurred by the spoiler filter
+- Admin can mark a character as "major" to display them first
+
+**Timeline:**
+- Chronological list of key story events
+- Each event: short label, optional longer note, chapter/section tag
+- Events beyond the user's current chapter are hidden/blurred by the spoiler filter
+- Displayed as a vertical timeline with chapter markers as section dividers
+
+**Discord Threads:**
+- List of all Discord threads related to this book (e.g. "General Discussion", "Chapters 1–5", "Theories & Predictions")
+- Each entry: thread title + "Open in Discord →" button
+- Displayed in the order defined by admin
 
 ---
 
@@ -135,9 +174,13 @@ A simple dropdown of family member names (stored in Firestore config, editable i
 Protected by Discord login. Sections:
 
 **Current Book:**
-- Set title, author, genre tags, synopsis — cover fetched automatically from Google Books API; admin can paste a custom URL to override
-- Set Goodreads URL and Discord discussion thread URL
+- Set title, author, genre tags, synopsis (short), full description — cover fetched automatically from Google Books API; admin can paste a custom URL to override
+- Set Goodreads URL
 - Set meeting: date, time, location, Discord voice URL
+- **Discord Threads:** add/remove/reorder threads (each has a title + URL); the first thread is used as the primary link on the dashboard
+- **Supplemental Materials:** add/remove/reorder entries (title, URL, type badge)
+- **Characters:** add/edit/delete character cards (name, description, first appearance chapter, major flag)
+- **Timeline:** add/edit/delete timeline events (label, note, chapter number); drag to reorder
 
 **Archive a Book:**
 - One-click "Move to Past Books" — takes the current book and appends it to the past books list, then clears the current book fields
@@ -162,10 +205,38 @@ Protected by Discord login. Sections:
 ```
 /config
   currentBook: {
-    title, author, coverUrl, genres[], synopsis,
-    goodreadsUrl, discordThreadUrl,
-    meeting: { date, time, location, discordVoiceUrl }
+    title, author, coverUrl, genres[],
+    synopsis,           // short version shown on dashboard hero
+    fullDescription,    // longer version shown on /book
+    goodreadsUrl,
+    meeting: { date, time, location, discordVoiceUrl },
+
+    discordThreads: [   // ordered list; first is the primary dashboard link
+      { title: string, url: string }
+    ],
+
+    supplementalMaterials: [
+      { title: string, url: string, type: 'article'|'video'|'podcast'|'map'|'other' }
+    ],
+
+    characters: [
+      {
+        name: string,
+        description: string,
+        firstAppearanceChapter: number,
+        isMajor: boolean
+      }
+    ],
+
+    timeline: [         // stored in display order
+      {
+        label: string,
+        note: string,   // optional longer note
+        chapter: number
+      }
+    ]
   }
+
   audiobookServer: { description, url }
   discordGuildId: string
   discordServerId: string
@@ -187,7 +258,7 @@ Protected by Discord login. Sections:
   {
     title, author, coverUrl, genres[],
     dateRead: timestamp,
-    discordThreadUrl
+    discordThreadUrl         // single primary thread link for past books
   }
 ```
 
