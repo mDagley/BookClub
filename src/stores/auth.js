@@ -23,6 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
   })
 
   function loginWithDiscord() {
+    sessionStorage.setItem('loginReturnTo', window.location.pathname)
     const clientId = import.meta.env.VITE_DISCORD_CLIENT_ID
     const redirectUri = import.meta.env.VITE_DISCORD_REDIRECT_URI || `${window.location.origin}/admin`
     const scope = 'identify guilds'

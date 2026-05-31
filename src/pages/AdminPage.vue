@@ -85,11 +85,16 @@ onMounted(async () => {
   // Handle Discord OAuth callback — Discord redirects back to /admin?code=...
   const code = route.query.code
   if (code && !authStore.user) {
-    // Clear the code from the URL immediately so refresh/copy won't re-submit it
     window.history.replaceState({}, '', '/admin')
     try {
       await authStore.handleCallback(code)
       authError.value = null
+      // Return to the page the user was on before logging in
+      const returnTo = sessionStorage.getItem('loginReturnTo')
+      if (returnTo && returnTo !== '/admin') {
+        sessionStorage.removeItem('loginReturnTo')
+        window.location.replace(returnTo)
+      }
     } catch (err) {
       authError.value = err.message?.includes('permission-denied')
         ? 'You must be a member of the family Discord server to access the admin panel.'
