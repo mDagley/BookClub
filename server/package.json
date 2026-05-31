@@ -1,0 +1,10 @@
+{
+  "name": "family-book-club-server",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.19.2",
+    "firebase-admin": "^12",
+    "node-fetch": "^2.7.0"
+  }
+}

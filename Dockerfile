@@ -1,4 +1,4 @@
-# Stage 1: build
+# Stage 1: build Vue SPA
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -28,12 +28,19 @@ ENV VITE_DISCORD_REDIRECT_URI=$VITE_DISCORD_REDIRECT_URI
 COPY . .
 RUN npm run build
 
-# Stage 2: serve
-FROM nginx:alpine
+# Stage 2: run Express server
+FROM node:20-alpine
 
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-EXPOSE 80
+# Install server dependencies
+COPY server/package.json ./server/
+RUN cd server && npm install --omit=dev
 
-CMD ["nginx", "-g", "daemon off;"]
+# Copy built frontend and server code
+COPY --from=builder /app/dist ./dist
+COPY server/index.js ./server/
+
+EXPOSE 3000
+
+CMD ["node", "server/index.js"]

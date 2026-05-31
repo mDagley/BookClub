@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { auth } from '../firebase.js'
 import { signInWithCustomToken, signOut, onAuthStateChanged } from 'firebase/auth'
-import { getFunctions, httpsCallable } from 'firebase/functions'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)       // null = not logged in; object = logged in
@@ -35,10 +34,18 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       const redirectUri = import.meta.env.VITE_DISCORD_REDIRECT_URI || `${window.location.origin}/admin`
-      const functions = getFunctions()
-      const discordAuth = httpsCallable(functions, 'discordAuth')
-      const result = await discordAuth({ code, redirectUri })
-      await signInWithCustomToken(auth, result.data.token)
+      const res = await fetch('/api/discord-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, redirectUri }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        const err = new Error(data.error || 'Login failed')
+        if (data.code === 'permission-denied') err.message = 'permission-denied: ' + err.message
+        throw err
+      }
+      await signInWithCustomToken(auth, data.token)
       // onAuthStateChanged will fire and set user.value
     } finally {
       loading.value = false

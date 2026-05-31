@@ -47,7 +47,6 @@
 
 <script setup>
 import { ref } from 'vue'
-import { getFunctions, httpsCallable } from 'firebase/functions'
 
 defineProps({
   audiobookServer: { type: Object, default: null },
@@ -64,13 +63,17 @@ async function submitRequest() {
   submitting.value = true
   requestError.value = ''
   try {
-    const fns = getFunctions()
-    const sendWebhook = httpsCallable(fns, 'sendWebhook')
-    await sendWebhook({ name: requestName.value, message: requestMessage.value })
+    const res = await fetch('/api/send-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: requestName.value, message: requestMessage.value }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to send request')
     requestSent.value = true
     showForm.value = false
   } catch (err) {
-    requestError.value = err.code === 'functions/not-found'
+    requestError.value = err.message?.includes('not configured')
       ? 'Access requests are not set up yet. Please contact an admin.'
       : 'Failed to send request. Please try again.'
     console.error('sendWebhook failed:', err)
