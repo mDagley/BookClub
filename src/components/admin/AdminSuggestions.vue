@@ -13,6 +13,7 @@
             <th class="col-cover"></th>
             <th class="col-title">Title</th>
             <th class="col-author">Author</th>
+            <th class="col-published">Published</th>
             <th class="col-votes">Votes</th>
             <th class="col-suggested">Suggested By</th>
             <th class="col-readby">Read By</th>
@@ -32,6 +33,7 @@
                 <span v-if="suggestion.genres?.length" class="genre-list">{{ suggestion.genres.join(', ') }}</span>
               </td>
               <td class="col-author">{{ suggestion.author }}</td>
+              <td class="col-published">{{ suggestion.publishedDate || '—' }}</td>
               <td class="col-votes"><span class="vote-badge">{{ suggestion.votes ?? 0 }}</span></td>
               <td class="col-suggested">{{ suggestion.suggestedBy || '—' }}</td>
               <td class="col-readby">
@@ -67,6 +69,10 @@
                       <div class="edit-field">
                         <label class="edit-label">Suggested By</label>
                         <input v-model="editForm.suggestedBy" type="text" class="form-input" />
+                      </div>
+                      <div class="edit-field">
+                        <label class="edit-label">Published Date</label>
+                        <input v-model="editForm.publishedDate" type="text" class="form-input" placeholder="e.g. 2021-03" />
                       </div>
                     </div>
 
@@ -150,6 +156,7 @@ function startEdit(suggestion) {
     coverUrl: suggestion.coverUrl || '',
     description: suggestion.description || '',
     suggestedBy: suggestion.suggestedBy || '',
+    publishedDate: suggestion.publishedDate || '',
     genres: Array.isArray(suggestion.genres) ? [...suggestion.genres] : [],
     alreadyRead: Array.isArray(suggestion.alreadyRead) ? [...suggestion.alreadyRead] : [],
   }
@@ -257,6 +264,7 @@ function promote(suggestion) {
 .col-cover { width: 52px; }
 .col-title { min-width: 150px; }
 .col-author { min-width: 120px; color: var(--text-secondary); }
+.col-published { width: 90px; color: var(--text-muted); font-size: 0.82rem; }
 .col-votes { width: 60px; text-align: center; }
 .col-suggested { min-width: 110px; color: var(--text-secondary); }
 .col-readby { min-width: 130px; }

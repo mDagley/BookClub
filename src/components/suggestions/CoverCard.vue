@@ -14,16 +14,24 @@
         <span class="placeholder-emoji">📚</span>
       </div>
 
-      <!-- Vote badge -->
-      <button
-        class="vote-badge"
-        :class="{ voted: hasVoted }"
-        :style="hasVoted ? 'cursor: default' : ''"
-        :title="hasVoted ? 'Already voted' : 'Vote for this book'"
-        @click.stop="!hasVoted && emit('vote')"
-      >
-        ▲ {{ suggestion.votes ?? 0 }}
-      </button>
+      <!-- Vote badges -->
+      <div class="vote-badges">
+        <button
+          class="vote-btn upvote"
+          :class="{ active: userVote === 1 }"
+          :title="uid ? (userVote === 1 ? 'Remove upvote' : 'Upvote') : 'Login to vote'"
+          :disabled="!uid"
+          @click.stop="uid && emit('vote', 1)"
+        >▲</button>
+        <span class="vote-count">{{ suggestion.votes ?? 0 }}</span>
+        <button
+          class="vote-btn downvote"
+          :class="{ active: userVote === -1 }"
+          :title="uid ? (userVote === -1 ? 'Remove downvote' : 'Downvote') : 'Login to vote'"
+          :disabled="!uid"
+          @click.stop="uid && emit('vote', -1)"
+        >▼</button>
+      </div>
 
       <!-- Read badge -->
       <div
@@ -52,12 +60,18 @@
       <div v-if="suggestion.description" class="hover-overlay">
         <p class="hover-description">{{ suggestion.description }}</p>
       </div>
+
+      <!-- Comments button -->
+      <button class="comments-btn" title="View comments" @click.stop="emit('open-comments')">
+        💬
+      </button>
     </div>
 
     <!-- Below cover -->
     <div class="cover-meta">
       <p class="cover-title">{{ suggestion.title }}</p>
       <p class="cover-author">{{ suggestion.author }}</p>
+      <p v-if="formattedDate" class="cover-date">{{ formattedDate }}</p>
       <p class="cover-suggester">by {{ suggestion.suggestedBy }}</p>
     </div>
   </div>
@@ -69,10 +83,22 @@ import { GENRE_ICONS } from '../../utils/genres.js'
 
 const props = defineProps({
   suggestion: { type: Object, required: true },
-  hasVoted: { type: Boolean, default: false },
+  uid: { type: String, default: null },
 })
 
-const emit = defineEmits(['vote'])
+const emit = defineEmits(['vote', 'open-comments'])
+
+const userVote = computed(() => props.suggestion.votedUsers?.[props.uid] ?? 0)
+
+function formatPublishedDate(dateStr) {
+  if (!dateStr) return null
+  const parts = dateStr.split('-')
+  if (parts.length === 1) return parts[0]
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December']
+  return `${monthNames[parseInt(parts[1], 10) - 1]} ${parts[0]}`
+}
+
+const formattedDate = computed(() => formatPublishedDate(props.suggestion.publishedDate))
 
 const visibleGenres = computed(() =>
   (props.suggestion.genres || []).slice(0, 3)
@@ -152,33 +178,81 @@ const visibleGenres = computed(() =>
   overflow: hidden;
 }
 
-/* Vote badge */
-.vote-badge {
+/* Vote buttons */
+.vote-badges {
   position: absolute;
   top: 8px;
   left: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  z-index: 3;
+}
+
+.vote-btn {
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--gold);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 8px;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.vote-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.vote-btn.upvote.active,
+.vote-btn.upvote:not(:disabled):hover {
+  border-color: var(--gold);
   color: var(--gold);
+}
+
+.vote-btn.downvote.active,
+.vote-btn.downvote:not(:disabled):hover {
+  border-color: #7ab87a;
+  color: #7ab87a;
+}
+
+.vote-count {
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: bold;
-  padding: 0.2rem 0.55rem;
-  border-radius: 12px;
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+/* Comments button */
+.comments-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
   cursor: pointer;
   z-index: 3;
-  transition: background 0.15s, color 0.15s;
-  line-height: 1.4;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.vote-badge:hover:not(.voted) {
-  background: var(--gold);
-  color: var(--bg);
-}
-
-.vote-badge.voted {
-  opacity: 0.65;
-  cursor: default;
+.cover-card:hover .comments-btn {
+  opacity: 1;
 }
 
 /* Read badge */
@@ -227,6 +301,12 @@ const visibleGenres = computed(() =>
   font-family: var(--font-sans);
   font-size: 0.72rem;
   color: var(--text-muted);
+}
+
+.cover-date {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  color: var(--text-dim);
 }
 
 .cover-suggester {
