@@ -40,5 +40,9 @@ export function useSuggestions() {
     return updateDoc(doc(db, 'suggestions', id), { votes: increment(1) })
   }
 
-  return { suggestions, loading, addSuggestion, deleteSuggestion, upvoteSuggestion }
+  async function updateSuggestion(id, data) {
+    return updateDoc(doc(db, 'suggestions', id), data)
+  }
+
+  return { suggestions, loading, addSuggestion, deleteSuggestion, upvoteSuggestion, updateSuggestion }
 }
