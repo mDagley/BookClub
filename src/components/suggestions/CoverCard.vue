@@ -42,15 +42,6 @@
         {{ suggestion.alreadyRead.length }} read
       </div>
 
-      <!-- Mark as read toggle -->
-      <button
-        v-if="authUsername"
-        class="read-toggle-btn"
-        :class="{ 'is-read': hasRead }"
-        :title="hasRead ? 'Remove — I haven\'t read this' : 'Mark — I\'ve read this'"
-        @click.stop="emit('toggle-read')"
-      >{{ hasRead ? '✓' : '📖' }}</button>
-
       <!-- Genre icon strip -->
       <div v-if="visibleGenres.length > 0" class="genre-strip">
         <span
@@ -82,6 +73,15 @@
       <p class="cover-author">{{ suggestion.author }}</p>
       <p v-if="formattedDate" class="cover-date">{{ formattedDate }}</p>
       <p class="cover-suggester">by {{ suggestion.suggestedBy }}</p>
+      <button
+        class="read-toggle"
+        :class="{ 'is-read': hasRead, 'no-auth': !authUsername }"
+        :title="!authUsername ? 'Login with Discord to mark as read' : (hasRead ? 'Remove — I haven\'t read this' : 'Mark as read')"
+        @click.stop="authUsername ? emit('toggle-read') : null"
+      >
+        <span v-if="hasRead">✓ I've read this</span>
+        <span v-else>Mark as read</span>
+      </button>
     </div>
   </div>
 </template>
@@ -243,33 +243,34 @@ const visibleGenres = computed(() =>
 }
 
 /* Mark as read toggle */
-.read-toggle-btn {
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  background: rgba(0, 0, 0, 0.6);
+.read-toggle {
+  background: none;
   border: 1px solid var(--border);
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-family: var(--font-sans);
   font-size: 0.65rem;
+  padding: 0.15rem 0.5rem;
   cursor: pointer;
-  z-index: 3;
-  opacity: 0;
-  transition: opacity 0.2s, border-color 0.2s;
+  text-align: left;
+  width: 100%;
+  transition: border-color 0.15s, color 0.15s;
+  margin-top: 0.15rem;
 }
 
-.cover-card:hover .read-toggle-btn {
-  opacity: 1;
-}
-
-.read-toggle-btn.is-read {
-  opacity: 1;
+.read-toggle:hover:not(.no-auth) {
   border-color: #7ab87a;
   color: #7ab87a;
+}
+
+.read-toggle.is-read {
+  border-color: #7ab87a;
+  color: #7ab87a;
+}
+
+.read-toggle.no-auth {
+  opacity: 0.45;
+  cursor: default;
 }
 
 /* Comments button */
