@@ -36,7 +36,9 @@ function mapCategoriesToGenres(categories = []) {
 async function fetchFromGoogleBooks(title, author) {
   try {
     const q = encodeURIComponent(`intitle:${title}${author ? ` inauthor:${author}` : ''}`)
-    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`)
+    const key = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY
+    const keyParam = key ? `&key=${key}` : ''
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1${keyParam}`)
     if (!res.ok) return null
     const data = await res.json()
     const info = data.items?.[0]?.volumeInfo
