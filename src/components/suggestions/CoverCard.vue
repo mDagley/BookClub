@@ -41,7 +41,11 @@
           :key="genre"
           class="genre-icon"
           :title="genre"
-        >{{ genreIcon(genre) }}</span>
+          :aria-label="genre"
+        >
+          <img v-if="GENRE_ICONS[genre]?.img" :src="GENRE_ICONS[genre].img" :alt="genre" class="genre-icon-img" />
+          <template v-else>{{ GENRE_ICONS[genre]?.icon ?? '📖' }}</template>
+        </span>
       </div>
     </div>
 
@@ -69,9 +73,6 @@ const visibleGenres = computed(() =>
   (props.suggestion.genres || []).slice(0, 3)
 )
 
-function genreIcon(genre) {
-  return GENRE_ICONS[genre]?.icon ?? '📖'
-}
 </script>
 
 <style scoped>
@@ -160,6 +161,13 @@ function genreIcon(genre) {
   border-radius: 12px;
   z-index: 2;
   line-height: 1.4;
+}
+
+.genre-icon-img {
+  width: 1.1em;
+  height: 1.1em;
+  object-fit: contain;
+  vertical-align: middle;
 }
 
 /* Meta below cover */

@@ -48,7 +48,10 @@
               class="genre-icon"
               :title="genre"
               :aria-label="genre"
-            >{{ genreIcon(genre) }}</span>
+            >
+              <img v-if="GENRE_ICONS[genre]?.img" :src="GENRE_ICONS[genre].img" :alt="genre" class="genre-icon-img" />
+              <template v-else>{{ GENRE_ICONS[genre]?.icon ?? '📖' }}</template>
+            </span>
           </div>
         </div>
 
@@ -97,9 +100,6 @@ function formatDate(dateRead) {
   return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 }
 
-function genreIcon(genre) {
-  return GENRE_ICONS[genre]?.icon ?? '📖'
-}
 
 function visibleGenres(book) {
   return (book.genres || []).slice(0, 3)
