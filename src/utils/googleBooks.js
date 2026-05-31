@@ -1,16 +1,16 @@
 const GENRE_KEYWORD_MAP = [
   { keywords: ['dystopia', 'dystopian', 'post-apocalyptic', 'post apocalyptic'], genre: 'Dystopian' },
   { keywords: ['science fiction', 'sci-fi', 'space opera', 'cyberpunk'], genre: 'SciFi' },
-  { keywords: ['mystery', 'detective', 'crime', 'noir', 'whodunit'], genre: 'Mystery' },
+  { keywords: ['mystery', 'detective', 'crime', 'noir', 'whodunit', 'true crime'], genre: 'Mystery' },
   { keywords: ['thriller', 'suspense'], genre: 'Thriller' },
   { keywords: ['horror', 'gothic'], genre: 'Horror' },
   { keywords: ['romance', 'romantic'], genre: 'Romance' },
   { keywords: ['cozy'], genre: 'Cozy' },
   { keywords: ['dark academia'], genre: 'Dark Academia' },
   { keywords: ['magic', 'magical realism', 'witch', 'wizard', 'necromancer', 'sorcery'], genre: 'Magic' },
-  { keywords: ['humor', 'comedy', 'humorous', 'satire'], genre: 'Humor' },
+  { keywords: ['humor', 'comedy', 'humorous', 'satire', 'wit'], genre: 'Humor' },
   { keywords: ['biography', 'autobiography', 'memoir'], genre: 'Biography' },
-  { keywords: ['nonfiction', 'non-fiction', 'non fiction', 'true crime', 'history', 'self-help'], genre: 'Non Fiction' },
+  { keywords: ['nonfiction', 'non-fiction', 'non fiction', 'history', 'self-help', 'true story'], genre: 'Non Fiction' },
   { keywords: ['classic', 'classics', 'literary classic'], genre: 'Classic' },
   { keywords: ['lgbtq', 'lgbt', 'queer'], genre: 'LGBT+' },
   { keywords: ['activism', 'social justice', 'political'], genre: 'Activism' },
@@ -31,42 +31,113 @@ function mapCategoriesToGenres(categories = []) {
   return genres
 }
 
-function buildCoverUrl(thumbnail) {
-  if (!thumbnail) return null
-  return thumbnail.replace('http://', 'https://').replace('zoom=1', 'zoom=2')
-}
+// ── Google Books ──────────────────────────────────────────────────────────────
 
-async function queryGoogleBooks(title, author) {
-  if (!title) return null
-  const q = encodeURIComponent(`intitle:${title}${author ? ` inauthor:${author}` : ''}`)
-  const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`)
-  if (!res.ok) return null
-  const data = await res.json()
-  return data.items?.[0]?.volumeInfo ?? null
-}
-
-// Returns full book metadata from Google Books.
-// Only fields that could be found are set; missing fields are null / [].
-export async function fetchBookMetadata(title, author) {
+async function fetchFromGoogleBooks(title, author) {
   try {
-    const info = await queryGoogleBooks(title, author)
+    const q = encodeURIComponent(`intitle:${title}${author ? ` inauthor:${author}` : ''}`)
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`)
+    if (!res.ok) return null
+    const data = await res.json()
+    const info = data.items?.[0]?.volumeInfo
     if (!info) return null
 
     const rawDesc = info.description || ''
-    // First paragraph (or first 220 chars) as short synopsis
     const firstPara = rawDesc.split(/\n\n|\r\n\r\n/)[0].trim()
-    const synopsis = firstPara.length > 220
-      ? firstPara.slice(0, 217) + '…'
-      : firstPara || null
+    const synopsis = firstPara.length > 220 ? firstPara.slice(0, 217) + '…' : firstPara || null
+    const thumbnail = info.imageLinks?.thumbnail
+    const coverUrl = thumbnail
+      ? thumbnail.replace('http://', 'https://').replace('zoom=1', 'zoom=2')
+      : null
 
     return {
-      coverUrl: buildCoverUrl(info.imageLinks?.thumbnail),
+      coverUrl,
       synopsis,
       fullDescription: rawDesc || null,
       genres: mapCategoriesToGenres(info.categories),
     }
   } catch {
     return null
+  }
+}
+
+// ── Open Library ──────────────────────────────────────────────────────────────
+
+async function fetchFromOpenLibrary(title, author) {
+  try {
+    const params = new URLSearchParams({
+      title,
+      ...(author ? { author } : {}),
+      limit: '1',
+      fields: 'key,cover_i,subject,first_sentence',
+    })
+    const res = await fetch(`https://openlibrary.org/search.json?${params}`)
+    if (!res.ok) return null
+    const data = await res.json()
+    const doc = data.docs?.[0]
+    if (!doc) return null
+
+    const coverUrl = doc.cover_i
+      ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+      : null
+
+    // Fetch full description from the work record
+    let fullDescription = null
+    let synopsis = null
+    if (doc.key) {
+      try {
+        const workRes = await fetch(`https://openlibrary.org${doc.key}.json`)
+        if (workRes.ok) {
+          const work = await workRes.json()
+          const raw = work.description
+          if (raw) {
+            fullDescription = typeof raw === 'string' ? raw : raw.value
+            const firstPara = fullDescription.split(/\n\n|\r\n\r\n/)[0].trim()
+            synopsis = firstPara.length > 220 ? firstPara.slice(0, 217) + '…' : firstPara || null
+          }
+        }
+      } catch { /* description is optional */ }
+    }
+
+    // Fall back to first_sentence as synopsis if no description found
+    if (!synopsis && doc.first_sentence) {
+      const fs = doc.first_sentence
+      synopsis = (typeof fs === 'string' ? fs : fs.value) || null
+    }
+
+    return {
+      coverUrl,
+      synopsis,
+      fullDescription,
+      genres: mapCategoriesToGenres(doc.subject || []),
+    }
+  } catch {
+    return null
+  }
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+// Tries Google Books first, then Open Library as fallback.
+// Merges the best available data from both sources.
+export async function fetchBookMetadata(title, author) {
+  if (!title) return null
+
+  const [gbResult, olResult] = await Promise.allSettled([
+    fetchFromGoogleBooks(title, author),
+    fetchFromOpenLibrary(title, author),
+  ])
+
+  const gb = gbResult.status === 'fulfilled' ? gbResult.value : null
+  const ol = olResult.status === 'fulfilled' ? olResult.value : null
+
+  if (!gb && !ol) return null
+
+  return {
+    coverUrl:        gb?.coverUrl        ?? ol?.coverUrl        ?? null,
+    synopsis:        gb?.synopsis        ?? ol?.synopsis        ?? null,
+    fullDescription: gb?.fullDescription ?? ol?.fullDescription ?? null,
+    genres:          (gb?.genres?.length ? gb.genres : ol?.genres) ?? [],
   }
 }
 
