@@ -17,10 +17,11 @@ const GENRE_KEYWORD_MAP = [
   { keywords: ['fantasy'], genre: 'Fantasy' },
 ]
 
-function mapCategoriesToGenres(categories = []) {
+// Scan categories AND description text — API categories are often too sparse
+function mapCategoriesToGenres(categories = [], description = '') {
   const seen = new Set()
   const genres = []
-  const haystack = categories.map(c => c.toLowerCase()).join(' ')
+  const haystack = (categories.map(c => c.toLowerCase()).join(' ') + ' ' + description.toLowerCase()).trim()
   for (const { keywords, genre } of GENRE_KEYWORD_MAP) {
     if (seen.has(genre)) continue
     if (keywords.some(k => haystack.includes(k))) {
@@ -56,7 +57,7 @@ async function fetchFromGoogleBooks(title, author) {
       coverUrl,
       synopsis,
       fullDescription: rawDesc || null,
-      genres: mapCategoriesToGenres(info.categories),
+      genres: mapCategoriesToGenres(info.categories, rawDesc),
     }
   } catch {
     return null
@@ -111,7 +112,7 @@ async function fetchFromOpenLibrary(title, author) {
       coverUrl,
       synopsis,
       fullDescription,
-      genres: mapCategoriesToGenres(doc.subject || []),
+      genres: mapCategoriesToGenres(doc.subject || [], fullDescription || ''),
     }
   } catch {
     return null

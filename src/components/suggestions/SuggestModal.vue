@@ -165,7 +165,7 @@ async function autofillFromApi() {
   const meta = await fetchBookMetadata(form.title, form.author)
   fetchingMeta.value = false
   if (!meta) return
-  if (meta.description && !form.description) form.description = meta.description
+  if (meta.fullDescription && !form.description) form.description = meta.fullDescription
   if (meta.genres.length && !form.genres.length) form.genres = meta.genres
 }
 
