@@ -35,7 +35,7 @@
               <td class="col-author">{{ suggestion.author }}</td>
               <td class="col-published">{{ suggestion.publishedDate || '—' }}</td>
               <td class="col-votes"><span class="vote-badge">{{ suggestion.votes ?? 0 }}</span></td>
-              <td class="col-suggested">{{ suggestion.suggestedBy || '—' }}</td>
+              <td class="col-suggested">{{ resolveName(suggestion.suggestedBy) || '—' }}</td>
               <td class="col-readby">
                 <span v-if="suggestion.alreadyRead?.length" class="readby-text">{{ resolveNames(suggestion.alreadyRead).join(', ') }}</span>
                 <span v-else class="empty-cell">—</span>
@@ -142,7 +142,7 @@ import CoverUpload from '../shared/CoverUpload.vue'
 
 const { suggestions, loading, deleteSuggestion, updateSuggestion } = useSuggestions()
 const { familyMembers } = useConfig()
-const { resolveNames } = useMemberProfiles()
+const { resolveName, resolveNames } = useMemberProfiles()
 
 const emit = defineEmits(['promote'])
 
