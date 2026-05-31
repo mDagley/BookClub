@@ -42,6 +42,15 @@
         {{ suggestion.alreadyRead.length }} read
       </div>
 
+      <!-- Mark as read toggle -->
+      <button
+        v-if="authUsername"
+        class="read-toggle-btn"
+        :class="{ 'is-read': hasRead }"
+        :title="hasRead ? 'Remove — I haven\'t read this' : 'Mark — I\'ve read this'"
+        @click.stop="emit('toggle-read')"
+      >{{ hasRead ? '✓' : '📖' }}</button>
+
       <!-- Genre icon strip -->
       <div v-if="visibleGenres.length > 0" class="genre-strip">
         <span
@@ -84,11 +93,13 @@ import { GENRE_ICONS } from '../../utils/genres.js'
 const props = defineProps({
   suggestion: { type: Object, required: true },
   uid: { type: String, default: null },
+  authUsername: { type: String, default: null },
 })
 
-const emit = defineEmits(['vote', 'open-comments'])
+const emit = defineEmits(['vote', 'open-comments', 'toggle-read'])
 
 const userVote = computed(() => props.suggestion.votedUsers?.[props.uid] ?? 0)
+const hasRead = computed(() => props.suggestion.alreadyRead?.includes(props.authUsername) ?? false)
 
 function formatPublishedDate(dateStr) {
   if (!dateStr) return null
@@ -229,6 +240,36 @@ const visibleGenres = computed(() =>
   border-radius: 4px;
   min-width: 1.5rem;
   text-align: center;
+}
+
+/* Mark as read toggle */
+.read-toggle-btn {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  cursor: pointer;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+
+.cover-card:hover .read-toggle-btn {
+  opacity: 1;
+}
+
+.read-toggle-btn.is-read {
+  opacity: 1;
+  border-color: #7ab87a;
+  color: #7ab87a;
 }
 
 /* Comments button */

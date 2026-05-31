@@ -46,6 +46,15 @@
         </div>
       </div>
 
+      <!-- Mark as read -->
+      <button
+        v-if="authUsername"
+        class="list-read-btn"
+        :class="{ 'is-read': s.alreadyRead?.includes(authUsername) }"
+        :title="s.alreadyRead?.includes(authUsername) ? 'Remove — I haven\'t read this' : 'Mark — I\'ve read this'"
+        @click="voteOnSuggestion && emit('toggle-read', s)"
+      >{{ s.alreadyRead?.includes(authUsername) ? '✓' : '📖' }}</button>
+
       <!-- Vote buttons -->
       <div class="list-vote">
         <button
@@ -78,8 +87,11 @@ import { GENRE_ICONS } from '../../utils/genres.js'
 defineProps({
   suggestions: { type: Array, required: true },
   uid: { type: String, default: null },
+  authUsername: { type: String, default: null },
   voteOnSuggestion: { type: Function, required: true },
 })
+
+const emit = defineEmits(['toggle-read'])
 
 function genreIcon(genre) {
   return GENRE_ICONS[genre]?.icon ?? '📖'
@@ -222,6 +234,22 @@ function genreIcon(genre) {
   font-weight: bold;
   color: var(--text-primary);
 }
+
+.list-read-btn {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  align-self: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.list-read-btn:hover { border-color: #7ab87a; color: #7ab87a; }
+.list-read-btn.is-read { border-color: #7ab87a; color: #7ab87a; }
 
 .empty-state {
   text-align: center;

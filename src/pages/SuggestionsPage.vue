@@ -21,15 +21,19 @@
       v-else-if="view === 'grid'"
       :suggestions="filteredSuggestions"
       :uid="uid"
+      :auth-username="authUsername"
       :vote-on-suggestion="voteOnSuggestion"
       @open-comments="openComments"
+      @toggle-read="handleToggleRead"
     />
 
     <ListView
       v-else
       :suggestions="filteredSuggestions"
       :uid="uid"
+      :auth-username="authUsername"
       :vote-on-suggestion="voteOnSuggestion"
+      @toggle-read="handleToggleRead"
     />
 
     <SuggestModal
@@ -58,10 +62,17 @@ import ListView from '../components/suggestions/ListView.vue'
 import SuggestModal from '../components/suggestions/SuggestModal.vue'
 import CommentPanel from '../components/suggestions/CommentPanel.vue'
 
-const { suggestions, loading, addSuggestion, voteOnSuggestion } = useSuggestions()
+const { suggestions, loading, addSuggestion, voteOnSuggestion, toggleAlreadyRead } = useSuggestions()
 const authStore = useAuthStore()
 
 const uid = computed(() => authStore.user?.uid ?? null)
+const authUsername = computed(() => authStore.user?.discordUsername ?? null)
+
+function handleToggleRead(suggestion) {
+  if (!authUsername.value) return
+  const isRead = suggestion.alreadyRead?.includes(authUsername.value) ?? false
+  toggleAlreadyRead(suggestion.id, authUsername.value, isRead)
+}
 
 const view = ref('grid')
 const showModal = ref(false)
