@@ -14,9 +14,7 @@
  */
 
 const admin = require('firebase-admin')
-// Users must set GOOGLE_APPLICATION_CREDENTIALS env var or pass serviceAccount directly
-// For simplicity: read from a local service-account.json file if it exists
-const serviceAccount = require('../service-account.json') // excluded from git
+const serviceAccount = require('../service-account.json')
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -30,113 +28,90 @@ async function seed () {
   // ── config/main ────────────────────────────────────────────────────────────
   await db.collection('config').doc('main').set({
     currentBook: {
-      title: 'The Name of the Wind',
-      author: 'Patrick Rothfuss',
-      genres: ['Epic Fantasy', 'Series'],
-      synopsis: 'A young man grows to be the most notorious wizard his world has ever seen.',
-      fullDescription: 'The riveting first-hand account of his life, told by Kvothe himself—now an innkeeper.',
+      title: 'Gideon the Ninth',
+      author: 'Tamsyn Muir',
+      genres: ['Sci-Fi', 'Horror'],
+      synopsis: 'The Emperor needs necromancers. The Ninth Necromancer needs a swordswoman. Gideon has a sword, some dirty magazines, and no more time for undead bullshit.',
+      fullDescription: 'Tamsyn Muir\'s Gideon the Ninth unveils a universe of swords, necromancy, and science. The Emperor needs necromancers. The Ninth Necromancer needs a swordswoman. Gideon has a sword, some dirty magazines, and no more time for undead bullshit.',
       coverUrl: null,
-      goodreadsUrl: 'https://www.goodreads.com/book/show/186074.The_Name_of_the_Wind',
+      goodreadsUrl: 'https://www.goodreads.com/book/show/42036538-gideon-the-ninth',
       meeting: {
-        date: '2026-06-15',
-        time: '19:00',
-        location: 'Grandma\'s house',
+        date: null,
+        time: null,
+        location: 'TBD',
         discordVoiceUrl: null
       },
-      discordThreads: [
-        { title: 'General Discussion', url: 'https://discord.com/channels/placeholder/1' }
-      ],
+      discordThreads: [],
       supplementalMaterials: [],
-      characters: [
-        { name: 'Kvothe', description: 'The protagonist, a legendary wizard and musician.', firstAppearanceChapter: 1, isMajor: true },
-        { name: 'Denna', description: 'A mysterious woman Kvothe is infatuated with.', firstAppearanceChapter: 3, isMajor: true }
-      ],
-      timeline: [
-        { chapter: 1, label: 'Kvothe begins his story', note: 'The frame narrative starts.' },
-        { chapter: 5, label: 'Kvothe arrives at the university', note: null }
-      ]
+      characters: [],
+      timeline: []
     },
     audiobookServer: {
       description: 'Access our family Audiobookshelf server to listen along.',
-      url: 'https://audiobooks.example.com'
+      url: null
     },
-    familyMembers: ['Alice', 'Bob', 'Carol', 'Dave'],
-    discordGuildId: 'YOUR_GUILD_ID_HERE',
-    discordGuildUrl: 'https://discord.gg/your-invite',
-    goodreadsGroupUrl: 'https://www.goodreads.com/group/show/your-group',
-    audiobookServerUrl: 'https://audiobooks.example.com',
-    discordWebhookUrl: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_URL'
+    familyMembers: ['Jonathan Gibson', 'Melissa Gibson', 'Michael Gibson', 'Beth Gibson'],
+    discordGuildId: '1355392166553325598',
+    discordGuildUrl: 'https://discord.gg/FzTvG5fpb',
+    goodreadsGroupUrl: '',
+    audiobookServerUrl: null,
+    discordWebhookUrl: null
   })
   console.log('  ✓ config/main written')
-
-  // ── suggestions ────────────────────────────────────────────────────────────
-  const suggestions = [
-    {
-      title: 'The Way of Kings',
-      author: 'Brandon Sanderson',
-      genres: ['Epic Fantasy', 'Series'],
-      description: 'Roshar is a world of stone and storms.',
-      coverUrl: null,
-      alreadyRead: ['Alice'],
-      suggestedBy: 'Bob',
-      votes: 5,
-      createdAt: admin.firestore.Timestamp.now()
-    },
-    {
-      title: 'Piranesi',
-      author: 'Susanna Clarke',
-      genres: ['Mystery', 'Magic'],
-      description: 'A man lives in a labyrinthine House whose halls contain statues and tides.',
-      coverUrl: null,
-      alreadyRead: [],
-      suggestedBy: 'Carol',
-      votes: 3,
-      createdAt: admin.firestore.Timestamp.now()
-    },
-    {
-      title: 'A Deadly Education',
-      author: 'Naomi Novik',
-      genres: ['YA', 'Magic'],
-      description: 'A girl at a school for magical students that wants to kill them.',
-      coverUrl: null,
-      alreadyRead: [],
-      suggestedBy: 'Dave',
-      votes: 1,
-      createdAt: admin.firestore.Timestamp.now()
-    }
-  ]
-
-  for (const suggestion of suggestions) {
-    await db.collection('suggestions').add(suggestion)
-  }
-  console.log(`  ✓ ${suggestions.length} suggestions added`)
 
   // ── pastBooks ──────────────────────────────────────────────────────────────
   const pastBooks = [
     {
-      title: 'The Hobbit',
-      author: 'J.R.R. Tolkien',
-      genres: ['High Fantasy', 'Series'],
-      synopsis: 'A hobbit goes on an unexpected journey.',
+      title: 'Dawn',
+      author: 'Octavia E. Butler',
+      genres: ['Sci-Fi', 'Horror'],
+      synopsis: 'Lilith Iyapo wakes after nuclear war to find herself aboard an alien ship — and humanity\'s survival depends on a deal she never agreed to.',
       coverUrl: null,
-      dateRead: admin.firestore.Timestamp.fromDate(new Date('2026-01-15')),
-      discordThreadUrl: 'https://discord.com/channels/placeholder/past1'
+      dateRead: admin.firestore.Timestamp.fromDate(new Date('2026-05-17')),
+      discordThreadUrl: null
     },
     {
-      title: 'Circe',
-      author: 'Madeline Miller',
-      genres: ['Mythology', 'Literary Fiction'],
-      synopsis: 'The story of Circe, daughter of the sun god Helios.',
+      title: 'The Tainted Cup',
+      author: 'Robert Jackson Bennett',
+      genres: ['Mystery'],
+      synopsis: 'In a world where human augmentation is common, an investigator and his uniquely gifted assistant must solve an impossible murder.',
       coverUrl: null,
-      dateRead: admin.firestore.Timestamp.fromDate(new Date('2025-10-20')),
-      discordThreadUrl: 'https://discord.com/channels/placeholder/past2'
+      dateRead: admin.firestore.Timestamp.fromDate(new Date('2026-03-06')),
+      discordThreadUrl: null
+    },
+    {
+      title: 'Juniper & Thorn',
+      author: 'Ava Reid',
+      genres: ['Horror', 'Historical Fiction', 'Romance'],
+      synopsis: 'A monster\'s daughter discovers love and dark magic in a crumbling city where something is killing the men one by one.',
+      coverUrl: null,
+      dateRead: admin.firestore.Timestamp.fromDate(new Date('2025-10-01')),
+      discordThreadUrl: null
+    },
+    {
+      title: 'Butter',
+      author: 'Asako Yuzuki',
+      genres: ['Mystery'],
+      synopsis: 'A journalist investigates a woman on death row for poisoning her lovers — and finds herself dangerously drawn into her world of food and obsession.',
+      coverUrl: null,
+      dateRead: admin.firestore.Timestamp.fromDate(new Date('2025-07-26')),
+      discordThreadUrl: null
+    },
+    {
+      title: 'The Long Way to a Small, Angry Planet',
+      author: 'Becky Chambers',
+      genres: ['Sci-Fi'],
+      synopsis: 'A found family of misfits crew a tunnelling ship through the galaxy, building a wormhole to the most dangerous place in the universe.',
+      coverUrl: null,
+      dateRead: admin.firestore.Timestamp.fromDate(new Date('2025-06-14')),
+      discordThreadUrl: null
     }
   ]
 
   for (const book of pastBooks) {
     await db.collection('pastBooks').add(book)
   }
-  console.log(`  ✓ ${pastBooks.length} pastBooks added`)
+  console.log(`  ✓ ${pastBooks.length} past books added`)
 
   console.log('Seeding complete.')
   process.exit(0)
