@@ -20,17 +20,21 @@ const { discordGuildUrl, goodreadsGroupUrl, audiobookServerUrl } = useConfig()
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
   padding: 1.25rem;
+  background: rgba(4, 8, 20, 0.75);
+  backdrop-filter: blur(8px);
   border-top: 1px solid var(--border);
   font-family: var(--font-sans);
   font-size: 0.8rem;
-  color: var(--text-dim);
+  color: var(--text-secondary);
 }
 
 .app-footer a {
-  color: var(--text-muted);
+  color: var(--text-secondary);
   text-decoration: none;
+  transition: color 0.2s;
 }
 
 .app-footer a:hover {
@@ -38,7 +42,8 @@ const { discordGuildUrl, goodreadsGroupUrl, audiobookServerUrl } = useConfig()
 }
 
 .footer-sep {
-  color: var(--border);
+  color: var(--border-hover);
+  opacity: 0.6;
 }
 
 .footer-attr {
