@@ -28,3 +28,6 @@ dist-ssr/
 
 # Accidental temp directories
 C/
+
+# Firebase service account key (never commit — contains private credentials)
+service-account.json
