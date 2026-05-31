@@ -8,9 +8,9 @@ const fetch = require('node-fetch')
 // Locally: place service-account.json in the project root.
 let serviceAccount
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-  serviceAccount = JSON.parse(
-    Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString('utf8')
-  )
+  // Strip whitespace/newlines that can appear when copying base64 strings
+  const cleaned = process.env.FIREBASE_SERVICE_ACCOUNT.replace(/\s/g, '')
+  serviceAccount = JSON.parse(Buffer.from(cleaned, 'base64').toString('utf8'))
 } else {
   try {
     serviceAccount = require('../service-account.json')
