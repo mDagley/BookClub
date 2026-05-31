@@ -23,9 +23,14 @@
         <div class="suggestion-info">
           <span class="suggestion-title">{{ s.title }}</span>
           <span class="suggestion-author">{{ s.author }}</span>
-          <span v-if="s.genres?.[0]" class="chip">{{ s.genres[0] }}</span>
+          <div class="suggestion-badges">
+            <span v-if="s.genres?.[0]" class="chip">{{ s.genres[0] }}</span>
+            <span v-if="s.alreadyRead?.length" class="read-chip" :title="`Read by: ${s.alreadyRead.join(', ')}`">
+              ✓ {{ s.alreadyRead.length }} read
+            </span>
+          </div>
         </div>
-        <span class="suggestion-votes">▲ {{ s.votes }}</span>
+        <span class="suggestion-votes">{{ s.votes ?? 0 }}</span>
       </div>
     </div>
 
@@ -109,6 +114,23 @@ defineEmits(['open-suggest'])
   font-family: var(--font-sans);
   font-size: 0.75rem;
   color: var(--text-dim);
+}
+
+.suggestion-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.read-chip {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  color: #7ab87a;
+  background: rgba(122, 184, 122, 0.1);
+  border: 1px solid rgba(122, 184, 122, 0.3);
+  border-radius: 10px;
+  padding: 0.1rem 0.4rem;
 }
 
 .suggestion-votes {

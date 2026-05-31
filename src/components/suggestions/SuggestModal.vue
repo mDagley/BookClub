@@ -152,6 +152,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { GENRE_ICONS, GENRE_LIST } from '../../utils/genres.js'
 import { fetchBookMetadata, fetchCoverUrl } from '../../utils/googleBooks.js'
 import CoverUpload from '../shared/CoverUpload.vue'
+import { useAuthStore } from '../../stores/auth.js'
 
 const props = defineProps({
   addSuggestion: { type: Function, required: true },
@@ -160,9 +161,8 @@ const props = defineProps({
 const emit = defineEmits(['close', 'submitted'])
 
 const modalRef = ref(null)
-
-const LS_KEY = 'bookclub_iam'
-const currentMember = ref(localStorage.getItem(LS_KEY) || null)
+const authStore = useAuthStore()
+const currentMember = ref(authStore.user?.discordUsername || null)
 
 const form = reactive({
   title: '',

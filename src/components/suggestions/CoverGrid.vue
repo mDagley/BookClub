@@ -5,8 +5,10 @@
       :key="suggestion.id"
       :suggestion="suggestion"
       :uid="uid"
+      :auth-username="authUsername"
       @vote="(dir) => voteOnSuggestion(suggestion.id, uid, dir)"
       @open-comments="emit('open-comments', suggestion)"
+      @toggle-read="emit('toggle-read', suggestion)"
     />
     <div v-if="suggestions.length === 0" class="empty-state">
       <p>No suggestions match your filters.</p>
@@ -20,10 +22,11 @@ import CoverCard from './CoverCard.vue'
 defineProps({
   suggestions: { type: Array, required: true },
   uid: { type: String, default: null },
+  authUsername: { type: String, default: null },
   voteOnSuggestion: { type: Function, required: true },
 })
 
-const emit = defineEmits(['open-comments'])
+const emit = defineEmits(['open-comments', 'toggle-read'])
 </script>
 
 <style scoped>

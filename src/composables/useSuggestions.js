@@ -5,7 +5,8 @@ import { ref, onUnmounted } from 'vue'
 import { db } from '../firebase.js'
 import {
   collection, onSnapshot, addDoc, deleteDoc, doc,
-  updateDoc, serverTimestamp, query, orderBy, runTransaction, deleteField
+  updateDoc, serverTimestamp, query, orderBy, runTransaction, deleteField,
+  arrayUnion, arrayRemove
 } from 'firebase/firestore'
 
 export function useSuggestions() {
@@ -57,9 +58,14 @@ export function useSuggestions() {
     })
   }
 
+  async function toggleAlreadyRead(id, username, isCurrentlyRead) {
+    const op = isCurrentlyRead ? arrayRemove(username) : arrayUnion(username)
+    return updateDoc(doc(db, 'suggestions', id), { alreadyRead: op })
+  }
+
   async function updateSuggestion(id, data) {
     return updateDoc(doc(db, 'suggestions', id), data)
   }
 
-  return { suggestions, loading, addSuggestion, deleteSuggestion, voteOnSuggestion, updateSuggestion }
+  return { suggestions, loading, addSuggestion, deleteSuggestion, voteOnSuggestion, toggleAlreadyRead, updateSuggestion }
 }
