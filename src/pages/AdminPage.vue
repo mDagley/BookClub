@@ -48,6 +48,7 @@
           @promote="onPromote"
         />
         <AdminAudiobook v-else-if="activeTab === 'audiobook'" />
+        <AdminMembers v-else-if="activeTab === 'members'" />
       </div>
     </div>
   </div>
@@ -61,6 +62,7 @@ import AdminCurrentBook from '../components/admin/AdminCurrentBook.vue'
 import AdminPastBooks from '../components/admin/AdminPastBooks.vue'
 import AdminSuggestions from '../components/admin/AdminSuggestions.vue'
 import AdminAudiobook from '../components/admin/AdminAudiobook.vue'
+import AdminMembers from '../components/admin/AdminMembers.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -71,6 +73,7 @@ const tabs = [
   { id: 'past', label: 'Past Books' },
   { id: 'suggestions', label: 'Suggestions' },
   { id: 'audiobook', label: 'Audiobook' },
+  { id: 'members', label: 'Members' },
 ]
 
 const activeTab = ref('current')

@@ -41,7 +41,7 @@
         <div class="list-meta">
           <span class="meta-text">Suggested by: <em>{{ s.suggestedBy }}</em></span>
           <span v-if="s.alreadyRead && s.alreadyRead.length > 0" class="meta-text read-by">
-            Read by: {{ s.alreadyRead.join(', ') }}
+            Read by: {{ resolveNames(s.alreadyRead).join(', ') }}
           </span>
         </div>
       </div>
@@ -83,6 +83,9 @@
 
 <script setup>
 import { GENRE_ICONS } from '../../utils/genres.js'
+import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
+
+const { resolveNames } = useMemberProfiles()
 
 defineProps({
   suggestions: { type: Array, required: true },

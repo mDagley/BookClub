@@ -37,7 +37,7 @@
       <div
         v-if="suggestion.alreadyRead && suggestion.alreadyRead.length > 0"
         class="read-badge"
-        :title="`Read by: ${suggestion.alreadyRead.join(', ')}`"
+        :title="`Read by: ${readByNames}`"
       >
         {{ suggestion.alreadyRead.length }} read
       </div>
@@ -89,6 +89,7 @@
 <script setup>
 import { computed } from 'vue'
 import { GENRE_ICONS } from '../../utils/genres.js'
+import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
 
 const props = defineProps({
   suggestion: { type: Object, required: true },
@@ -98,8 +99,11 @@ const props = defineProps({
 
 const emit = defineEmits(['vote', 'open-comments', 'toggle-read'])
 
+const { resolveNames } = useMemberProfiles()
+
 const userVote = computed(() => props.suggestion.votedUsers?.[props.uid] ?? 0)
 const hasRead = computed(() => props.suggestion.alreadyRead?.includes(props.authUsername) ?? false)
+const readByNames = computed(() => resolveNames(props.suggestion.alreadyRead).join(', '))
 
 function formatPublishedDate(dateStr) {
   if (!dateStr) return null
