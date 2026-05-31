@@ -5,6 +5,8 @@
     <a v-if="goodreadsGroupUrl" :href="goodreadsGroupUrl" target="_blank" rel="noopener">Goodreads Group</a>
     <span v-if="goodreadsGroupUrl && audiobookServerUrl" class="footer-sep">·</span>
     <a v-if="audiobookServerUrl" :href="audiobookServerUrl" target="_blank" rel="noopener">Audiobookshelf</a>
+    <span class="footer-sep">·</span>
+    <a href="https://pngtree.com/freebackground/enchanted-glow-forest-waterfall-fantasy-landscape-with-magical-moonlight_19079910.html" target="_blank" rel="noopener" class="footer-attr">Background image from Pngtree</a>
   </footer>
 </template>
 
@@ -37,5 +39,10 @@ const { discordGuildUrl, goodreadsGroupUrl, audiobookServerUrl } = useConfig()
 
 .footer-sep {
   color: var(--border);
+}
+
+.footer-attr {
+  font-size: 0.72rem;
+  opacity: 0.7;
 }
 </style>

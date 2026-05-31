@@ -9,7 +9,7 @@
 
 .card:hover {
   border-color: var(--border-hover);
-  box-shadow: var(--glow-green);
+  box-shadow: var(--glow-blue);
 }
 
 /* Chips / Tags */
@@ -43,7 +43,7 @@
 .btn:hover {
   border-color: var(--border-hover);
   background: var(--accent);
-  box-shadow: var(--glow-green);
+  box-shadow: var(--glow-blue);
 }
 
 .btn-primary {
