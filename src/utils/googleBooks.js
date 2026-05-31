@@ -32,6 +32,18 @@ function mapCategoriesToGenres(categories = [], description = '') {
   return genres
 }
 
+// Returns true if the URL resolves to Google's generic "no cover" placeholder.
+// Google's placeholder is ≤128px wide regardless of the zoom level requested;
+// real covers at zoom=2 are typically 200px+ wide.
+function isGenericCover(url) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve(img.naturalWidth <= 128 && img.naturalHeight <= 200)
+    img.onerror = () => resolve(true)
+    img.src = url
+  })
+}
+
 // ── Google Books ──────────────────────────────────────────────────────────────
 
 async function fetchFromGoogleBooks(title, author) {
@@ -49,15 +61,18 @@ async function fetchFromGoogleBooks(title, author) {
     const firstPara = rawDesc.split(/\n\n|\r\n\r\n/)[0].trim()
     const synopsis = firstPara.length > 220 ? firstPara.slice(0, 217) + '…' : firstPara || null
     const thumbnail = info.imageLinks?.thumbnail
-    const coverUrl = thumbnail
+    let coverUrl = thumbnail
       ? thumbnail.replace('http://', 'https://').replace('zoom=1', 'zoom=2')
       : null
+
+    if (coverUrl && await isGenericCover(coverUrl)) coverUrl = null
 
     return {
       coverUrl,
       synopsis,
       fullDescription: rawDesc || null,
       genres: mapCategoriesToGenres(info.categories, rawDesc),
+      publishedDate: info.publishedDate || null,
     }
   } catch {
     return null
@@ -141,6 +156,7 @@ export async function fetchBookMetadata(title, author) {
     synopsis:        gb?.synopsis        ?? ol?.synopsis        ?? null,
     fullDescription: gb?.fullDescription ?? ol?.fullDescription ?? null,
     genres:          (gb?.genres?.length ? gb.genres : ol?.genres) ?? [],
+    publishedDate:   gb?.publishedDate   ?? null,
   }
 }
 
