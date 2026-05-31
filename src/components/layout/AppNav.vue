@@ -1,6 +1,10 @@
 <template>
   <nav class="app-nav">
-    <RouterLink to="/" class="nav-title">The Family That Reads Together</RouterLink>
+    <RouterLink to="/" class="nav-brand">
+      <span class="nav-brand-icon">📚</span>
+      <span class="nav-brand-text">The Family That Reads Together</span>
+    </RouterLink>
+
     <div class="nav-links">
       <RouterLink to="/">Home</RouterLink>
       <RouterLink to="/book">This Book</RouterLink>
@@ -8,6 +12,7 @@
       <RouterLink to="/past-books">Past Books</RouterLink>
       <RouterLink v-if="authStore.user" to="/admin" class="nav-admin">Admin</RouterLink>
     </div>
+
     <div class="nav-auth">
       <template v-if="authStore.user">
         <span class="nav-username">{{ authStore.user.discordUsername }}</span>
@@ -29,20 +34,37 @@ const authStore = useAuthStore()
 .app-nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background: var(--surface-subtle);
+  gap: 1.5rem;
+  padding: 0.85rem 1.75rem;
+  background: rgba(11, 21, 16, 0.92);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
   flex-wrap: wrap;
-  gap: 1rem;
 }
 
-.nav-title {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  color: var(--gold);
-  font-style: italic;
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   text-decoration: none;
+  flex-shrink: 0;
+}
+
+.nav-brand-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.nav-brand-text {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  text-transform: uppercase;
 }
 
 .nav-links {
@@ -50,22 +72,42 @@ const authStore = useAuthStore()
   gap: 1.5rem;
   font-family: var(--font-sans);
   font-size: 0.85rem;
+  flex: 1;
 }
 
 .nav-links a {
   color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.2s;
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transition: width 0.2s ease;
 }
 
 .nav-links a:hover,
 .nav-links a.router-link-active {
   color: var(--gold);
+  text-decoration: none;
+}
+
+.nav-links a:hover::after,
+.nav-links a.router-link-active::after {
+  width: 100%;
 }
 
 .nav-admin {
   border: 1px solid var(--border);
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.7rem;
   border-radius: var(--radius-sm);
 }
 
@@ -74,6 +116,7 @@ const authStore = useAuthStore()
   align-items: center;
   gap: 0.75rem;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 .nav-username {
@@ -99,9 +142,24 @@ const authStore = useAuthStore()
   background: transparent;
 }
 
-@media (max-width: 640px) {
-  .app-nav { padding: 0.75rem 1rem; }
-  .nav-title { font-size: 0.95rem; }
-  .nav-links { gap: 1rem; font-size: 0.8rem; }
+@media (max-width: 700px) {
+  .app-nav {
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+  .nav-brand-text {
+    font-size: 0.75rem;
+  }
+  .nav-links {
+    gap: 0.85rem;
+    font-size: 0.78rem;
+    width: 100%;
+    order: 3;
+  }
+  .nav-auth {
+    margin-left: 0;
+    order: 2;
+  }
+  .nav-brand { order: 1; }
 }
 </style>

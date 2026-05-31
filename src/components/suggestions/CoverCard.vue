@@ -206,15 +206,16 @@ const visibleGenres = computed(() =>
 }
 
 .vote-btn {
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(200, 150, 60, 0.3);
   color: var(--text-muted);
-  font-size: 0.6rem;
-  padding: 0.15rem 0.4rem;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 8px;
   cursor: pointer;
   line-height: 1.2;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
+  backdrop-filter: blur(4px);
 }
 
 .vote-btn:disabled {
@@ -253,13 +254,13 @@ const visibleGenres = computed(() =>
   border-radius: var(--radius-sm);
   color: var(--text-dim);
   font-family: var(--font-sans);
-  font-size: 0.65rem;
-  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
   cursor: pointer;
   text-align: left;
   width: 100%;
   transition: border-color 0.15s, color 0.15s;
-  margin-top: 0.15rem;
+  margin-top: 0.2rem;
 }
 
 .read-toggle:hover:not(.no-auth) {
@@ -334,7 +335,8 @@ const visibleGenres = computed(() =>
 
 .cover-title {
   font-family: var(--font-serif);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: var(--text-primary);
   line-height: 1.3;
   display: -webkit-box;
@@ -344,7 +346,8 @@ const visibleGenres = computed(() =>
 }
 
 .cover-author {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
+  font-style: italic;
   font-size: 0.72rem;
   color: var(--text-muted);
 }

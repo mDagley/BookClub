@@ -60,6 +60,12 @@ const primaryThread = computed(() => props.book.discordThreads?.[0] ?? null)
   display: flex;
   gap: 1.5rem;
   align-items: flex-start;
+  animation: fadeUp 0.5s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .hero-cover {
@@ -71,6 +77,13 @@ const primaryThread = computed(() => props.book.discordThreads?.[0] ?? null)
   width: 100%;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
+  box-shadow: 6px 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(200, 150, 60, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cover-img:hover {
+  transform: translateY(-3px) rotate(-0.5deg);
+  box-shadow: 10px 14px 32px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(200, 150, 60, 0.15);
 }
 
 .cover-placeholder {
@@ -93,23 +106,27 @@ const primaryThread = computed(() => props.book.discordThreads?.[0] ?? null)
 }
 
 .eyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   color: var(--gold);
+  opacity: 0.85;
 }
 
 .hero-title {
   font-family: var(--font-serif);
-  font-size: 1.75rem;
-  color: var(--gold);
-  line-height: 1.2;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--gold-light);
+  line-height: 1.15;
+  text-shadow: 0 2px 12px rgba(200, 150, 60, 0.2);
 }
 
 .hero-author {
-  font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
   color: var(--text-secondary);
 }
 

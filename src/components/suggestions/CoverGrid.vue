@@ -32,8 +32,15 @@ const emit = defineEmits(['open-comments', 'toggle-read'])
 <style scoped>
 .cover-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(160px, 44%), 1fr));
   gap: 20px;
+}
+
+@media (max-width: 480px) {
+  .cover-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
 }
 
 .empty-state {

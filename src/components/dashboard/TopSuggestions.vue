@@ -140,7 +140,9 @@ const { resolveNames } = useMemberProfiles()
 }
 
 .suggestion-title {
-  font-size: 0.85rem;
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  font-weight: 500;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -148,7 +150,8 @@ const { resolveNames } = useMemberProfiles()
 }
 
 .suggestion-author {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
+  font-style: italic;
   font-size: 0.75rem;
   color: var(--text-dim);
 }
