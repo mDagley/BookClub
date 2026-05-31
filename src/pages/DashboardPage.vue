@@ -55,7 +55,7 @@ const uid = computed(() => authStore.user?.uid ?? null)
 const authUsername = computed(() => authStore.user?.discordUsername ?? null)
 
 const topSuggestions = computed(() => suggestions.value.slice(0, 3))
-const recentPastBooks = computed(() => pastBooks.value.slice(0, 3))
+const recentPastBooks = computed(() => pastBooks.value.slice(0, 5))
 const showSuggestModal = ref(false)
 </script>
 
