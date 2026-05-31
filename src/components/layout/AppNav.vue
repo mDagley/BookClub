@@ -1,7 +1,7 @@
 <template>
   <nav class="app-nav">
     <RouterLink to="/" class="nav-brand">
-      <span class="nav-brand-icon">📚</span>
+      <img src="/book-icon.svg" alt="" class="nav-brand-icon" aria-hidden="true" />
       <span class="nav-brand-text">The Family That Reads Together</span>
     </RouterLink>
 
@@ -54,8 +54,9 @@ const authStore = useAuthStore()
 }
 
 .nav-brand-icon {
-  font-size: 1.2rem;
-  line-height: 1;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
 }
 
 .nav-brand-text {
