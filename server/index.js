@@ -1,7 +1,28 @@
 const express = require('express')
 const path = require('path')
+const fs = require('fs')
 const admin = require('firebase-admin')
 const fetch = require('node-fetch')
+const multer = require('multer')
+
+const COVERS_DIR = path.join(__dirname, '../public/covers')
+fs.mkdirSync(COVERS_DIR, { recursive: true })
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, COVERS_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg'
+    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`)
+  },
+})
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true)
+    else cb(new Error('File must be an image'))
+  },
+})
 
 // --- Firebase Admin init ---
 // In Easy Panel: set FIREBASE_SERVICE_ACCOUNT to the base64-encoded service account JSON.
@@ -163,8 +184,23 @@ app.post('/api/send-webhook', async (req, res) => {
   }
 })
 
+// --- Cover image upload ---
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
+  res.json({ url: `/covers/${req.file.filename}` })
+})
+
+app.use((err, _req, res, _next) => {
+  if (err instanceof multer.MulterError || err?.message === 'File must be an image') {
+    return res.status(400).json({ error: err.message })
+  }
+  console.error(err)
+  res.status(500).json({ error: 'Internal server error' })
+})
+
 // --- Serve Vue SPA ---
 const distPath = path.join(__dirname, '../dist')
+app.use('/covers', express.static(COVERS_DIR))
 app.use(express.static(distPath))
 app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')))
 

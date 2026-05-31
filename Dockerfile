@@ -42,6 +42,8 @@ RUN cd server && npm install --omit=dev
 COPY --from=builder /app/dist ./dist
 COPY server/index.js ./server/
 
+RUN mkdir -p /app/public/covers
+
 EXPOSE 3000
 
 CMD ["node", "server/index.js"]
