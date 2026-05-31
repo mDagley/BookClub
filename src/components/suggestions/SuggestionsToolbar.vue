@@ -1,20 +1,6 @@
 <template>
   <div class="toolbar">
-    <!-- 1. "I am" dropdown -->
-    <div class="toolbar-group">
-      <label class="toolbar-label" for="toolbar-iam">I am</label>
-      <select
-        id="toolbar-iam"
-        class="toolbar-select"
-        :value="selectedMember"
-        @change="onMemberChange"
-      >
-        <option value="">— select name —</option>
-        <option v-for="name in familyMembers" :key="name" :value="name">{{ name }}</option>
-      </select>
-    </div>
-
-    <!-- 2. Filter chips -->
+    <!-- 1. Filter chips -->
     <div class="toolbar-group filter-chips">
       <button
         class="chip chip-toggle"
@@ -26,12 +12,6 @@
         :class="{ active: filterMode === 'unread' }"
         @click="emit('update:filterMode', 'unread')"
       >Not read by anyone</button>
-      <button
-        v-if="selectedMember"
-        class="chip chip-toggle"
-        :class="{ active: filterMode === 'mine' }"
-        @click="emit('update:filterMode', 'mine')"
-      >I haven't read</button>
     </div>
 
     <!-- 3. Genre multi-select -->
@@ -120,8 +100,6 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { GENRE_LIST, GENRE_ICONS } from '../../utils/genres.js'
 
 const props = defineProps({
-  familyMembers: { type: Array, default: () => [] },
-  selectedMember: { type: String, default: null },
   filterMode: { type: String, default: 'all' },
   selectedGenres: { type: Array, default: () => [] },
   sortMode: { type: String, default: 'votes' },
@@ -130,7 +108,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  'update:selectedMember',
   'update:filterMode',
   'update:selectedGenres',
   'update:sortMode',
@@ -138,16 +115,8 @@ const emit = defineEmits([
   'open-modal',
 ])
 
-const LS_KEY = 'bookclub_iam'
 const showGenrePanel = ref(false)
 const genreRef = ref(null)
-
-function onMemberChange(event) {
-  const val = event.target.value || null
-  if (val) localStorage.setItem(LS_KEY, val)
-  else localStorage.removeItem(LS_KEY)
-  emit('update:selectedMember', val)
-}
 
 function toggleGenre(genre) {
   const current = [...props.selectedGenres]

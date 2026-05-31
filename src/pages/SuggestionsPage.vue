@@ -1,14 +1,11 @@
 <template>
   <div class="suggestions-page">
     <SuggestionsToolbar
-      :family-members="familyMembers"
-      :selected-member="selectedMember"
       :filter-mode="filterMode"
       :selected-genres="selectedGenres"
       :sort-mode="sortMode"
       :view="view"
       :total="filteredSuggestions.length"
-      @update:selected-member="selectedMember = $event"
       @update:filter-mode="filterMode = $event"
       @update:selected-genres="selectedGenres = $event"
       @update:sort-mode="sortMode = $event"
@@ -23,15 +20,16 @@
     <CoverGrid
       v-else-if="view === 'grid'"
       :suggestions="filteredSuggestions"
-      :has-voted="hasVoted"
-      :cast-vote="castVote"
+      :uid="uid"
+      :vote-on-suggestion="voteOnSuggestion"
+      @open-comments="openComments"
     />
 
     <ListView
       v-else
       :suggestions="filteredSuggestions"
-      :has-voted="hasVoted"
-      :cast-vote="castVote"
+      :uid="uid"
+      :vote-on-suggestion="voteOnSuggestion"
     />
 
     <SuggestModal
@@ -40,49 +38,53 @@
       @close="showModal = false"
       @submitted="showModal = false"
     />
+
+    <CommentPanel
+      v-if="commentSuggestion"
+      :suggestion="commentSuggestion"
+      :uid="uid"
+      @close="commentSuggestion = null"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { useSuggestions } from '../composables/useSuggestions.js'
-import { useVoting } from '../composables/useVoting.js'
-import { useConfig } from '../composables/useConfig.js'
+import { useAuthStore } from '../stores/auth.js'
 import SuggestionsToolbar from '../components/suggestions/SuggestionsToolbar.vue'
 import CoverGrid from '../components/suggestions/CoverGrid.vue'
 import ListView from '../components/suggestions/ListView.vue'
 import SuggestModal from '../components/suggestions/SuggestModal.vue'
+import CommentPanel from '../components/suggestions/CommentPanel.vue'
 
-// Composables
-const { suggestions, loading, addSuggestion, upvoteSuggestion } = useSuggestions()
-const { hasVoted, castVote } = useVoting(upvoteSuggestion)
-const { familyMembers } = useConfig()
+const { suggestions, loading, addSuggestion, voteOnSuggestion } = useSuggestions()
+const authStore = useAuthStore()
 
-// Page state
+const uid = computed(() => authStore.user?.uid ?? null)
+
 const view = ref('grid')
 const showModal = ref(false)
-const selectedMember = ref(localStorage.getItem('bookclub_iam') || null)
+const commentSuggestion = ref(null)
 const filterMode = ref('all')
+
+function openComments(suggestion) {
+  commentSuggestion.value = suggestion
+}
 const selectedGenres = ref([])
 const sortMode = ref('votes')
 
-// Computed filtered + sorted suggestions
 const filteredSuggestions = computed(() => {
   let list = [...suggestions.value]
 
-  // 1. Genre filter (OR — matches any selected genre)
   if (selectedGenres.value.length) {
     list = list.filter(s => selectedGenres.value.some(g => (s.genres || []).includes(g)))
   }
 
-  // 2. Filter mode
   if (filterMode.value === 'unread') {
     list = list.filter(s => !s.alreadyRead || s.alreadyRead.length === 0)
-  } else if (filterMode.value === 'mine' && selectedMember.value) {
-    list = list.filter(s => !(s.alreadyRead || []).includes(selectedMember.value))
   }
 
-  // 3. Sort
   if (sortMode.value === 'votes') {
     list.sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0))
   } else if (sortMode.value === 'newest') {
@@ -112,7 +114,6 @@ const filteredSuggestions = computed(() => {
   gap: 1.25rem;
 }
 
-/* Skeleton loading grid */
 .loading-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));

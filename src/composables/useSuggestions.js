@@ -5,7 +5,7 @@ import { ref, onUnmounted } from 'vue'
 import { db } from '../firebase.js'
 import {
   collection, onSnapshot, addDoc, deleteDoc, doc,
-  updateDoc, increment, serverTimestamp, query, orderBy
+  updateDoc, serverTimestamp, query, orderBy, runTransaction, deleteField
 } from 'firebase/firestore'
 
 export function useSuggestions() {
@@ -36,13 +36,30 @@ export function useSuggestions() {
     return deleteDoc(doc(db, 'suggestions', id))
   }
 
-  async function upvoteSuggestion(id) {
-    return updateDoc(doc(db, 'suggestions', id), { votes: increment(1) })
+  async function voteOnSuggestion(id, uid, direction) {
+    const ref = doc(db, 'suggestions', id)
+    return runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref)
+      const data = snap.data() || {}
+      const votedUsers = data.votedUsers || {}
+      const current = votedUsers[uid] || 0
+      let votes = data.votes || 0
+
+      if (current === direction) {
+        // Toggle off
+        votes -= direction
+        tx.update(ref, { votes, [`votedUsers.${uid}`]: deleteField() })
+      } else {
+        // Add or switch vote
+        votes = votes - current + direction
+        tx.update(ref, { votes, [`votedUsers.${uid}`]: direction })
+      }
+    })
   }
 
   async function updateSuggestion(id, data) {
     return updateDoc(doc(db, 'suggestions', id), data)
   }
 
-  return { suggestions, loading, addSuggestion, deleteSuggestion, upvoteSuggestion, updateSuggestion }
+  return { suggestions, loading, addSuggestion, deleteSuggestion, voteOnSuggestion, updateSuggestion }
 }

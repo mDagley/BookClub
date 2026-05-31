@@ -46,16 +46,23 @@
         </div>
       </div>
 
-      <!-- Vote button -->
+      <!-- Vote buttons -->
       <div class="list-vote">
         <button
-          :class="['btn', hasVoted(s.id) ? '' : 'btn-gold', hasVoted(s.id) ? 'btn-voted' : '']"
-          :disabled="hasVoted(s.id)"
-          :title="hasVoted(s.id) ? 'Already voted' : 'Vote'"
-          @click="!hasVoted(s.id) && castVote(s.id)"
-        >
-          ▲ {{ s.votes ?? 0 }}
-        </button>
+          class="list-vote-btn upvote"
+          :class="{ active: (s.votedUsers?.[uid] ?? 0) === 1 }"
+          :disabled="!uid"
+          :title="uid ? 'Upvote' : 'Login to vote'"
+          @click="uid && voteOnSuggestion(s.id, uid, 1)"
+        >▲</button>
+        <span class="list-vote-count">{{ s.votes ?? 0 }}</span>
+        <button
+          class="list-vote-btn downvote"
+          :class="{ active: (s.votedUsers?.[uid] ?? 0) === -1 }"
+          :disabled="!uid"
+          :title="uid ? 'Downvote' : 'Login to vote'"
+          @click="uid && voteOnSuggestion(s.id, uid, -1)"
+        >▼</button>
       </div>
     </div>
 
@@ -70,8 +77,8 @@ import { GENRE_ICONS } from '../../utils/genres.js'
 
 defineProps({
   suggestions: { type: Array, required: true },
-  hasVoted: { type: Function, required: true },
-  castVote: { type: Function, required: true },
+  uid: { type: String, default: null },
+  voteOnSuggestion: { type: Function, required: true },
 })
 
 function genreIcon(genre) {
@@ -184,17 +191,35 @@ function genreIcon(genre) {
 .list-vote {
   flex-shrink: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 2px;
 }
 
-.btn-voted {
-  opacity: 0.55;
-  cursor: default;
+.list-vote-btn {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: color 0.15s, border-color 0.15s;
 }
 
-.btn-voted:hover {
-  background: var(--surface);
-  border-color: var(--border);
+.list-vote-btn:disabled { opacity: 0.4; cursor: default; }
+
+.list-vote-btn.upvote.active,
+.list-vote-btn.upvote:not(:disabled):hover { border-color: var(--gold); color: var(--gold); }
+
+.list-vote-btn.downvote.active,
+.list-vote-btn.downvote:not(:disabled):hover { border-color: #7ab87a; color: #7ab87a; }
+
+.list-vote-count {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: bold;
   color: var(--text-primary);
 }
 
