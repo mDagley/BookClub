@@ -1,22 +1,24 @@
 :root {
-  /* Colors */
-  --bg: #0e1a10;
-  --surface: #162219;
-  --surface-subtle: #0b1510;
-  --border: #2a5232;
-  --border-hover: #4a8a52;
-  --accent: #2a5232;
-  --gold: #c8963c;
-  --gold-light: #e0b96a;
+  /* Colors — drawn from the enchanted forest background:
+     deep midnight navy sky, teal forest, warm amber firefly glow, cyan moonlight */
+  --bg: #07101e;
+  --surface: #0c1b2e;
+  --surface-subtle: #060d18;
+  --border: #1a3a52;
+  --border-hover: #2a6688;
+  --accent: #1a3a52;
+  --gold: #e8a828;        /* warm amber — matches the firefly/waterfall glow */
+  --gold-light: #f5c96a;
+  --moon: #a8d8f0;        /* moonlight blue — for accents and highlights */
   --discord-blue: #5865F2;
 
-  /* Text */
-  --text-primary: #cfe8d0;
-  --text-secondary: #a8c4a8;
-  --text-muted: #7a9c7a;
-  --text-dim: #527a52;
+  /* Text — cool blue-white tones from the moonlit scene */
+  --text-primary: #c8dff0;
+  --text-secondary: #88adc4;
+  --text-muted: #5a8298;
+  --text-dim: #3a5e72;
 
-  /* Typography — Cinzel for display, Lora for serif body, Nunito for UI */
+  /* Typography */
   --font-display: 'Cinzel', Georgia, serif;
   --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
   --font-sans: 'Nunito', system-ui, -apple-system, sans-serif;
@@ -26,7 +28,8 @@
   --radius-md: 8px;
   --radius-lg: 12px;
 
-  /* Decorative */
-  --glow-gold: 0 0 20px rgba(200, 150, 60, 0.15);
-  --glow-green: 0 0 24px rgba(74, 138, 82, 0.12);
+  /* Decorative glows */
+  --glow-gold: 0 0 20px rgba(232, 168, 40, 0.2);
+  --glow-blue: 0 0 24px rgba(42, 102, 136, 0.2);
+  --glow-moon: 0 0 20px rgba(168, 216, 240, 0.15);
 }
