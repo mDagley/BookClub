@@ -19,7 +19,9 @@
           :alt="s.title"
           class="suggestion-thumb"
         />
-        <div v-else class="suggestion-thumb-placeholder">📖</div>
+        <div v-else class="suggestion-thumb-placeholder">
+          <img src="/book-icon.svg" class="placeholder-book" alt="" />
+        </div>
 
         <div class="suggestion-info">
           <span class="suggestion-title">{{ s.title }}</span>
@@ -126,8 +128,13 @@ const { resolveNames } = useMemberProfiles()
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
   flex-shrink: 0;
+}
+
+.placeholder-book {
+  width: 70%;
+  opacity: 0.5;
+  filter: drop-shadow(0 1px 4px rgba(160, 208, 240, 0.3));
 }
 
 .suggestion-info {

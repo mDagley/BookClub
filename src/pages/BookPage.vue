@@ -19,7 +19,9 @@
             :alt="currentBook.title"
             class="book-cover-img"
           />
-          <div v-else class="book-cover-placeholder">📚</div>
+          <div v-else class="book-cover-placeholder">
+            <img src="/book-icon.svg" class="placeholder-book" alt="" />
+          </div>
         </div>
         <div class="book-header-body">
           <div class="genre-chips">
@@ -126,7 +128,12 @@ const { currentChapter, isVisible } = useSpoilerFilter()
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
+}
+
+.placeholder-book {
+  width: 60%;
+  opacity: 0.55;
+  filter: drop-shadow(0 2px 8px rgba(232, 168, 40, 0.35));
 }
 
 .book-header-body {

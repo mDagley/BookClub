@@ -14,7 +14,9 @@
           class="thumb-img"
           loading="lazy"
         />
-        <div v-else class="thumb-placeholder">📚</div>
+        <div v-else class="thumb-placeholder">
+          <img src="/book-icon.svg" class="placeholder-book" alt="" />
+        </div>
       </div>
 
       <!-- Main content -->
@@ -136,8 +138,15 @@ function genreIcon(genre) {
 }
 
 .thumb-placeholder {
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-book {
+  width: 70%;
   opacity: 0.5;
+  filter: drop-shadow(0 1px 4px rgba(160, 208, 240, 0.3));
 }
 
 /* Content area */

@@ -7,7 +7,9 @@
         :alt="book.title"
         class="cover-img"
       />
-      <div v-else class="cover-placeholder">📚</div>
+      <div v-else class="cover-placeholder">
+        <img src="/book-icon.svg" class="placeholder-book" alt="" />
+      </div>
     </RouterLink>
 
     <div class="hero-body">
@@ -95,7 +97,12 @@ const primaryThread = computed(() => props.book.discordThreads?.[0] ?? null)
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
+}
+
+.placeholder-book {
+  width: 60%;
+  opacity: 0.55;
+  filter: drop-shadow(0 2px 8px rgba(232, 168, 40, 0.35));
 }
 
 .hero-body {

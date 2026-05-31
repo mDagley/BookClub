@@ -53,7 +53,9 @@
                 <div class="edit-form">
                   <div class="edit-cover-preview">
                     <img v-if="editForm.coverUrl" :src="editForm.coverUrl" class="edit-thumb" alt="Cover" />
-                    <div v-else class="edit-thumb-placeholder">📚</div>
+                    <div v-else class="edit-thumb-placeholder">
+                      <img src="/book-icon.svg" class="placeholder-book" alt="" />
+                    </div>
                   </div>
 
                   <div class="edit-fields">
@@ -321,7 +323,12 @@ function promote(suggestion) {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+}
+
+.placeholder-book {
+  width: 65%;
+  opacity: 0.5;
+  filter: drop-shadow(0 1px 4px rgba(160, 208, 240, 0.3));
 }
 
 .edit-fields { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
