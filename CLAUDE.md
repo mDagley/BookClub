@@ -25,13 +25,13 @@ Work in the worktree, commit there, then cherry-pick commits to master.
 src/
   pages/           DashboardPage, BookPage, SuggestionsPage, PastBooksPage, PastBookDetailPage, AdminPage
   components/
-    admin/         AdminCurrentBook, AdminSuggestions, AdminPastBooks, AdminAudiobook
+    admin/         AdminCurrentBook, AdminSuggestions, AdminPastBooks, AdminAudiobook, AdminMembers
     suggestions/   CoverCard, CoverGrid, ListView, SuggestModal, SuggestionsToolbar, CommentPanel
     shared/        CoverUpload (cover image upload component)
     dashboard/     HeroSection, TopSuggestions, MeetingCard, PastBooksWidget, AudiobookWidget
     book/          CharacterGrid, TimelineSection, SupplementalMaterials, SpoilerFilter, DiscordThreads
     layout/        AppNav, AppFooter
-  composables/     useSuggestions, usePastBooks, useConfig, useVoting, useComments, useAuthStore (Pinia)
+  composables/     useSuggestions, usePastBooks, useConfig, useVoting, useComments, useMemberProfiles
   utils/           googleBooks.js, genres.js, uploadCover.js
   stores/          auth.js
   router/          index.js
@@ -53,64 +53,69 @@ server/
 ## Key Technical Details
 
 ### Firestore Collections
-- `config/main` — app config (current book, discord webhook URL, discord guild ID, audiobookServer, familyMembers)
-- `suggestions` — book suggestions; sorted by `votes DESC, createdAt DESC` (requires composite index)
-  - Each doc has: `title, author, genres, description, publishedDate, coverUrl, suggestedBy, votes, votedUsers, alreadyRead, createdAt`
-  - `votedUsers` — map of `{ [uid]: 1 | -1 }` for auth-based voting
-  - `alreadyRead` — array of Discord usernames who have read the book
+- `config/main` — app config: `currentBook`, `audiobookServer`, `familyMembers`, `memberProfiles`, `discordWebhookUrl`, `discordGuildId`
+- `suggestions` — sorted by `votes DESC, createdAt DESC` (requires composite index)
+  - Fields: `title, author, genres, description, publishedDate, coverUrl, suggestedBy, votes, votedUsers, alreadyRead, createdAt`
+  - `votedUsers` — `{ [uid]: 1 | -1 }` for auth-based bidirectional voting
+  - `alreadyRead` — array of Discord handles who have read the book
   - Subcollection `comments/{id}` — `{ userId, displayName, avatarUrl, content, createdAt }`
 - `pastBooks` — historical books with synopsis, characters, timeline, supplemental materials
 
 ### Auth Flow
-1. User clicks "Login with Discord" in admin panel
-2. Frontend redirects to Discord OAuth with `VITE_DISCORD_CLIENT_ID`
-3. Discord redirects back to `/admin?code=...`
-4. `AdminPage.vue` POSTs code to `/api/discord-auth`
-5. Server exchanges code for Discord user, checks guild membership, creates Firebase custom token
-6. Frontend signs in with the custom token → `auth.currentUser` populated
-7. Auth state available via `useAuthStore` — `user.uid`, `user.discordUsername`, `user.photoURL`
+1. "Login with Discord" button in AppNav (top-right) saves current path to `sessionStorage.loginReturnTo`, then redirects to Discord OAuth
+2. Discord redirects back to `/admin?code=...`
+3. `AdminPage.vue` exchanges the code via `POST /api/discord-auth`
+4. Server creates a Firebase custom token with claims: `discordId`, `discordUsername`, `discordAvatar`
+5. Client signs in with the token; `onAuthStateChanged` calls `getIdTokenResult()` to read the claims (NOTE: `firebaseUser.displayName` is NOT set for custom-token users — always use ID token claims)
+6. After login, AdminPage redirects to `sessionStorage.loginReturnTo` if set
+7. Auth state: `useAuthStore` exposes `user.uid`, `user.discordUsername`, `user.photoURL`
+
+### Member Profiles
+- `config/main.memberProfiles` — array of `{ name: "Melissa", handle: "melly2024" }` entries
+- Maps Discord handles → display names for all "already read" displays across the app
+- Admin UI: **Admin → Members** tab (AdminMembers.vue)
+- `useMemberProfiles()` composable — builds a handle→name map, exposes `resolveName(handle)` and `resolveNames(handles[])`
+- Used in: CoverCard read badge tooltip, ListView "Read by:", TopSuggestions read chip
 
 ### Voting System
-- Auth-based: requires Discord login; vote buttons are disabled (not hidden) when not logged in
+- Requires Discord login; buttons are disabled (not hidden) when logged out
 - `useSuggestions.voteOnSuggestion(id, uid, direction)` — Firestore transaction updating `votedUsers[uid]` and net `votes` counter
 - Direction `1` = upvote, `-1` = downvote; same direction again toggles off
-- `CoverCard` shows ▲ / count / ▼ stacked at top-left of cover; `ListView` shows same in the vote column
+- Available on: CoverCard (▲/count/▼ at top-left of cover image), ListView vote column, TopSuggestions card rows
 
 ### Mark as Read
-- Logged-in users can toggle their Discord username in a suggestion's `alreadyRead` array
-- `useSuggestions.toggleAlreadyRead(id, username, isCurrentlyRead)` — uses `arrayUnion` / `arrayRemove`
-- `CoverCard`: hover-revealed 📖 button at bottom-left; green ✓ when marked
-- `ListView`: always-visible button in the row
-- `SuggestModal`: "I've already read this" checkbox uses auth Discord username
+- Logged-in users toggle their Discord handle in a suggestion's `alreadyRead` array
+- `useSuggestions.toggleAlreadyRead(id, username, isCurrentlyRead)` — `arrayUnion` / `arrayRemove`
+- CoverCard: "Mark as read" / "✓ I've read this" text button in `cover-meta` (always visible, grayed when logged out)
+- ListView: same button always visible in each row
+- TopSuggestions: text button inside the suggestion-info column below genre badges
+- SuggestModal: "I've already read this" checkbox uses auth Discord username
 
 ### Comments
 - `useComments(suggestionId)` — realtime listener on `suggestions/{id}/comments` subcollection
 - `CommentPanel.vue` — slide-in right panel, requires login to post, own comments deletable
-- Opened from the 💬 hover button on CoverCard (grid view only for now)
+- Opened via 💬 hover button on CoverCard (bottom-right, grid view)
 - Panel state managed at `SuggestionsPage` level (`commentSuggestion` ref)
 
-### Cover Images
-`CoverUpload.vue` calls `uploadCoverImage()` from `src/utils/uploadCover.js`.  
-Upload POSTs multipart to `/api/upload` → Express saves to `/app/public/covers/` → returns `{ url: '/covers/filename' }`.  
+### Google Books / Cover Images
+`fetchBookMetadata(title, author)` in `src/utils/googleBooks.js`:
+- Fetches from Google Books first, Open Library as fallback; merges best data from both
+- Returns: `coverUrl`, `synopsis`, `fullDescription`, `genres`, `publishedDate`
+- **Placeholder detection:** Google's generic "no cover" image is ≤128px wide at any zoom. After getting a cover URL, it's loaded in a hidden `Image` element; if `naturalWidth ≤ 128 && naturalHeight ≤ 200`, the URL is discarded so Open Library's cover is used instead
+- `publishedDate` formatted as "March 2021" (month + year) in CoverCard, AdminSuggestions
+
+### Cover Upload
+`CoverUpload.vue` → `uploadCoverImage()` in `src/utils/uploadCover.js` → `POST /api/upload` (multer) → saved to `/app/public/covers/` → returns `{ url: '/covers/filename' }`.  
 Used in: SuggestModal, AdminSuggestions (edit), AdminCurrentBook, AdminPastBooks (edit + add).  
-Firebase Storage is fully removed from the project.
+Firebase Storage fully removed.
 
-### Published Date
-`fetchBookMetadata()` returns `publishedDate` (e.g. `"2021-03-15"`). Stored on suggestion docs.  
-Displayed formatted (e.g. "March 2021") on CoverCard below author, in AdminSuggestions table, and editable in admin inline edit form.
-
-### Genre System
-16 genres defined in `src/utils/genres.js`. Fantasy, SciFi, Horror, Mystery have custom PNG icons in `public/genres/`. Others use emoji. Genre detection in `googleBooks.js` scans both API categories and description text.
-
-### Google Books Integration
-`src/utils/googleBooks.js` — `fetchBookMetadata(title, author)` returns:
-- `coverUrl`, `synopsis`, `fullDescription`, `genres`, `publishedDate`
-- Falls back to Open Library if Google Books fails
+### TopSuggestions Dashboard Card
+Shows top 3 suggestions with: cover thumbnail, title, author, description (2-line clamp), all genres, "X read" chip, "Mark as read" text button, ▲/▼ vote buttons. All interactive features require Discord login (disabled otherwise). Receives `uid`, `authUsername`, `voteOnSuggestion`, `toggleAlreadyRead` props from `DashboardPage`.
 
 ### Audiobook Server
-- `AudiobookWidget.vue` on dashboard — shows description, "Sign in" link, and "Request Access" form
-- Request Access POSTs name + message to `/api/send-webhook` → server fetches webhook URL from `config/main.discordWebhookUrl` and sends to Discord
-- Admin configures webhook URL and server URL via Admin → Audiobook Server tab
+- `AudiobookWidget.vue` on dashboard — shows description, "Sign in" link, "Request Access" form
+- Request POSTs to `/api/send-webhook` → Discord webhook from `config/main.discordWebhookUrl`
+- Configure via Admin → Audiobook Server tab
 
 ### Environment Variables
 **Local:** `.env` (not committed)  
@@ -125,19 +130,18 @@ Displayed formatted (e.g. "March 2021") on CoverCard below author, in AdminSugge
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase client config |
 | `VITE_FIREBASE_APP_ID` | Firebase client config |
 | `VITE_DISCORD_CLIENT_ID` | Discord OAuth app ID |
-| `VITE_DISCORD_REDIRECT_URI` | Discord OAuth redirect (e.g. `http://localhost:5199/admin`) |
+| `VITE_DISCORD_REDIRECT_URI` | Discord OAuth redirect (must be `{origin}/admin`) |
 | `VITE_GOOGLE_BOOKS_API_KEY` | Google Books API |
 | `FIREBASE_SERVICE_ACCOUNT` | Base64-encoded service account JSON (server only) |
 | `DISCORD_CLIENT_ID` | Discord OAuth (server only) |
 | `DISCORD_CLIENT_SECRET` | Discord OAuth (server only) |
 
 ## CSS / Styling Notes
-- `src/styles/base.css` — `:root { font-size: 17px }` (set for readability for older family members; all sizing is rem-based so this scales everything)
-- `src/styles/components.css` — component-level styles
-- Genre icon tooltips: CSS `::after` pseudo-element tooltips were removed because `overflow: hidden` on the cover container clips them. Native `title` attribute tooltips remain.
-- Hover overlays on `CoverCard.vue` show book description on hover (`.hover-overlay` fades in)
-- CoverCard hover also reveals: 💬 comments button (bottom-right), 📖 mark-as-read toggle (bottom-left)
+- `src/styles/base.css` — `:root { font-size: 17px }` for readability; all sizing is rem-based
+- Genre icon tooltips: native `title` attribute only — CSS `::after` tooltips were removed because `overflow: hidden` on cover containers clips them
+- CoverCard hover reveals: 💬 comments button (bottom-right of cover image)
+- Mark-as-read is always visible text below the card (not hover-dependent)
 
 ## Firestore Indexes
 Suggestions require a composite index: `votes DESC, createdAt DESC`  
-(Firebase will show an error link in the console to create it if missing)
+(Firebase will show a console error link to create it if missing)
