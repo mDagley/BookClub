@@ -7,6 +7,7 @@ export const GENRE_ICONS = {
   'Sci-Fi':            { icon: '🚀' },
   'Mystery':           { icon: '🔍' },
   'Historical Fiction':{ icon: '🏰' },
+  'Magic':             { icon: '✨' },
   'Magic Realism':     { icon: '🌙' },
   'Mythology':         { icon: '🕷️' },
   'Horror':            { icon: '👻' },

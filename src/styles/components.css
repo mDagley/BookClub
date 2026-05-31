@@ -167,6 +167,12 @@
   100% { background-position: -200% 0; }
 }
 
+/* Small button variant */
+.btn-sm {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+}
+
 /* Section title */
 .section-title {
   font-family: var(--font-serif);
