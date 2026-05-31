@@ -20,53 +20,97 @@
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="suggestion in suggestions"
-            :key="suggestion.id"
-            class="suggestion-row"
-          >
-            <td class="col-cover">
-              <img
-                v-if="suggestion.coverUrl"
-                :src="suggestion.coverUrl"
-                :alt="suggestion.title"
-                class="cover-thumb"
-              />
-              <div v-else class="cover-placeholder"></div>
-            </td>
-            <td class="col-title">
-              <span class="book-title">{{ suggestion.title }}</span>
-              <span v-if="suggestion.genres?.length" class="genre-list">
-                {{ suggestion.genres.join(', ') }}
-              </span>
-            </td>
-            <td class="col-author">{{ suggestion.author }}</td>
-            <td class="col-votes">
-              <span class="vote-badge">{{ suggestion.votes ?? 0 }}</span>
-            </td>
-            <td class="col-suggested">{{ suggestion.suggestedBy || '—' }}</td>
-            <td class="col-readby">
-              <span v-if="suggestion.alreadyRead?.length" class="readby-text">
-                {{ suggestion.alreadyRead.join(', ') }}
-              </span>
-              <span v-else class="empty-cell">—</span>
-            </td>
-            <td class="col-actions">
-              <button
-                class="btn btn-promote btn-sm"
-                @click="promote(suggestion)"
-                title="Copy to Current Book"
-              >
-                Promote
-              </button>
-              <button
-                class="btn btn-danger btn-sm"
-                @click="deleteSug(suggestion)"
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
+          <template v-for="suggestion in suggestions" :key="suggestion.id">
+            <!-- Normal row -->
+            <tr v-if="editingId !== suggestion.id" class="suggestion-row">
+              <td class="col-cover">
+                <img v-if="suggestion.coverUrl" :src="suggestion.coverUrl" :alt="suggestion.title" class="cover-thumb" />
+                <div v-else class="cover-placeholder"></div>
+              </td>
+              <td class="col-title">
+                <span class="book-title">{{ suggestion.title }}</span>
+                <span v-if="suggestion.genres?.length" class="genre-list">{{ suggestion.genres.join(', ') }}</span>
+              </td>
+              <td class="col-author">{{ suggestion.author }}</td>
+              <td class="col-votes"><span class="vote-badge">{{ suggestion.votes ?? 0 }}</span></td>
+              <td class="col-suggested">{{ suggestion.suggestedBy || '—' }}</td>
+              <td class="col-readby">
+                <span v-if="suggestion.alreadyRead?.length" class="readby-text">{{ suggestion.alreadyRead.join(', ') }}</span>
+                <span v-else class="empty-cell">—</span>
+              </td>
+              <td class="col-actions">
+                <button class="btn btn-secondary btn-sm" @click="startEdit(suggestion)">Edit</button>
+                <button class="btn btn-promote btn-sm" @click="promote(suggestion)" title="Copy to Current Book">Promote</button>
+                <button class="btn btn-danger btn-sm" @click="deleteSug(suggestion)">Delete</button>
+              </td>
+            </tr>
+
+            <!-- Inline edit row -->
+            <tr v-else class="edit-row">
+              <td colspan="7" class="edit-cell">
+                <div class="edit-form">
+                  <div class="edit-cover-preview">
+                    <img v-if="editForm.coverUrl" :src="editForm.coverUrl" class="edit-thumb" alt="Cover" />
+                    <div v-else class="edit-thumb-placeholder">📚</div>
+                  </div>
+
+                  <div class="edit-fields">
+                    <div class="edit-row-fields">
+                      <div class="edit-field">
+                        <label class="edit-label">Title</label>
+                        <input v-model="editForm.title" type="text" class="form-input" />
+                      </div>
+                      <div class="edit-field">
+                        <label class="edit-label">Author</label>
+                        <input v-model="editForm.author" type="text" class="form-input" />
+                      </div>
+                      <div class="edit-field">
+                        <label class="edit-label">Suggested By</label>
+                        <input v-model="editForm.suggestedBy" type="text" class="form-input" />
+                      </div>
+                    </div>
+
+                    <div class="edit-field">
+                      <label class="edit-label">Cover URL</label>
+                      <input v-model="editForm.coverUrl" type="url" class="form-input" placeholder="https://…" />
+                    </div>
+
+                    <div class="edit-field">
+                      <label class="edit-label">Description</label>
+                      <textarea v-model="editForm.description" class="form-input" rows="3" />
+                    </div>
+
+                    <div class="edit-field">
+                      <label class="edit-label">Genres</label>
+                      <div class="genre-check-grid">
+                        <label v-for="g in GENRE_LIST" :key="g" class="genre-check">
+                          <input type="checkbox" :value="g" v-model="editForm.genres" />
+                          {{ g }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="edit-field">
+                      <label class="edit-label">Already Read By</label>
+                      <div class="member-check-grid">
+                        <label v-for="m in familyMembers" :key="m" class="member-check">
+                          <input type="checkbox" :value="m" v-model="editForm.alreadyRead" />
+                          {{ m }}
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="edit-actions">
+                      <button class="btn btn-primary btn-sm" :disabled="saving" @click="saveEdit">
+                        {{ saving ? 'Saving…' : 'Save' }}
+                      </button>
+                      <button class="btn btn-secondary btn-sm" @click="cancelEdit">Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
@@ -76,11 +120,50 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useSuggestions } from '../../composables/useSuggestions.js'
+import { useConfig } from '../../composables/useConfig.js'
+import { GENRE_LIST } from '../../utils/genres.js'
 
-const { suggestions, loading, deleteSuggestion } = useSuggestions()
+const { suggestions, loading, deleteSuggestion, updateSuggestion } = useSuggestions()
+const { familyMembers } = useConfig()
 
 const emit = defineEmits(['promote'])
+
+const editingId = ref(null)
+const saving = ref(false)
+const editForm = ref({})
+
+function startEdit(suggestion) {
+  editingId.value = suggestion.id
+  editForm.value = {
+    title: suggestion.title || '',
+    author: suggestion.author || '',
+    coverUrl: suggestion.coverUrl || '',
+    description: suggestion.description || '',
+    suggestedBy: suggestion.suggestedBy || '',
+    genres: Array.isArray(suggestion.genres) ? [...suggestion.genres] : [],
+    alreadyRead: Array.isArray(suggestion.alreadyRead) ? [...suggestion.alreadyRead] : [],
+  }
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editForm.value = {}
+}
+
+async function saveEdit() {
+  saving.value = true
+  try {
+    await updateSuggestion(editingId.value, { ...editForm.value })
+    cancelEdit()
+  } catch (err) {
+    console.error('Update error:', err)
+    alert('Save failed: ' + (err.message || 'Unknown error'))
+  } finally {
+    saving.value = false
+  }
+}
 
 async function deleteSug(suggestion) {
   if (!window.confirm(`Delete suggestion "${suggestion.title}"? This cannot be undone.`)) return
@@ -93,7 +176,6 @@ async function deleteSug(suggestion) {
 }
 
 function promote(suggestion) {
-  // Emit up to AdminPage which will switch tabs and prefill AdminCurrentBook
   emit('promote', {
     title: suggestion.title || '',
     author: suggestion.author || '',
@@ -102,7 +184,6 @@ function promote(suggestion) {
     synopsis: suggestion.synopsis || '',
     description: suggestion.description || '',
     genres: Array.isArray(suggestion.genres) ? [...suggestion.genres] : [],
-    // Clear meeting/discussion fields — admin fills those in
     meetingDate: '',
     meetingTime: '',
     meetingLocation: '',
@@ -116,17 +197,9 @@ function promote(suggestion) {
 </script>
 
 <style scoped>
-.admin-suggestions {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+.admin-suggestions { display: flex; flex-direction: column; gap: 1rem; }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+.section-header { display: flex; align-items: center; justify-content: space-between; }
 
 .section-heading {
   font-family: var(--font-serif);
@@ -135,11 +208,7 @@ function promote(suggestion) {
   margin: 0;
 }
 
-.loading-state,
-.empty-state {
-  color: var(--text-muted);
-  font-style: italic;
-}
+.loading-state, .empty-state { color: var(--text-muted); font-style: italic; }
 
 .table-wrap {
   overflow-x: auto;
@@ -172,13 +241,10 @@ function promote(suggestion) {
   color: var(--text-primary);
 }
 
-.suggestion-row:last-child td {
-  border-bottom: none;
-}
+.suggestion-row:last-child td,
+.edit-row:last-child .edit-cell { border-bottom: none; }
 
-.suggestion-row:hover td {
-  background: var(--surface-subtle);
-}
+.suggestion-row:hover td { background: var(--surface-subtle); }
 
 .col-cover { width: 52px; }
 .col-title { min-width: 150px; }
@@ -186,35 +252,13 @@ function promote(suggestion) {
 .col-votes { width: 60px; text-align: center; }
 .col-suggested { min-width: 110px; color: var(--text-secondary); }
 .col-readby { min-width: 130px; }
-.col-actions { width: 150px; white-space: nowrap; }
+.col-actions { width: 190px; white-space: nowrap; }
 
-.cover-thumb {
-  width: 40px;
-  height: 56px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  display: block;
-}
+.cover-thumb { width: 40px; height: 56px; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+.cover-placeholder { width: 40px; height: 56px; background: var(--surface-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border); }
 
-.cover-placeholder {
-  width: 40px;
-  height: 56px;
-  background: var(--surface-subtle);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-}
-
-.book-title {
-  display: block;
-  font-weight: 600;
-}
-
-.genre-list {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 0.1rem;
-}
+.book-title { display: block; font-weight: 600; }
+.genre-list { display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
 
 .vote-badge {
   display: inline-block;
@@ -227,14 +271,98 @@ function promote(suggestion) {
   font-weight: 700;
 }
 
-.readby-text {
-  font-size: 0.82rem;
-  color: var(--text-muted);
+.readby-text { font-size: 0.82rem; color: var(--text-muted); }
+.empty-cell { color: var(--text-muted); }
+
+/* ── Inline edit ── */
+.edit-cell {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-subtle);
 }
 
-.empty-cell {
-  color: var(--text-muted);
+.edit-form {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
 }
+
+.edit-cover-preview { flex-shrink: 0; }
+.edit-thumb { width: 60px; border-radius: var(--radius-sm); border: 1px solid var(--border); display: block; }
+.edit-thumb-placeholder {
+  width: 60px;
+  aspect-ratio: 2/3;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.edit-fields { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
+
+.edit-row-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.edit-field { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.edit-label {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.form-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.6rem;
+  width: 100%;
+  resize: vertical;
+}
+
+.form-input:focus { outline: none; border-color: var(--border-hover); }
+
+.genre-check-grid, .member-check-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.genre-check, .member-check {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+}
+
+.genre-check:has(input:checked), .member-check:has(input:checked) {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(200, 150, 60, 0.08);
+}
+
+.genre-check input, .member-check input { display: none; }
+
+.edit-actions { display: flex; gap: 0.5rem; padding-top: 0.25rem; }
 
 /* Buttons */
 .btn {
@@ -248,33 +376,20 @@ function promote(suggestion) {
   transition: opacity 0.15s;
 }
 
-.btn-sm {
-  padding: 0.3rem 0.65rem;
-  font-size: 0.78rem;
-}
+.btn-sm { padding: 0.3rem 0.65rem; font-size: 0.78rem; }
 
-.btn-promote {
-  background: transparent;
-  border-color: var(--border-hover);
-  color: var(--gold);
-}
+.btn-primary { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-promote:hover {
-  border-color: var(--gold);
-  background: rgba(200, 150, 60, 0.08);
-}
+.btn-secondary { background: transparent; border-color: var(--border-hover); color: var(--text-secondary); }
+.btn-secondary:hover { border-color: var(--text-secondary); }
 
-.btn-danger {
-  background: transparent;
-  border-color: rgba(242, 139, 130, 0.4);
-  color: #f28b82;
-}
+.btn-promote { background: transparent; border-color: var(--border-hover); color: var(--gold); }
+.btn-promote:hover { border-color: var(--gold); background: rgba(200, 150, 60, 0.08); }
 
-.btn-danger:hover {
-  background: rgba(242, 139, 130, 0.1);
-}
+.btn-danger { background: transparent; border-color: rgba(242, 139, 130, 0.4); color: #f28b82; }
+.btn-danger:hover { background: rgba(242, 139, 130, 0.1); }
 
-.col-actions .btn + .btn {
-  margin-left: 0.35rem;
-}
+.col-actions .btn + .btn { margin-left: 0.35rem; }
 </style>
