@@ -12,6 +12,53 @@ const serviceAccount = require('../service-account.json')
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
 const db = admin.firestore()
 
+async function fetchMetadata(title, author) {
+  async function fromGB() {
+    try {
+      const q = encodeURIComponent(`intitle:${title} inauthor:${author}`)
+      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`)
+      if (!res.ok) return null
+      const info = (await res.json()).items?.[0]?.volumeInfo
+      if (!info) return null
+      const thumb = info.imageLinks?.thumbnail
+      return {
+        coverUrl: thumb ? thumb.replace('http://', 'https://').replace('zoom=1', 'zoom=2') : null,
+        description: info.description?.slice(0, 800) || null,
+      }
+    } catch { return null }
+  }
+  async function fromOL() {
+    try {
+      const params = new URLSearchParams({ title, author, limit: '1', fields: 'key,cover_i,first_sentence' })
+      const res = await fetch(`https://openlibrary.org/search.json?${params}`)
+      if (!res.ok) return null
+      const doc = (await res.json()).docs?.[0]
+      if (!doc) return null
+      const coverUrl = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : null
+      let description = null
+      if (doc.key) {
+        try {
+          const wr = await fetch(`https://openlibrary.org${doc.key}.json`)
+          if (wr.ok) {
+            const raw = (await wr.json()).description
+            if (raw) description = (typeof raw === 'string' ? raw : raw.value)?.slice(0, 800) || null
+          }
+        } catch {}
+      }
+      if (!description && doc.first_sentence) {
+        const fs = doc.first_sentence
+        description = (typeof fs === 'string' ? fs : fs.value) || null
+      }
+      return { coverUrl, description }
+    } catch { return null }
+  }
+  const [gbr, olr] = await Promise.allSettled([fromGB(), fromOL()])
+  const gb = gbr.status === 'fulfilled' ? gbr.value : null
+  const ol = olr.status === 'fulfilled' ? olr.value : null
+  if (!gb && !ol) return null
+  return { coverUrl: gb?.coverUrl ?? ol?.coverUrl ?? null, description: gb?.description ?? ol?.description ?? null }
+}
+
 const suggestions = [
   {
     title: 'Taipei Story',
@@ -376,30 +423,25 @@ async function run() {
   }
   console.log(`\nDone — ${suggestions.length} suggestions added.`)
 
-  // Fetch and backfill descriptions + covers from Google Books
-  console.log('\nFetching metadata from Google Books…')
-  const snap = await col.orderBy('createdAt', 'desc').get()
+  // Fetch and backfill descriptions + covers (Google Books + Open Library)
+  console.log('\nFetching metadata from Google Books + Open Library…')
+  const snap = await db.collection('suggestions').get()
   let updated = 0
   for (const docSnap of snap.docs) {
     const d = docSnap.data()
-    if (d.description || d.coverUrl) continue // already has data
-    const q = encodeURIComponent(`intitle:${d.title} inauthor:${d.author}`)
+    if (d.description || d.coverUrl) continue
     try {
-      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`)
-      if (!res.ok) continue
-      const data = await res.json()
-      const info = data.items?.[0]?.volumeInfo
-      if (!info) continue
+      const meta = await fetchMetadata(d.title, d.author)
+      if (!meta) { process.stdout.write('.'); continue }
       const updates = {}
-      if (info.description) updates.description = info.description.slice(0, 500)
-      const thumb = info.imageLinks?.thumbnail
-      if (thumb) updates.coverUrl = thumb.replace('http://', 'https://').replace('zoom=1', 'zoom=2')
+      if (meta.description && !d.description) updates.description = meta.description
+      if (meta.coverUrl && !d.coverUrl) updates.coverUrl = meta.coverUrl
       if (Object.keys(updates).length) {
         await docSnap.ref.update(updates)
         console.log(`  ✓ ${d.title}`)
         updated++
-      }
-    } catch { /* skip on error */ }
+      } else process.stdout.write('.')
+    } catch { process.stdout.write('x') }
     // Small delay to avoid rate limiting
     await new Promise(r => setTimeout(r, 200))
   }

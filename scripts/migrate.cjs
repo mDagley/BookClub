@@ -62,25 +62,66 @@ function migrateGenres(genres) {
   return [...seen]
 }
 
-// ── Google Books metadata fetch ───────────────────────────────────────────────
+// ── Metadata fetch (Google Books → Open Library fallback) ─────────────────────
+async function fetchFromGB(title, author) {
+  try {
+    const q = encodeURIComponent(`intitle:${title} inauthor:${author}`)
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`)
+    if (!res.ok) return null
+    const data = await res.json()
+    const info = data.items?.[0]?.volumeInfo
+    if (!info) return null
+    const thumb = info.imageLinks?.thumbnail
+    const rawDesc = info.description || ''
+    const firstPara = rawDesc.split(/\n\n|\r\n\r\n/)[0].trim()
+    return {
+      coverUrl: thumb ? thumb.replace('http://', 'https://').replace('zoom=1', 'zoom=2') : null,
+      synopsis: firstPara.length > 220 ? firstPara.slice(0, 217) + '…' : firstPara || null,
+      fullDescription: rawDesc || null,
+    }
+  } catch { return null }
+}
+
+async function fetchFromOL(title, author) {
+  try {
+    const params = new URLSearchParams({ title, author, limit: '1', fields: 'key,cover_i,first_sentence' })
+    const res = await fetch(`https://openlibrary.org/search.json?${params}`)
+    if (!res.ok) return null
+    const doc = (await res.json()).docs?.[0]
+    if (!doc) return null
+    const coverUrl = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : null
+    let fullDescription = null, synopsis = null
+    if (doc.key) {
+      try {
+        const wr = await fetch(`https://openlibrary.org${doc.key}.json`)
+        if (wr.ok) {
+          const raw = (await wr.json()).description
+          if (raw) {
+            fullDescription = typeof raw === 'string' ? raw : raw.value
+            const fp = fullDescription.split(/\n\n|\r\n\r\n/)[0].trim()
+            synopsis = fp.length > 220 ? fp.slice(0, 217) + '…' : fp || null
+          }
+        }
+      } catch {}
+    }
+    if (!synopsis && doc.first_sentence) {
+      const fs = doc.first_sentence
+      synopsis = (typeof fs === 'string' ? fs : fs.value) || null
+    }
+    return { coverUrl, synopsis, fullDescription }
+  } catch { return null }
+}
+
 async function fetchMetadata(title, author) {
-  const q = encodeURIComponent(`intitle:${title} inauthor:${author}`)
-  const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`)
-  if (!res.ok) return null
-  const data = await res.json()
-  const info = data.items?.[0]?.volumeInfo
-  if (!info) return null
-
-  const thumbnail = info.imageLinks?.thumbnail
-  const coverUrl = thumbnail
-    ? thumbnail.replace('http://', 'https://').replace('zoom=1', 'zoom=2')
-    : null
-
-  const rawDesc = info.description || ''
-  const firstPara = rawDesc.split(/\n\n|\r\n\r\n/)[0].trim()
-  const synopsis = firstPara.length > 220 ? firstPara.slice(0, 217) + '…' : firstPara || null
-
-  return { coverUrl, synopsis, fullDescription: rawDesc || null }
+  const [gbr, olr] = await Promise.allSettled([fetchFromGB(title, author), fetchFromOL(title, author)])
+  const gb = gbr.status === 'fulfilled' ? gbr.value : null
+  const ol = olr.status === 'fulfilled' ? olr.value : null
+  if (!gb && !ol) return null
+  return {
+    coverUrl:        gb?.coverUrl        ?? ol?.coverUrl        ?? null,
+    synopsis:        gb?.synopsis        ?? ol?.synopsis        ?? null,
+    fullDescription: gb?.fullDescription ?? ol?.fullDescription ?? null,
+  }
 }
 
 // ── Migration ─────────────────────────────────────────────────────────────────
