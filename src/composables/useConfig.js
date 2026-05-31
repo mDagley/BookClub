@@ -8,6 +8,7 @@ export function useConfig() {
   const familyMembers = ref([])
   const memberProfiles = ref([]) // [{ name: 'Melissa', handle: 'melly2024' }]
   const discordGuildUrl = ref('')
+  const discordInviteUrl = ref('')
   const goodreadsGroupUrl = ref('')
   const audiobookServerUrl = ref('')
   const discordWebhookUrl = ref('')
@@ -21,6 +22,7 @@ export function useConfig() {
       familyMembers.value = data.familyMembers || []
       memberProfiles.value = data.memberProfiles || []
       discordGuildUrl.value = data.discordGuildUrl || ''
+      discordInviteUrl.value = data.discordInviteUrl || ''
       goodreadsGroupUrl.value = data.goodreadsGroupUrl || ''
       audiobookServerUrl.value = data.audiobookServerUrl || ''
       discordWebhookUrl.value = data.discordWebhookUrl || ''
@@ -39,6 +41,7 @@ export function useConfig() {
     familyMembers,
     memberProfiles,
     discordGuildUrl,
+    discordInviteUrl,
     goodreadsGroupUrl,
     audiobookServerUrl,
     discordWebhookUrl,

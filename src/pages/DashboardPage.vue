@@ -22,6 +22,7 @@
       />
       <PastBooksWidget :past-books="recentPastBooks" />
       <AudiobookWidget :audiobook-server="audiobookServer" />
+      <DiscordWidget :discord-invite-url="discordInviteUrl" />
     </div>
 
     <!-- Suggest modal (opens from TopSuggestions) -->
@@ -39,9 +40,10 @@ import HeroSection from '../components/dashboard/HeroSection.vue'
 import TopSuggestions from '../components/dashboard/TopSuggestions.vue'
 import PastBooksWidget from '../components/dashboard/PastBooksWidget.vue'
 import AudiobookWidget from '../components/dashboard/AudiobookWidget.vue'
+import DiscordWidget from '../components/dashboard/DiscordWidget.vue'
 import SuggestModal from '../components/suggestions/SuggestModal.vue'
 
-const { currentBook, audiobookServer, loading: configLoading } = useConfig()
+const { currentBook, audiobookServer, discordInviteUrl, loading: configLoading } = useConfig()
 const { suggestions, addSuggestion, voteOnSuggestion, toggleAlreadyRead } = useSuggestions()
 const { pastBooks } = usePastBooks()
 const authStore = useAuthStore()

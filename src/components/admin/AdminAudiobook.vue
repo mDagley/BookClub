@@ -28,6 +28,16 @@
       </div>
 
       <div class="form-group">
+        <label class="form-label">Discord Invite URL <span class="label-note">(optional — shown as "Join Server" button)</span></label>
+        <input
+          v-model="form.discordInviteUrl"
+          type="url"
+          class="form-input"
+          placeholder="https://discord.gg/…"
+        />
+      </div>
+
+      <div class="form-group">
         <label class="form-label">Discord Webhook URL <span class="label-note">(masked for security)</span></label>
         <input
           v-model="form.discordWebhookUrl"
@@ -56,7 +66,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../firebase.js'
 import { useConfig } from '../../composables/useConfig.js'
 
-const { audiobookServer, discordWebhookUrl, loading: configLoading } = useConfig()
+const { audiobookServer, discordWebhookUrl, discordInviteUrl, loading: configLoading } = useConfig()
 
 const saving = ref(false)
 const saveMessage = ref('')
@@ -66,6 +76,7 @@ const form = ref({
   description: '',
   audiobookUrl: '',
   discordWebhookUrl: '',
+  discordInviteUrl: '',
 })
 
 // Populate form once config loads — use a flag so subsequent snapshots
@@ -81,6 +92,7 @@ watch(
       form.value.description = server?.description || ''
       form.value.audiobookUrl = server?.url || ''
       form.value.discordWebhookUrl = webhookUrl || ''
+      form.value.discordInviteUrl = discordInviteUrl.value || ''
     }
   },
   { immediate: true }
@@ -101,6 +113,7 @@ async function save() {
         url: form.value.audiobookUrl,
       },
       discordWebhookUrl: form.value.discordWebhookUrl,
+      discordInviteUrl: form.value.discordInviteUrl,
     })
     showMessage('Settings saved!')
   } catch (err) {
