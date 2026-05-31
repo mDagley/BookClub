@@ -1,6 +1,6 @@
 <template>
   <section class="hero card">
-    <div class="hero-cover">
+    <RouterLink to="/book" class="hero-cover" title="More about this book">
       <img
         v-if="book.coverUrl"
         :src="book.coverUrl"
@@ -8,7 +8,7 @@
         class="cover-img"
       />
       <div v-else class="cover-placeholder">📚</div>
-    </div>
+    </RouterLink>
 
     <div class="hero-body">
       <p class="eyebrow">Now Reading</p>
