@@ -31,7 +31,7 @@ router.beforeEach(async (to, _from, next) => {
         if (!authStore.loading) { unwatch(); resolve() }
       })
     }
-    if (!authStore.user) {
+    if (!authStore.user && !to.query.code) {
       next('/')
       return
     }
