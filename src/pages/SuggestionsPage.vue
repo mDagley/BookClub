@@ -4,13 +4,13 @@
       :family-members="familyMembers"
       :selected-member="selectedMember"
       :filter-mode="filterMode"
-      :selected-genre="selectedGenre"
+      :selected-genres="selectedGenres"
       :sort-mode="sortMode"
       :view="view"
       :total="filteredSuggestions.length"
       @update:selected-member="selectedMember = $event"
       @update:filter-mode="filterMode = $event"
-      @update:selected-genre="selectedGenre = $event"
+      @update:selected-genres="selectedGenres = $event"
       @update:sort-mode="sortMode = $event"
       @update:view="view = $event"
       @open-modal="showModal = true"
@@ -63,16 +63,16 @@ const view = ref('grid')
 const showModal = ref(false)
 const selectedMember = ref(localStorage.getItem('bookclub_iam') || null)
 const filterMode = ref('all')
-const selectedGenre = ref(null)
+const selectedGenres = ref([])
 const sortMode = ref('votes')
 
 // Computed filtered + sorted suggestions
 const filteredSuggestions = computed(() => {
   let list = [...suggestions.value]
 
-  // 1. Genre filter
-  if (selectedGenre.value) {
-    list = list.filter(s => s.genres && s.genres.includes(selectedGenre.value))
+  // 1. Genre filter (OR — matches any selected genre)
+  if (selectedGenres.value.length) {
+    list = list.filter(s => selectedGenres.value.some(g => (s.genres || []).includes(g)))
   }
 
   // 2. Filter mode
