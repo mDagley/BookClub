@@ -1,5 +1,5 @@
 <template>
-  <div class="cover-card" :class="{ 'has-desc': !!suggestion.description }">
+  <div ref="cardRef" class="cover-card" :class="{ 'has-desc': !!suggestion.description }" @mouseenter="onMouseEnter">
     <!-- Cover image area -->
     <div class="cover-wrap">
       <!-- Image or placeholder -->
@@ -62,8 +62,8 @@
       </button>
     </div>
 
-    <!-- Description tooltip — appears to the right of the card on hover -->
-    <div v-if="suggestion.description" class="desc-tooltip" role="tooltip">
+    <!-- Description tooltip — appears left or right depending on card position -->
+    <div v-if="suggestion.description" class="desc-tooltip" :class="{ 'tooltip-left': tooltipFlipped }" role="tooltip">
       <p class="desc-tooltip-title">{{ suggestion.title }}</p>
       <p class="desc-tooltip-text">{{ suggestion.description }}</p>
     </div>
@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { GENRE_ICONS } from '../../utils/genres.js'
 import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
 
@@ -99,6 +99,15 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['vote', 'open-comments', 'toggle-read'])
+
+const cardRef = ref(null)
+const tooltipFlipped = ref(false)
+
+function onMouseEnter() {
+  if (!cardRef.value) return
+  const rect = cardRef.value.getBoundingClientRect()
+  tooltipFlipped.value = rect.right > window.innerWidth * 0.62
+}
 
 const { resolveNames } = useMemberProfiles()
 
@@ -189,6 +198,16 @@ const visibleGenres = computed(() =>
 
 .cover-card:hover .desc-tooltip {
   opacity: 1;
+  transform: translateX(0);
+}
+
+.desc-tooltip.tooltip-left {
+  left: auto;
+  right: calc(100% + 10px);
+  transform: translateX(6px);
+}
+
+.cover-card:hover .desc-tooltip.tooltip-left {
   transform: translateX(0);
 }
 
