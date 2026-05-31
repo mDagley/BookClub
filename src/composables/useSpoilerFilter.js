@@ -4,7 +4,8 @@ const STORAGE_KEY = 'bookclub_spoiler_chapter'
 
 export function useSpoilerFilter() {
   const stored = localStorage.getItem(STORAGE_KEY)
-  const currentChapter = ref(stored ? parseInt(stored, 10) : 0)
+  const parsed = parseInt(stored, 10)
+  const currentChapter = ref(Number.isFinite(parsed) ? parsed : 0)
 
   watch(currentChapter, (val) => {
     localStorage.setItem(STORAGE_KEY, String(val))
