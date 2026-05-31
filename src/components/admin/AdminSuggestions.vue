@@ -37,7 +37,7 @@
               <td class="col-votes"><span class="vote-badge">{{ suggestion.votes ?? 0 }}</span></td>
               <td class="col-suggested">{{ suggestion.suggestedBy || '—' }}</td>
               <td class="col-readby">
-                <span v-if="suggestion.alreadyRead?.length" class="readby-text">{{ suggestion.alreadyRead.join(', ') }}</span>
+                <span v-if="suggestion.alreadyRead?.length" class="readby-text">{{ resolveNames(suggestion.alreadyRead).join(', ') }}</span>
                 <span v-else class="empty-cell">—</span>
               </td>
               <td class="col-actions">
@@ -136,11 +136,13 @@
 import { ref } from 'vue'
 import { useSuggestions } from '../../composables/useSuggestions.js'
 import { useConfig } from '../../composables/useConfig.js'
+import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
 import { GENRE_LIST } from '../../utils/genres.js'
 import CoverUpload from '../shared/CoverUpload.vue'
 
 const { suggestions, loading, deleteSuggestion, updateSuggestion } = useSuggestions()
 const { familyMembers } = useConfig()
+const { resolveNames } = useMemberProfiles()
 
 const emit = defineEmits(['promote'])
 
