@@ -170,6 +170,7 @@ const form = reactive({
   coverUrl: '',
   genres: [],
   description: '',
+  publishedDate: '',
   iAlreadyRead: false,
   suggestedBy: currentMember.value || '',
 })
@@ -186,6 +187,7 @@ async function autofillFromApi() {
   if (!meta) return
   if (meta.fullDescription && !form.description) form.description = meta.fullDescription
   if (meta.genres.length && !form.genres.length) form.genres = meta.genres
+  if (meta.publishedDate && !form.publishedDate) form.publishedDate = meta.publishedDate
 }
 
 async function handleSubmit() {
@@ -209,6 +211,7 @@ async function handleSubmit() {
       author: form.author.trim(),
       genres: form.genres,
       description: form.description.trim(),
+      publishedDate: form.publishedDate || null,
       alreadyRead,
       suggestedBy: form.suggestedBy.trim(),
       coverUrl: null,
