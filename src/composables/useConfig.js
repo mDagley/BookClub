@@ -6,6 +6,7 @@ export function useConfig() {
   const currentBook = ref(null)
   const audiobookServer = ref(null)
   const familyMembers = ref([])
+  const memberProfiles = ref([]) // [{ name: 'Melissa', handle: 'melly2024' }]
   const discordGuildUrl = ref('')
   const goodreadsGroupUrl = ref('')
   const audiobookServerUrl = ref('')
@@ -18,6 +19,7 @@ export function useConfig() {
       currentBook.value = data.currentBook || null
       audiobookServer.value = data.audiobookServer || null
       familyMembers.value = data.familyMembers || []
+      memberProfiles.value = data.memberProfiles || []
       discordGuildUrl.value = data.discordGuildUrl || ''
       goodreadsGroupUrl.value = data.goodreadsGroupUrl || ''
       audiobookServerUrl.value = data.audiobookServerUrl || ''
@@ -35,6 +37,7 @@ export function useConfig() {
     currentBook,
     audiobookServer,
     familyMembers,
+    memberProfiles,
     discordGuildUrl,
     goodreadsGroupUrl,
     audiobookServerUrl,

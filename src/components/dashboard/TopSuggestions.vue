@@ -25,7 +25,7 @@
           <span class="suggestion-author">{{ s.author }}</span>
           <div class="suggestion-badges">
             <span v-if="s.genres?.[0]" class="chip">{{ s.genres[0] }}</span>
-            <span v-if="s.alreadyRead?.length" class="read-chip" :title="`Read by: ${s.alreadyRead.join(', ')}`">
+            <span v-if="s.alreadyRead?.length" class="read-chip" :title="`Read by: ${resolveNames(s.alreadyRead).join(', ')}`">
               ✓ {{ s.alreadyRead.length }} read
             </span>
           </div>
@@ -43,11 +43,15 @@
 </template>
 
 <script setup>
+import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
+
 defineProps({
   suggestions: { type: Array, default: () => [] },
   total: { type: Number, default: 0 },
 })
 defineEmits(['open-suggest'])
+
+const { resolveNames } = useMemberProfiles()
 </script>
 
 <style scoped>
