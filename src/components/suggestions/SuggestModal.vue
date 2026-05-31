@@ -153,6 +153,7 @@ import { GENRE_ICONS, GENRE_LIST } from '../../utils/genres.js'
 import { fetchBookMetadata, fetchCoverUrl } from '../../utils/googleBooks.js'
 import CoverUpload from '../shared/CoverUpload.vue'
 import { useAuthStore } from '../../stores/auth.js'
+import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
 
 const props = defineProps({
   addSuggestion: { type: Function, required: true },
@@ -162,7 +163,14 @@ const emit = defineEmits(['close', 'submitted'])
 
 const modalRef = ref(null)
 const authStore = useAuthStore()
-const currentMember = ref(authStore.user?.discordUsername || null)
+const { resolveName } = useMemberProfiles()
+
+// Use display name from member profiles if available, otherwise Discord handle
+const currentMember = ref(
+  authStore.user?.discordUsername
+    ? resolveName(authStore.user.discordUsername)
+    : null
+)
 
 const form = reactive({
   title: '',

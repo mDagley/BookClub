@@ -73,7 +73,7 @@
       <p class="cover-title">{{ suggestion.title }}</p>
       <p class="cover-author">{{ suggestion.author }}</p>
       <p v-if="formattedDate" class="cover-date">{{ formattedDate }}</p>
-      <p class="cover-suggester">by {{ suggestion.suggestedBy }}</p>
+      <p class="cover-suggester">by {{ resolveName(suggestion.suggestedBy) }}</p>
       <button
         class="read-toggle"
         :class="{ 'is-read': hasRead, 'no-auth': !authUsername }"
@@ -109,7 +109,7 @@ function onMouseEnter() {
   tooltipFlipped.value = rect.right > window.innerWidth * 0.62
 }
 
-const { resolveNames } = useMemberProfiles()
+const { resolveName, resolveNames } = useMemberProfiles()
 
 const userVote = computed(() => props.suggestion.votedUsers?.[props.uid] ?? 0)
 const hasRead = computed(() => props.suggestion.alreadyRead?.includes(props.authUsername) ?? false)
