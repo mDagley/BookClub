@@ -15,8 +15,40 @@
     </div>
 
     <div v-else class="admin-content">
-      <h1 class="section-title">Admin Panel</h1>
-      <p>Welcome, {{ authStore.user.discordUsername }}! Full admin UI coming in Phase 9.</p>
+      <div class="admin-header">
+        <h1 class="section-title">Admin Panel</h1>
+        <span class="admin-user">{{ authStore.user.discordUsername }}</span>
+      </div>
+
+      <!-- Tab navigation -->
+      <nav class="admin-tabs" role="tablist">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          role="tab"
+          class="tab-btn"
+          :class="{ active: activeTab === tab.id }"
+          :aria-selected="activeTab === tab.id"
+          @click="activeTab = tab.id"
+        >
+          {{ tab.label }}
+        </button>
+      </nav>
+
+      <!-- Tab panels -->
+      <div class="tab-panel">
+        <AdminCurrentBook
+          v-if="activeTab === 'current'"
+          :prefill="currentBookPrefill"
+          @prefill-consumed="currentBookPrefill = null"
+        />
+        <AdminPastBooks v-else-if="activeTab === 'past'" />
+        <AdminSuggestions
+          v-else-if="activeTab === 'suggestions'"
+          @promote="onPromote"
+        />
+        <AdminAudiobook v-else-if="activeTab === 'audiobook'" />
+      </div>
     </div>
   </div>
 </template>
@@ -25,10 +57,29 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
+import AdminCurrentBook from '../components/admin/AdminCurrentBook.vue'
+import AdminPastBooks from '../components/admin/AdminPastBooks.vue'
+import AdminSuggestions from '../components/admin/AdminSuggestions.vue'
+import AdminAudiobook from '../components/admin/AdminAudiobook.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
 const authError = ref(null)
+
+const tabs = [
+  { id: 'current', label: 'Current Book' },
+  { id: 'past', label: 'Past Books' },
+  { id: 'suggestions', label: 'Suggestions' },
+  { id: 'audiobook', label: 'Audiobook' },
+]
+
+const activeTab = ref('current')
+const currentBookPrefill = ref(null)
+
+function onPromote(bookData) {
+  currentBookPrefill.value = bookData
+  activeTab.value = 'current'
+}
 
 onMounted(async () => {
   // Handle Discord OAuth callback — Discord redirects back to /admin?code=...
@@ -38,6 +89,7 @@ onMounted(async () => {
     window.history.replaceState({}, '', '/admin')
     try {
       await authStore.handleCallback(code)
+      authError.value = null
     } catch (err) {
       authError.value = err.message?.includes('permission-denied')
         ? 'You must be a member of the family Discord server to access the admin panel.'
@@ -49,7 +101,7 @@ onMounted(async () => {
 
 <style scoped>
 .admin-page {
-  max-width: 800px;
+  max-width: 960px;
   margin: 4rem auto;
   padding: 0 1.5rem;
 }
@@ -80,6 +132,60 @@ onMounted(async () => {
 .admin-content {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-user {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Tabs */
+.admin-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.admin-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.tab-panel {
+  min-height: 400px;
 }
 </style>
