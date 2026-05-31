@@ -5,6 +5,7 @@ const routes = [
   { path: '/book', component: () => import('../pages/BookPage.vue') },
   { path: '/suggestions', component: () => import('../pages/SuggestionsPage.vue') },
   { path: '/past-books', component: () => import('../pages/PastBooksPage.vue') },
+  { path: '/past-books/:id', component: () => import('../pages/PastBookDetailPage.vue') },
   {
     path: '/admin',
     component: () => import('../pages/AdminPage.vue'),

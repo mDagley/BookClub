@@ -22,9 +22,10 @@
 
     <!-- Books grid -->
     <div v-else class="books-grid">
-      <div
+      <RouterLink
         v-for="book in pastBooks"
         :key="book.id"
+        :to="`/past-books/${book.id}`"
         class="book-card"
       >
         <!-- Cover image area -->
@@ -82,7 +83,7 @@
             💬 View Discord Discussion →
           </a>
         </div>
-      </div>
+      </RouterLink>
     </div>
   </div>
 </template>
@@ -136,6 +137,8 @@ function visibleGenres(book) {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  text-decoration: none;
+  color: inherit;
 }
 
 /* ── Cover wrap ── */
