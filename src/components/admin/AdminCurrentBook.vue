@@ -42,13 +42,20 @@
 
       <div class="form-row">
         <div class="form-group form-group--full">
-          <label class="form-label">Custom Cover URL <span class="label-note">(overrides auto-fetch)</span></label>
-          <input
-            v-model="form.coverUrl"
-            type="url"
-            class="form-input"
-            placeholder="https://…"
-          />
+          <label class="form-label">Cover <span class="label-note">(URL or upload)</span></label>
+          <div class="cover-url-row">
+            <input
+              v-model="form.coverUrl"
+              type="url"
+              class="form-input"
+              placeholder="https://… or use upload button →"
+            />
+            <CoverUpload
+              book-id="current-book"
+              label="Upload"
+              @uploaded="val => { form.coverUrl = val; coverPreview = val }"
+            />
+          </div>
         </div>
       </div>
 
@@ -308,6 +315,7 @@ import { useConfig } from '../../composables/useConfig.js'
 import { usePastBooks } from '../../composables/usePastBooks.js'
 import { fetchBookMetadata } from '../../utils/googleBooks.js'
 import { GENRE_LIST } from '../../utils/genres.js'
+import CoverUpload from '../shared/CoverUpload.vue'
 
 const { currentBook } = useConfig()
 const { addPastBook } = usePastBooks()
@@ -938,6 +946,14 @@ async function archiveBook() {
 .btn-delete:hover {
   color: #f28b82;
 }
+
+.cover-url-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cover-url-row .form-input { flex: 1; }
 
 /* Footer */
 .form-footer {

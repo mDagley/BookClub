@@ -71,8 +71,15 @@
                     </div>
 
                     <div class="edit-field">
-                      <label class="edit-label">Cover URL</label>
-                      <input v-model="editForm.coverUrl" type="url" class="form-input" placeholder="https://…" />
+                      <label class="edit-label">Cover <span style="font-weight:400;text-transform:none">(URL or upload)</span></label>
+                      <div class="cover-url-row">
+                        <input v-model="editForm.coverUrl" type="url" class="form-input" placeholder="https://…" />
+                        <CoverUpload
+                          :book-id="editingId"
+                          label="Upload"
+                          @uploaded="url => editForm.coverUrl = url"
+                        />
+                      </div>
                     </div>
 
                     <div class="edit-field">
@@ -124,6 +131,7 @@ import { ref } from 'vue'
 import { useSuggestions } from '../../composables/useSuggestions.js'
 import { useConfig } from '../../composables/useConfig.js'
 import { GENRE_LIST } from '../../utils/genres.js'
+import CoverUpload from '../shared/CoverUpload.vue'
 
 const { suggestions, loading, deleteSuggestion, updateSuggestion } = useSuggestions()
 const { familyMembers } = useConfig()
@@ -363,6 +371,9 @@ function promote(suggestion) {
 .genre-check input, .member-check input { display: none; }
 
 .edit-actions { display: flex; gap: 0.5rem; padding-top: 0.25rem; }
+
+.cover-url-row { display: flex; gap: 0.5rem; align-items: center; }
+.cover-url-row .form-input { flex: 1; }
 
 /* Buttons */
 .btn {
