@@ -20,6 +20,7 @@
           class="suggestion-thumb"
         />
         <div v-else class="suggestion-thumb-placeholder">📖</div>
+
         <div class="suggestion-info">
           <span class="suggestion-title">{{ s.title }}</span>
           <span class="suggestion-author">{{ s.author }}</span>
@@ -30,7 +31,33 @@
             </span>
           </div>
         </div>
-        <span class="suggestion-votes">{{ s.votes ?? 0 }}</span>
+
+        <!-- Mark as read -->
+        <button
+          class="read-toggle"
+          :class="{ 'is-read': s.alreadyRead?.includes(authUsername), 'no-auth': !authUsername }"
+          :title="!authUsername ? 'Login to mark as read' : (s.alreadyRead?.includes(authUsername) ? 'Remove — I haven\'t read this' : 'Mark as read')"
+          @click="authUsername && toggleAlreadyRead(s.id, authUsername, s.alreadyRead?.includes(authUsername))"
+        >{{ s.alreadyRead?.includes(authUsername) ? '✓' : '📖' }}</button>
+
+        <!-- Vote buttons -->
+        <div class="vote-col">
+          <button
+            class="vote-btn upvote"
+            :class="{ active: (s.votedUsers?.[uid] ?? 0) === 1 }"
+            :disabled="!uid"
+            :title="uid ? 'Upvote' : 'Login to vote'"
+            @click="uid && voteOnSuggestion(s.id, uid, 1)"
+          >▲</button>
+          <span class="vote-count">{{ s.votes ?? 0 }}</span>
+          <button
+            class="vote-btn downvote"
+            :class="{ active: (s.votedUsers?.[uid] ?? 0) === -1 }"
+            :disabled="!uid"
+            :title="uid ? 'Downvote' : 'Login to vote'"
+            @click="uid && voteOnSuggestion(s.id, uid, -1)"
+          >▼</button>
+        </div>
       </div>
     </div>
 
@@ -48,6 +75,10 @@ import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
 defineProps({
   suggestions: { type: Array, default: () => [] },
   total: { type: Number, default: 0 },
+  uid: { type: String, default: null },
+  authUsername: { type: String, default: null },
+  voteOnSuggestion: { type: Function, default: () => {} },
+  toggleAlreadyRead: { type: Function, default: () => {} },
 })
 defineEmits(['open-suggest'])
 
@@ -64,7 +95,7 @@ const { resolveNames } = useMemberProfiles()
 .suggestion-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .rank {
@@ -104,6 +135,7 @@ const { resolveNames } = useMemberProfiles()
   flex-direction: column;
   gap: 0.15rem;
   overflow: hidden;
+  min-width: 0;
 }
 
 .suggestion-title {
@@ -137,12 +169,53 @@ const { resolveNames } = useMemberProfiles()
   padding: 0.1rem 0.4rem;
 }
 
-.suggestion-votes {
-  font-family: var(--font-sans);
-  font-size: 0.8rem;
-  color: var(--gold);
-  font-weight: bold;
+/* Mark as read */
+.read-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  padding: 0.2rem 0.45rem;
+  cursor: pointer;
   flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.read-toggle:hover:not(.no-auth) { border-color: #7ab87a; color: #7ab87a; }
+.read-toggle.is-read { border-color: #7ab87a; color: #7ab87a; }
+.read-toggle.no-auth { opacity: 0.4; cursor: default; }
+
+/* Vote column */
+.vote-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.vote-btn {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.55rem;
+  padding: 0.12rem 0.35rem;
+  border-radius: 6px;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.vote-btn:disabled { opacity: 0.4; cursor: default; }
+.vote-btn.upvote.active, .vote-btn.upvote:not(:disabled):hover { border-color: var(--gold); color: var(--gold); }
+.vote-btn.downvote.active, .vote-btn.downvote:not(:disabled):hover { border-color: #7ab87a; color: #7ab87a; }
+
+.vote-count {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: bold;
+  color: var(--text-primary);
 }
 
 .suggestions-footer {

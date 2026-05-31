@@ -14,6 +14,10 @@
         class="col-wide"
         :suggestions="topSuggestions"
         :total="suggestions.length"
+        :uid="uid"
+        :auth-username="authUsername"
+        :vote-on-suggestion="voteOnSuggestion"
+        :toggle-already-read="(id, username, isRead) => toggleAlreadyRead(id, username, isRead)"
         @open-suggest="showSuggestModal = true"
       />
       <PastBooksWidget :past-books="recentPastBooks" />
@@ -30,6 +34,7 @@ import { computed, ref } from 'vue'
 import { useConfig } from '../composables/useConfig.js'
 import { useSuggestions } from '../composables/useSuggestions.js'
 import { usePastBooks } from '../composables/usePastBooks.js'
+import { useAuthStore } from '../stores/auth.js'
 import HeroSection from '../components/dashboard/HeroSection.vue'
 import TopSuggestions from '../components/dashboard/TopSuggestions.vue'
 import PastBooksWidget from '../components/dashboard/PastBooksWidget.vue'
@@ -37,8 +42,12 @@ import AudiobookWidget from '../components/dashboard/AudiobookWidget.vue'
 import SuggestModal from '../components/suggestions/SuggestModal.vue'
 
 const { currentBook, audiobookServer, loading: configLoading } = useConfig()
-const { suggestions, addSuggestion } = useSuggestions()
+const { suggestions, addSuggestion, voteOnSuggestion, toggleAlreadyRead } = useSuggestions()
 const { pastBooks } = usePastBooks()
+const authStore = useAuthStore()
+
+const uid = computed(() => authStore.user?.uid ?? null)
+const authUsername = computed(() => authStore.user?.discordUsername ?? null)
 
 const topSuggestions = computed(() => suggestions.value.slice(0, 3))
 const recentPastBooks = computed(() => pastBooks.value.slice(0, 3))
