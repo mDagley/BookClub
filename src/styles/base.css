@@ -1,3 +1,6 @@
+/* Bump root to 17px so all rem values scale up for readability */
+:root { font-size: 17px; }
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -6,6 +9,9 @@
 
 body {
   background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(42, 82, 50, 0.35) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 30% at 80% 80%, rgba(26, 58, 32, 0.2) 0%, transparent 60%);
   color: var(--text-primary);
   font-family: var(--font-sans);
   line-height: 1.6;
@@ -25,3 +31,27 @@ img {
   max-width: 100%;
   display: block;
 }
+
+/* ── Page entrance animation ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.page-enter {
+  animation: fadeUp 0.45s ease both;
+}
+
+/* Staggered children */
+.stagger > * { animation: fadeUp 0.4s ease both; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.12s; }
+.stagger > *:nth-child(3) { animation-delay: 0.19s; }
+.stagger > *:nth-child(4) { animation-delay: 0.26s; }
+.stagger > *:nth-child(5) { animation-delay: 0.33s; }
+.stagger > *:nth-child(6) { animation-delay: 0.40s; }

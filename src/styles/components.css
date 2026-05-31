@@ -4,10 +4,12 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
   border-color: var(--border-hover);
+  box-shadow: var(--glow-green);
 }
 
 /* Chips / Tags */
@@ -35,12 +37,13 @@
   font-family: var(--font-sans);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
 
 .btn:hover {
   border-color: var(--border-hover);
   background: var(--accent);
+  box-shadow: var(--glow-green);
 }
 
 .btn-primary {
@@ -73,24 +76,7 @@
 .btn-gold:hover {
   background: var(--gold);
   color: var(--bg);
-}
-
-/* Vote badge */
-.vote-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(10, 20, 12, 0.88);
-  border: 1px solid var(--gold);
-  color: var(--gold);
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: bold;
-  padding: 0.2rem 0.55rem;
-  border-radius: 12px;
-  backdrop-filter: blur(2px);
-  z-index: 2;
-  cursor: pointer;
+  box-shadow: 0 0 16px rgba(200, 150, 60, 0.25);
 }
 
 /* Read badge */
@@ -128,30 +114,6 @@
   line-height: 1;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9));
   cursor: default;
-  position: relative;
-}
-
-.genre-icon::after {
-  content: attr(title);
-  position: absolute;
-  bottom: 120%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #0d1a10;
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: 0.55rem;
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s;
-  border: 1px solid var(--border);
-}
-
-.genre-icon:hover::after {
-  opacity: 1;
 }
 
 .genre-icon-img {
@@ -181,11 +143,20 @@
   font-size: 0.78rem;
 }
 
-/* Section title */
+/* Section title — Cinzel display font for that fantasy-tome feel */
 .section-title {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   color: var(--gold);
-  font-style: italic;
   margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+
+/* Decorative divider */
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
 }
