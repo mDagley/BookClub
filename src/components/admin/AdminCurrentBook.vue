@@ -428,6 +428,7 @@ async function fetchBookData() {
   if (meta.synopsis && !form.value.synopsis) form.value.synopsis = meta.synopsis
   if (meta.fullDescription && !form.value.description) form.value.description = meta.fullDescription
   if (meta.genres.length && !form.value.genres.length) form.value.genres = meta.genres
+  if (meta.publishedDate && !form.value.publishedDate) form.value.publishedDate = meta.publishedDate
 }
 
 watch(() => form.value.coverUrl, (val) => {
