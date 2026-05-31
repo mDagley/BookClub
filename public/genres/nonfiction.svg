@@ -5,19 +5,16 @@
       <stop offset="100%" stop-color="#5aabdd"/>
     </linearGradient>
   </defs>
-  <!-- Open book left page -->
-  <path d="M6 10 Q6 8 8 8 L19 8 L19 34 Q13 32 6 34 Z" stroke="url(#g)" stroke-width="2" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.08"/>
-  <!-- Open book right page -->
-  <path d="M21 8 L32 8 Q34 8 34 10 L34 34 Q27 32 21 34 Z" stroke="url(#g)" stroke-width="2" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.08"/>
-  <!-- Spine -->
-  <line x1="19" y1="8" x2="21" y2="8" stroke="url(#g)" stroke-width="2.5"/>
-  <line x1="19" y1="34" x2="21" y2="34" stroke="url(#g)" stroke-width="2.5"/>
-  <!-- Text lines left -->
-  <line x1="9" y1="14" x2="17" y2="14" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
-  <line x1="9" y1="18" x2="17" y2="18" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
-  <line x1="9" y1="22" x2="17" y2="22" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
-  <!-- Text lines right -->
-  <line x1="23" y1="14" x2="31" y2="14" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
-  <line x1="23" y1="18" x2="31" y2="18" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
-  <line x1="23" y1="22" x2="31" y2="22" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <!-- Left page -->
+  <path d="M5 8 Q5 6 8 6 L20 8 L20 36 Q12 34 5 36 Z"
+        stroke="url(#g)" stroke-width="2.5" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.12"/>
+  <!-- Right page -->
+  <path d="M20 8 L32 6 Q35 6 35 8 L35 36 Q28 34 20 36 Z"
+        stroke="url(#g)" stroke-width="2.5" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.12"/>
+  <!-- Spine crease -->
+  <line x1="20" y1="8" x2="20" y2="36" stroke="url(#g)" stroke-width="2"/>
+  <!-- 3 text lines on right page only -->
+  <line x1="23" y1="15" x2="32" y2="15" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="23" y1="21" x2="32" y2="21" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="23" y1="27" x2="29" y2="27" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round"/>
 </svg>

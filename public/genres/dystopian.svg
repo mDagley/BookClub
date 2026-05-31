@@ -5,14 +5,12 @@
       <stop offset="100%" stop-color="#5aabdd"/>
     </linearGradient>
   </defs>
-  <!-- Broken chain - left link -->
-  <path d="M6 20 Q6 14 11 14 L15 14 Q18 14 18 20 Q18 26 15 26 L11 26 Q6 26 6 20 Z" stroke="url(#g)" stroke-width="2" fill="none"/>
-  <!-- Break gap -->
-  <line x1="18" y1="17" x2="22" y2="17" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-  <line x1="18" y1="23" x2="22" y2="23" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-  <!-- Right link (broken/open) -->
-  <path d="M22 14 L25 14 Q30 14 30 20 Q30 26 25 26 L22 26 Q20 26 20 20" stroke="url(#g)" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <!-- Break marks -->
-  <line x1="20" y1="14" x2="22" y2="12" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round"/>
-  <line x1="20" y1="26" x2="22" y2="28" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Lock body -->
+  <rect x="10" y="20" width="20" height="16" rx="3" stroke="url(#g)" stroke-width="2.5" fill="url(#g)" fill-opacity="0.15"/>
+  <!-- Shackle — broken open (gap at top right) -->
+  <path d="M14 20 L14 13 Q14 7 20 7 Q26 7 26 13 L26 20"
+        stroke="url(#g)" stroke-width="2.5" stroke-linecap="round" fill="none" stroke-dasharray="5 4"/>
+  <!-- Keyhole -->
+  <circle cx="20" cy="28" r="3" stroke="url(#g)" stroke-width="2"/>
+  <line x1="20" y1="31" x2="20" y2="35" stroke="url(#g)" stroke-width="2" stroke-linecap="round"/>
 </svg>
