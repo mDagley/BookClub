@@ -24,6 +24,7 @@
         <div class="suggestion-info">
           <span class="suggestion-title">{{ s.title }}</span>
           <span class="suggestion-author">{{ s.author }}</span>
+          <p v-if="s.description" class="suggestion-desc">{{ s.description }}</p>
           <div class="suggestion-badges">
             <span v-for="genre in (s.genres || [])" :key="genre" class="chip">{{ genre }}</span>
             <span v-if="s.alreadyRead?.length" class="read-chip" :title="`Read by: ${resolveNames(s.alreadyRead).join(', ')}`">
@@ -150,6 +151,17 @@ const { resolveNames } = useMemberProfiles()
   font-family: var(--font-sans);
   font-size: 0.75rem;
   color: var(--text-dim);
+}
+
+.suggestion-desc {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .suggestion-badges {
