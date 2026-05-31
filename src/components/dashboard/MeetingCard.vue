@@ -3,11 +3,11 @@
     <p class="section-title">Next Meeting</p>
     <div class="meeting-row">
       <span class="meeting-icon">📅</span>
-      <span>{{ meeting.date }}</span>
+      <span>{{ meeting.date || 'TBD' }}</span>
     </div>
-    <div class="meeting-row" v-if="meeting.time">
+    <div class="meeting-row">
       <span class="meeting-icon">🕐</span>
-      <span>{{ meeting.time }}</span>
+      <span>{{ meeting.time || 'TBD' }}</span>
     </div>
     <div class="meeting-row" v-if="meeting.location">
       <span class="meeting-icon">📍</span>
