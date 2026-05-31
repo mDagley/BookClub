@@ -1,5 +1,5 @@
 <template>
-  <div class="discord-widget card">
+  <div class="discord-widget">
     <p class="section-title">Join our Discord</p>
 
     <p class="discord-desc">
