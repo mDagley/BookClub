@@ -30,7 +30,7 @@ async function seed () {
     currentBook: {
       title: 'Gideon the Ninth',
       author: 'Tamsyn Muir',
-      genres: ['Sci-Fi', 'Horror'],
+      genres: ['SciFi', 'Horror'],
       synopsis: 'The Emperor needs necromancers. The Ninth Necromancer needs a swordswoman. Gideon has a sword, some dirty magazines, and no more time for undead bullshit.',
       fullDescription: 'Tamsyn Muir\'s Gideon the Ninth unveils a universe of swords, necromancy, and science. The Emperor needs necromancers. The Ninth Necromancer needs a swordswoman. Gideon has a sword, some dirty magazines, and no more time for undead bullshit.',
       coverUrl: null,
@@ -64,7 +64,7 @@ async function seed () {
     {
       title: 'Dawn',
       author: 'Octavia E. Butler',
-      genres: ['Sci-Fi', 'Horror'],
+      genres: ['SciFi', 'Horror'],
       synopsis: 'Lilith Iyapo wakes after nuclear war to find herself aboard an alien ship — and humanity\'s survival depends on a deal she never agreed to.',
       coverUrl: null,
       dateRead: admin.firestore.Timestamp.fromDate(new Date('2026-05-17')),
@@ -100,7 +100,7 @@ async function seed () {
     {
       title: 'The Long Way to a Small, Angry Planet',
       author: 'Becky Chambers',
-      genres: ['Sci-Fi'],
+      genres: ['SciFi'],
       synopsis: 'A found family of misfits crew a tunnelling ship through the galaxy, building a wormhole to the most dangerous place in the universe.',
       coverUrl: null,
       dateRead: admin.firestore.Timestamp.fromDate(new Date('2025-06-14')),
