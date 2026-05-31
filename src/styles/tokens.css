@@ -2,21 +2,21 @@
   /* Colors — drawn from the enchanted forest background:
      deep midnight navy sky, teal forest, warm amber firefly glow, cyan moonlight */
   --bg: #07101e;
-  --surface: #0c1b2e;
-  --surface-subtle: #060d18;
-  --border: #1a3a52;
-  --border-hover: #2a6688;
+  --surface: #0d1e33;
+  --surface-subtle: #07111e;
+  --border: #1e4060;
+  --border-hover: #2e70a0;
   --accent: #1a3a52;
   --gold: #e8a828;        /* warm amber — matches the firefly/waterfall glow */
   --gold-light: #f5c96a;
   --moon: #a8d8f0;        /* moonlight blue — for accents and highlights */
   --discord-blue: #5865F2;
 
-  /* Text — cool blue-white tones from the moonlit scene */
-  --text-primary: #c8dff0;
-  --text-secondary: #88adc4;
-  --text-muted: #5a8298;
-  --text-dim: #3a5e72;
+  /* Text — bright enough to read against the dark image */
+  --text-primary: #eaf3fc;
+  --text-secondary: #b8d0e4;
+  --text-muted: #8aafc8;
+  --text-dim: #6090aa;
 
   /* Typography */
   --font-display: 'Cinzel', Georgia, serif;

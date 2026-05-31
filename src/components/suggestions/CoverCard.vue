@@ -131,10 +131,11 @@ const visibleGenres = computed(() =>
 .cover-wrap {
   position: relative;
   aspect-ratio: 2 / 3;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   overflow: hidden;
   background: var(--surface-subtle);
   border: 1px solid var(--border);
+  border-bottom: none;
   transition: border-color 0.2s, transform 0.15s;
 }
 
@@ -352,7 +353,12 @@ const visibleGenres = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  padding: 0 2px;
+  padding: 0.45rem 0.5rem 0.4rem;
+  background: rgba(4, 8, 20, 0.72);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  backdrop-filter: blur(4px);
 }
 
 .cover-title {

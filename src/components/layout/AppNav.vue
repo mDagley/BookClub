@@ -36,8 +36,8 @@ const authStore = useAuthStore()
   align-items: center;
   gap: 1.5rem;
   padding: 0.85rem 1.75rem;
-  background: rgba(11, 21, 16, 0.92);
-  backdrop-filter: blur(8px);
+  background: rgba(4, 8, 20, 0.88);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
