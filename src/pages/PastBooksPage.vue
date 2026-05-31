@@ -1,3 +1,285 @@
 <template>
-  <div class="page-placeholder">Past Books</div>
+  <div class="past-books-page">
+    <h1 class="page-title">Past Books</h1>
+
+    <!-- Loading state: 6 skeleton cards -->
+    <div v-if="loading" class="books-grid">
+      <div v-for="n in 6" :key="n" class="skeleton-card">
+        <div class="skeleton cover-skeleton" />
+        <div class="skeleton-meta">
+          <div class="skeleton text-skeleton title-skeleton" />
+          <div class="skeleton text-skeleton author-skeleton" />
+          <div class="skeleton text-skeleton date-skeleton" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div v-else-if="pastBooks.length === 0" class="empty-state">
+      <span class="empty-icon">📚</span>
+      <p class="empty-text">No past books yet. Check back after your first meeting!</p>
+    </div>
+
+    <!-- Books grid -->
+    <div v-else class="books-grid">
+      <div
+        v-for="book in pastBooks"
+        :key="book.id"
+        class="book-card"
+      >
+        <!-- Cover image area -->
+        <div class="cover-wrap">
+          <img
+            v-if="book.coverUrl"
+            :src="book.coverUrl"
+            :alt="book.title || 'Book cover'"
+            class="cover-img"
+            loading="lazy"
+          />
+          <div v-else class="cover-placeholder">
+            <span class="placeholder-emoji">📚</span>
+          </div>
+
+          <!-- Genre icon strip -->
+          <div v-if="(book.genres || []).length > 0" class="genre-strip">
+            <span
+              v-for="genre in (book.genres || []).slice(0, 3)"
+              :key="genre"
+              class="genre-icon"
+              :title="genre"
+              :aria-label="genre"
+            >{{ genreIcon(genre) }}</span>
+          </div>
+        </div>
+
+        <!-- Meta below cover -->
+        <div class="book-meta">
+          <p class="book-title">{{ book.title }}</p>
+          <p class="book-author">{{ book.author }}</p>
+
+          <!-- Genre chips -->
+          <div v-if="book.genres && book.genres.length > 0" class="genre-chips">
+            <span
+              v-for="genre in book.genres"
+              :key="genre"
+              class="chip"
+            >{{ genre }}</span>
+          </div>
+
+          <p v-if="book.dateRead" class="book-date">Read in {{ formatDate(book.dateRead) }}</p>
+
+          <!-- Discord discussion link -->
+          <a
+            v-if="book.discordThreadUrl"
+            :href="book.discordThreadUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-discord discord-btn"
+          >
+            💬 View Discord Discussion →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
+
+<script setup>
+import { usePastBooks } from '../composables/usePastBooks.js'
+import { GENRE_ICONS } from '../utils/genres.js'
+
+const { pastBooks, loading } = usePastBooks()
+
+function formatDate(dateRead) {
+  if (!dateRead) return ''
+  const d = typeof dateRead.toDate === 'function' ? dateRead.toDate() : new Date(dateRead)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+}
+
+function genreIcon(genre) {
+  return GENRE_ICONS[genre]?.icon ?? '📖'
+}
+
+function visibleGenres(book) {
+  return (book.genres || []).slice(0, 3)
+}
+</script>
+
+<style scoped>
+.past-books-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-title {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  color: var(--gold);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Grid ── */
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ── Book card ── */
+.book-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* ── Cover wrap ── */
+.cover-wrap {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.book-card:hover .cover-wrap {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--surface), var(--surface-subtle));
+}
+
+.placeholder-emoji {
+  font-size: 2.5rem;
+  opacity: 0.5;
+}
+
+/* ── Meta below cover ── */
+.book-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0 2px;
+}
+
+.book-title {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.book-author {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.genre-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.book-date {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin: 0;
+  font-style: italic;
+}
+
+.discord-btn {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  text-decoration: none;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+/* ── Skeleton loading ── */
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cover-skeleton {
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0 2px;
+}
+
+.text-skeleton {
+  height: 0.85rem;
+  border-radius: var(--radius-sm);
+}
+
+.title-skeleton {
+  width: 85%;
+}
+
+.author-skeleton {
+  width: 60%;
+}
+
+.date-skeleton {
+  width: 70%;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  opacity: 0.4;
+}
+
+.empty-text {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+</style>
