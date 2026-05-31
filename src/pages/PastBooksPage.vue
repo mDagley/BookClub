@@ -38,7 +38,7 @@
             loading="lazy"
           />
           <div v-else class="cover-placeholder">
-            <span class="placeholder-emoji">📚</span>
+            <img src="/book-icon.svg" class="placeholder-book" alt="" />
           </div>
 
           <!-- Genre icon strip -->
@@ -191,9 +191,10 @@ function visibleGenres(book) {
   background: linear-gradient(135deg, var(--surface), var(--surface-subtle));
 }
 
-.placeholder-emoji {
-  font-size: 2.5rem;
-  opacity: 0.5;
+.placeholder-book {
+  width: 52%;
+  opacity: 0.55;
+  filter: drop-shadow(0 2px 6px rgba(232, 168, 40, 0.35));
 }
 
 /* ── Meta below cover ── */

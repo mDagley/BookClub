@@ -50,7 +50,9 @@
           <span class="field-label">Cover <span class="field-optional">(optional — auto-fetched if blank)</span></span>
           <div class="cover-row">
             <img v-if="form.coverUrl" :src="form.coverUrl" alt="Cover preview" class="cover-preview-thumb" />
-            <div v-else class="cover-preview-empty">📚</div>
+            <div v-else class="cover-preview-empty">
+              <img src="/book-icon.svg" class="placeholder-book" alt="" />
+            </div>
             <div class="cover-actions">
               <CoverUpload
                 :book-id="'suggest-' + Date.now()"
@@ -481,8 +483,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
   flex-shrink: 0;
+}
+
+.placeholder-book {
+  width: 70%;
+  opacity: 0.55;
+  filter: drop-shadow(0 1px 4px rgba(232, 168, 40, 0.35));
 }
 
 .cover-actions {

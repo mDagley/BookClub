@@ -14,7 +14,9 @@
           :alt="book.title"
           class="past-thumb"
         />
-        <div v-else class="past-thumb-placeholder">📖</div>
+        <div v-else class="past-thumb-placeholder">
+          <img src="/book-icon.svg" class="placeholder-book" alt="" />
+        </div>
         <div class="past-info">
           <span class="past-title">{{ book.title }}</span>
           <span class="past-author">{{ book.author }}</span>
@@ -95,8 +97,13 @@ function formatDate(ts) {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
   flex-shrink: 0;
+}
+
+.placeholder-book {
+  width: 70%;
+  opacity: 0.5;
+  filter: drop-shadow(0 1px 4px rgba(160, 208, 240, 0.3));
 }
 
 .past-info {
