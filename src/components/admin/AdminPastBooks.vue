@@ -359,16 +359,18 @@ async function submitAdd() {
   overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  background: var(--surface);
 }
 
 .books-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
+  min-width: 560px;
 }
 
 .books-table th {
-  background: var(--surface);
+  background: var(--surface-subtle);
   color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 700;
@@ -377,6 +379,7 @@ async function submitAdd() {
   padding: 0.6rem 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 .book-row td,
@@ -385,6 +388,7 @@ async function submitAdd() {
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
   color: var(--text-primary);
+  background: var(--surface);
 }
 
 .book-row:last-child td,
@@ -393,7 +397,7 @@ async function submitAdd() {
 }
 
 .book-row:hover td {
-  background: var(--surface-subtle);
+  background: rgba(46, 112, 160, 0.12);
 }
 
 .col-cover { width: 52px; }
@@ -433,9 +437,10 @@ async function submitAdd() {
 
 /* Inline edit form */
 .inline-edit-form {
-  background: var(--surface);
+  background: var(--surface-subtle);
   border-radius: var(--radius-sm);
   padding: 1rem;
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;

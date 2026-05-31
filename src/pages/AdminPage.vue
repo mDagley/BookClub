@@ -109,9 +109,9 @@ onMounted(async () => {
 
 <style scoped>
 .admin-page {
-  max-width: 960px;
-  margin: 4rem auto;
-  padding: 0 1.5rem;
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1.5rem 3rem;
 }
 
 .admin-loading,
