@@ -73,8 +73,15 @@
                       <input v-model="editForm.dateRead" type="date" class="form-input" />
                     </div>
                     <div class="form-group">
-                      <label class="form-label">Cover URL</label>
-                      <input v-model="editForm.coverUrl" type="url" class="form-input" placeholder="https://…" />
+                      <label class="form-label">Cover <span class="label-note">(URL or upload)</span></label>
+                      <div class="cover-url-row">
+                        <input v-model="editForm.coverUrl" type="url" class="form-input" placeholder="https://…" />
+                        <CoverUpload
+                          :book-id="editingId"
+                          label="Upload"
+                          @uploaded="url => editForm.coverUrl = url"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div class="form-group">
@@ -141,8 +148,15 @@
           <input v-model="addForm.dateRead" type="date" class="form-input" />
         </div>
         <div class="form-group">
-          <label class="form-label">Cover URL</label>
-          <input v-model="addForm.coverUrl" type="url" class="form-input" placeholder="https://…" />
+          <label class="form-label">Cover <span class="label-note">(URL or upload)</span></label>
+          <div class="cover-url-row">
+            <input v-model="addForm.coverUrl" type="url" class="form-input" placeholder="https://…" />
+            <CoverUpload
+              book-id="past-book-add"
+              label="Upload"
+              @uploaded="url => addForm.coverUrl = url"
+            />
+          </div>
         </div>
       </div>
       <div class="form-group">
@@ -187,6 +201,7 @@ import { ref } from 'vue'
 import { Timestamp } from 'firebase/firestore'
 import { usePastBooks } from '../../composables/usePastBooks.js'
 import { GENRE_LIST } from '../../utils/genres.js'
+import CoverUpload from '../shared/CoverUpload.vue'
 
 const { pastBooks, loading, addPastBook, updatePastBook, deletePastBook } = usePastBooks()
 
@@ -534,6 +549,22 @@ async function submitAdd() {
 
 .genre-input {
   display: none;
+}
+
+.cover-url-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cover-url-row .form-input { flex: 1; }
+
+.label-note {
+  font-weight: 400;
+  text-transform: none;
+  color: var(--text-muted);
+  letter-spacing: 0;
+  font-size: 0.72rem;
 }
 
 .add-actions {
