@@ -31,15 +31,15 @@
               ✓ {{ s.alreadyRead.length }} read
             </span>
           </div>
+          <button
+            class="read-toggle"
+            :class="{ 'is-read': s.alreadyRead?.includes(authUsername), 'no-auth': !authUsername }"
+            :title="!authUsername ? 'Login with Discord to mark as read' : undefined"
+            @click="authUsername && toggleAlreadyRead(s.id, authUsername, s.alreadyRead?.includes(authUsername))"
+          >
+            {{ s.alreadyRead?.includes(authUsername) ? '✓ I\'ve read this' : 'Mark as read' }}
+          </button>
         </div>
-
-        <!-- Mark as read -->
-        <button
-          class="read-toggle"
-          :class="{ 'is-read': s.alreadyRead?.includes(authUsername), 'no-auth': !authUsername }"
-          :title="!authUsername ? 'Login to mark as read' : (s.alreadyRead?.includes(authUsername) ? 'Remove — I haven\'t read this' : 'Mark as read')"
-          @click="authUsername && toggleAlreadyRead(s.id, authUsername, s.alreadyRead?.includes(authUsername))"
-        >{{ s.alreadyRead?.includes(authUsername) ? '✓' : '📖' }}</button>
 
         <!-- Vote buttons -->
         <div class="vote-col">
@@ -184,18 +184,18 @@ const { resolveNames } = useMemberProfiles()
 /* Mark as read */
 .read-toggle {
   background: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-dim);
+  border: none;
+  padding: 0;
+  font-family: var(--font-sans);
   font-size: 0.72rem;
-  padding: 0.2rem 0.45rem;
+  color: var(--text-dim);
   cursor: pointer;
-  flex-shrink: 0;
-  transition: border-color 0.15s, color 0.15s;
+  text-align: left;
+  transition: color 0.15s;
 }
 
-.read-toggle:hover:not(.no-auth) { border-color: #7ab87a; color: #7ab87a; }
-.read-toggle.is-read { border-color: #7ab87a; color: #7ab87a; }
+.read-toggle:hover:not(.no-auth) { color: #7ab87a; }
+.read-toggle.is-read { color: #7ab87a; }
 .read-toggle.no-auth { opacity: 0.4; cursor: default; }
 
 /* Vote column */
