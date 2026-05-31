@@ -45,6 +45,23 @@
           <span v-if="fetchingMeta" class="fetch-hint">Fetching book info…</span>
         </div>
 
+        <!-- Optional cover upload -->
+        <div class="field cover-field">
+          <span class="field-label">Cover <span class="field-optional">(optional — auto-fetched if blank)</span></span>
+          <div class="cover-row">
+            <img v-if="form.coverUrl" :src="form.coverUrl" alt="Cover preview" class="cover-preview-thumb" />
+            <div v-else class="cover-preview-empty">📚</div>
+            <div class="cover-actions">
+              <CoverUpload
+                :book-id="'suggest-' + Date.now()"
+                label="Upload cover"
+                @uploaded="url => form.coverUrl = url"
+              />
+              <button v-if="form.coverUrl" type="button" class="cover-clear-btn" @click="form.coverUrl = ''">✕ Clear</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Genres — checkbox chips -->
         <div class="field">
           <span class="field-label">Genres</span>
@@ -134,6 +151,7 @@ import { db } from '../../firebase.js'
 import { doc, updateDoc } from 'firebase/firestore'
 import { GENRE_ICONS, GENRE_LIST } from '../../utils/genres.js'
 import { fetchBookMetadata, fetchCoverUrl } from '../../utils/googleBooks.js'
+import CoverUpload from '../shared/CoverUpload.vue'
 
 const props = defineProps({
   addSuggestion: { type: Function, required: true },
@@ -149,6 +167,7 @@ const currentMember = ref(localStorage.getItem(LS_KEY) || null)
 const form = reactive({
   title: '',
   author: '',
+  coverUrl: '',
   genres: [],
   description: '',
   iAlreadyRead: false,
@@ -420,6 +439,61 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 }
 
 /* Error */
+.cover-field .field-optional {
+  font-weight: 400;
+  text-transform: none;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.cover-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cover-preview-thumb {
+  width: 48px;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.cover-preview-empty {
+  width: 48px;
+  aspect-ratio: 2/3;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.cover-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cover-clear-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+.cover-clear-btn:hover { border-color: #f28b82; color: #f28b82; }
+
 .fetch-hint {
   font-family: var(--font-sans);
   font-size: 0.75rem;
