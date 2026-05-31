@@ -229,16 +229,18 @@ function promote(suggestion) {
   overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  background: var(--surface);
 }
 
 .suggestions-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
+  min-width: 700px;
 }
 
 .suggestions-table th {
-  background: var(--surface);
+  background: var(--surface-subtle);
   color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 700;
@@ -247,6 +249,7 @@ function promote(suggestion) {
   padding: 0.6rem 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 .suggestion-row td {
@@ -254,21 +257,22 @@ function promote(suggestion) {
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
   color: var(--text-primary);
+  background: var(--surface);
 }
 
 .suggestion-row:last-child td,
 .edit-row:last-child .edit-cell { border-bottom: none; }
 
-.suggestion-row:hover td { background: var(--surface-subtle); }
+.suggestion-row:hover td { background: rgba(46, 112, 160, 0.12); }
 
-.col-cover { width: 52px; }
-.col-title { min-width: 150px; }
-.col-author { min-width: 120px; color: var(--text-secondary); }
-.col-published { width: 90px; color: var(--text-muted); font-size: 0.82rem; }
-.col-votes { width: 60px; text-align: center; }
-.col-suggested { min-width: 110px; color: var(--text-secondary); }
-.col-readby { min-width: 130px; }
-.col-actions { width: 190px; white-space: nowrap; }
+.col-cover { width: 48px; }
+.col-title { min-width: 130px; }
+.col-author { min-width: 100px; color: var(--text-secondary); }
+.col-published { width: 80px; color: var(--text-muted); font-size: 0.78rem; }
+.col-votes { width: 55px; text-align: center; }
+.col-suggested { min-width: 90px; color: var(--text-secondary); }
+.col-readby { min-width: 100px; }
+.col-actions { width: 170px; white-space: nowrap; }
 
 .cover-thumb { width: 40px; height: 56px; object-fit: cover; border-radius: var(--radius-sm); display: block; }
 .cover-placeholder { width: 40px; height: 56px; background: var(--surface-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border); }
@@ -295,6 +299,7 @@ function promote(suggestion) {
   padding: 1rem 0.75rem;
   border-bottom: 1px solid var(--border);
   background: var(--surface-subtle);
+  color: var(--text-primary);
 }
 
 .edit-form {
