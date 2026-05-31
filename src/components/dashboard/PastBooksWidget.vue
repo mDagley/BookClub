@@ -7,7 +7,7 @@
     </div>
 
     <div v-else class="past-list">
-      <div v-for="book in pastBooks" :key="book.id" class="past-row">
+      <RouterLink v-for="book in pastBooks" :key="book.id" :to="`/past-books/${book.id}`" class="past-row">
         <img
           v-if="book.coverUrl"
           :src="book.coverUrl"
@@ -27,7 +27,7 @@
             class="past-thread"
           >💬 Discord thread →</a>
         </div>
-      </div>
+      </RouterLink>
     </div>
 
     <div class="widget-footer">
@@ -60,6 +60,21 @@ function formatDate(ts) {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
+  margin: -0.25rem;
+  transition: background 0.15s;
+}
+
+.past-row:hover {
+  background: var(--surface-subtle);
+  text-decoration: none;
+}
+
+.past-row:hover .past-title {
+  color: var(--gold);
 }
 
 .past-thumb {

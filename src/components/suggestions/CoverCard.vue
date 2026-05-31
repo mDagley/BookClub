@@ -1,5 +1,5 @@
 <template>
-  <div class="cover-card">
+  <div class="cover-card" :class="{ 'has-desc': !!suggestion.description }">
     <!-- Cover image area -->
     <div class="cover-wrap">
       <!-- Image or placeholder -->
@@ -56,15 +56,16 @@
         </span>
       </div>
 
-      <!-- Hover overlay with description -->
-      <div v-if="suggestion.description" class="hover-overlay">
-        <p class="hover-description">{{ suggestion.description }}</p>
-      </div>
-
       <!-- Comments button -->
       <button class="comments-btn" title="View comments" @click.stop="emit('open-comments')">
         💬
       </button>
+    </div>
+
+    <!-- Description tooltip — appears to the right of the card on hover -->
+    <div v-if="suggestion.description" class="desc-tooltip" role="tooltip">
+      <p class="desc-tooltip-title">{{ suggestion.title }}</p>
+      <p class="desc-tooltip-text">{{ suggestion.description }}</p>
     </div>
 
     <!-- Below cover -->
@@ -163,34 +164,55 @@ const visibleGenres = computed(() =>
   opacity: 0.5;
 }
 
-/* Hover overlay */
-.hover-overlay {
+/* Description tooltip beside the card */
+.cover-card {
+  position: relative;
+}
+
+.desc-tooltip {
   position: absolute;
-  inset: 0;
-  background: rgba(10, 20, 12, 0.88);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem;
+  left: calc(100% + 10px);
+  top: 0;
+  width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  z-index: 40;
   opacity: 0;
-  transition: opacity 0.2s ease;
   pointer-events: none;
+  transform: translateX(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), var(--glow-green);
 }
 
-.cover-card:hover .hover-overlay {
+.cover-card:hover .desc-tooltip {
   opacity: 1;
+  transform: translateX(0);
 }
 
-.hover-description {
+.desc-tooltip-title {
+  font-family: var(--font-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 0.4rem;
+  line-height: 1.3;
+}
+
+.desc-tooltip-text {
   font-family: var(--font-sans);
-  font-size: 0.72rem;
-  color: var(--text-primary);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
   line-height: 1.55;
-  text-align: center;
   display: -webkit-box;
   -webkit-line-clamp: 8;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .desc-tooltip { display: none; }
 }
 
 /* Vote buttons */

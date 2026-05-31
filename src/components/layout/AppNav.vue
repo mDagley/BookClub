@@ -7,7 +7,7 @@
 
     <div class="nav-links">
       <RouterLink to="/">Home</RouterLink>
-      <RouterLink to="/book">This Book</RouterLink>
+      <RouterLink to="/book">Current Book</RouterLink>
       <RouterLink to="/suggestions">Suggestions</RouterLink>
       <RouterLink to="/past-books">Past Books</RouterLink>
       <RouterLink v-if="authStore.user" to="/admin" class="nav-admin">Admin</RouterLink>
