@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8a828"/>
+      <stop offset="100%" stop-color="#5aabdd"/>
+    </linearGradient>
+  </defs>
+  <!-- Raised fist - fingers -->
+  <rect x="12" y="12" width="5" height="10" rx="2.5" stroke="url(#g)" stroke-width="1.8" fill="url(#g)" fill-opacity="0.1"/>
+  <rect x="17.5" y="10" width="5" height="12" rx="2.5" stroke="url(#g)" stroke-width="1.8" fill="url(#g)" fill-opacity="0.1"/>
+  <rect x="23" y="11" width="5" height="11" rx="2.5" stroke="url(#g)" stroke-width="1.8" fill="url(#g)" fill-opacity="0.1"/>
+  <!-- Palm -->
+  <path d="M11 20 L11 30 Q11 33 14 33 L26 33 Q29 33 29 30 L29 20 Z" stroke="url(#g)" stroke-width="2" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.1"/>
+  <!-- Thumb -->
+  <path d="M11 22 Q8 22 8 25 Q8 28 11 28" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <!-- Strength lines -->
+  <line x1="32" y1="12" x2="36" y2="12" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="33" y1="16" x2="37" y2="16" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="32" y1="20" x2="36" y2="20" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

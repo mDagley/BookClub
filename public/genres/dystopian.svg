@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8a828"/>
+      <stop offset="100%" stop-color="#5aabdd"/>
+    </linearGradient>
+  </defs>
+  <!-- Broken chain - left link -->
+  <path d="M6 20 Q6 14 11 14 L15 14 Q18 14 18 20 Q18 26 15 26 L11 26 Q6 26 6 20 Z" stroke="url(#g)" stroke-width="2" fill="none"/>
+  <!-- Break gap -->
+  <line x1="18" y1="17" x2="22" y2="17" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="18" y1="23" x2="22" y2="23" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <!-- Right link (broken/open) -->
+  <path d="M22 14 L25 14 Q30 14 30 20 Q30 26 25 26 L22 26 Q20 26 20 20" stroke="url(#g)" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Break marks -->
+  <line x1="20" y1="14" x2="22" y2="12" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="20" y1="26" x2="22" y2="28" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
