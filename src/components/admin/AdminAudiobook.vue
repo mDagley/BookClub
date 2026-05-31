@@ -76,7 +76,7 @@ watch(
   ([server, webhookUrl]) => {
     if (populated) return
     // Only populate when we have actual data (not the initial null state)
-    if (server !== undefined || webhookUrl !== undefined) {
+    if (server !== null || webhookUrl !== '') {
       populated = true
       form.value.description = server?.description || ''
       form.value.audiobookUrl = server?.url || ''

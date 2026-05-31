@@ -21,7 +21,7 @@
     </div>
 
     <!-- Suggest modal (opens from TopSuggestions) -->
-    <SuggestModal v-if="showSuggestModal" @close="showSuggestModal = false" />
+    <SuggestModal v-if="showSuggestModal" :add-suggestion="addSuggestion" @close="showSuggestModal = false" />
   </div>
 </template>
 
@@ -37,7 +37,7 @@ import AudiobookWidget from '../components/dashboard/AudiobookWidget.vue'
 import SuggestModal from '../components/suggestions/SuggestModal.vue'
 
 const { currentBook, audiobookServer, loading: configLoading } = useConfig()
-const { suggestions } = useSuggestions()
+const { suggestions, addSuggestion } = useSuggestions()
 const { pastBooks } = usePastBooks()
 
 const topSuggestions = computed(() => suggestions.value.slice(0, 3))

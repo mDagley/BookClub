@@ -362,21 +362,29 @@ function populateFromBook(book) {
     coverPreview.value = ''
     return
   }
+  const meeting = book.meeting || {}
   form.value = {
     title: book.title || '',
     author: book.author || '',
     coverUrl: book.coverUrl || '',
     goodreadsUrl: book.goodreadsUrl || '',
     synopsis: book.synopsis || '',
-    description: book.description || '',
+    description: book.fullDescription || book.description || '',
     genres: Array.isArray(book.genres) ? [...book.genres] : [],
-    meetingDate: book.meetingDate || '',
-    meetingTime: book.meetingTime || '',
-    meetingLocation: book.meetingLocation || '',
-    discordVoiceUrl: book.discordVoiceUrl || '',
-    threads: (book.threads || []).map(t => ({ ...t, _key: nextKey() })),
-    materials: (book.materials || []).map(m => ({ ...m, _key: nextKey() })),
-    characters: (book.characters || []).map(c => ({ ...c, _key: nextKey(), _editing: false })),
+    meetingDate: meeting.date || '',
+    meetingTime: meeting.time || '',
+    meetingLocation: meeting.location || '',
+    discordVoiceUrl: meeting.discordVoiceUrl || '',
+    threads: (book.discordThreads || []).map(t => ({ ...t, _key: nextKey() })),
+    materials: (book.supplementalMaterials || []).map(m => ({ ...m, _key: nextKey() })),
+    characters: (book.characters || []).map(c => ({
+      name: c.name || '',
+      description: c.description || '',
+      firstAppearance: c.firstAppearanceChapter ?? null,
+      major: c.isMajor ?? false,
+      _key: nextKey(),
+      _editing: false,
+    })),
     timeline: (book.timeline || []).map(e => ({ ...e, _key: nextKey() })),
   }
   coverPreview.value = book.coverUrl || ''
@@ -462,7 +470,7 @@ function removeItem(list, index) {
   form.value[list].splice(index, 1)
 }
 
-// Serialize form to Firestore-safe object (strip _key and _editing)
+// Serialize form to Firestore-safe object using the public data shape
 function serializeForm() {
   const f = form.value
   return {
@@ -471,15 +479,24 @@ function serializeForm() {
     coverUrl: f.coverUrl || coverPreview.value || '',
     goodreadsUrl: f.goodreadsUrl,
     synopsis: f.synopsis,
-    description: f.description,
+    fullDescription: f.description,
     genres: f.genres,
-    meetingDate: f.meetingDate,
-    meetingTime: f.meetingTime,
-    meetingLocation: f.meetingLocation,
-    discordVoiceUrl: f.discordVoiceUrl,
-    threads: f.threads.map(({ _key, ...rest }) => rest),
-    materials: f.materials.map(({ _key, ...rest }) => rest),
-    characters: f.characters.map(({ _key, _editing, ...rest }) => rest),
+    meeting: {
+      date: f.meetingDate,
+      time: f.meetingTime,
+      location: f.meetingLocation,
+      discordVoiceUrl: f.discordVoiceUrl,
+    },
+    discordThreads: f.threads.map(({ _key, ...rest }) => rest),
+    supplementalMaterials: f.materials.map(({ _key, ...rest }) => ({
+      ...(({ type, ...r }) => r)(rest),
+      type: rest.type?.toLowerCase() || 'other',
+    })),
+    characters: f.characters.map(({ _key, _editing, firstAppearance, major, ...rest }) => ({
+      ...rest,
+      firstAppearanceChapter: firstAppearance ?? null,
+      isMajor: major ?? false,
+    })),
     timeline: f.timeline.map(({ _key, ...rest }) => rest),
   }
 }

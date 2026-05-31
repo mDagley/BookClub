@@ -12,8 +12,9 @@ service cloud.firestore {
     match /suggestions/{doc} {
       // Anyone can create a suggestion or upvote (increment only)
       allow create: if true;
-      allow update: if request.resource.data.votes == resource.data.votes + 1
-                    && request.auth == null; // vote without login
+      allow update: if request.auth == null
+                    && request.resource.data.votes == resource.data.votes + 1
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes']);
       allow update, delete: if request.auth != null; // admin can do anything
     }
     match /pastBooks/{doc} {

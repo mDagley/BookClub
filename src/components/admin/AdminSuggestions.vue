@@ -46,8 +46,8 @@
             </td>
             <td class="col-suggested">{{ suggestion.suggestedBy || '—' }}</td>
             <td class="col-readby">
-              <span v-if="suggestion.readBy?.length" class="readby-text">
-                {{ suggestion.readBy.join(', ') }}
+              <span v-if="suggestion.alreadyRead?.length" class="readby-text">
+                {{ suggestion.alreadyRead.join(', ') }}
               </span>
               <span v-else class="empty-cell">—</span>
             </td>
