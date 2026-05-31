@@ -25,7 +25,7 @@
           <span class="suggestion-title">{{ s.title }}</span>
           <span class="suggestion-author">{{ s.author }}</span>
           <div class="suggestion-badges">
-            <span v-if="s.genres?.[0]" class="chip">{{ s.genres[0] }}</span>
+            <span v-for="genre in (s.genres || [])" :key="genre" class="chip">{{ genre }}</span>
             <span v-if="s.alreadyRead?.length" class="read-chip" :title="`Read by: ${resolveNames(s.alreadyRead).join(', ')}`">
               ✓ {{ s.alreadyRead.length }} read
             </span>
