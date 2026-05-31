@@ -20,7 +20,7 @@
         :class="{ voted: hasVoted }"
         :style="hasVoted ? 'cursor: default' : ''"
         :title="hasVoted ? 'Already voted' : 'Vote for this book'"
-        @click="!hasVoted && emit('vote')"
+        @click.stop="!hasVoted && emit('vote')"
       >
         ▲ {{ suggestion.votes ?? 0 }}
       </button>
@@ -47,6 +47,11 @@
           <template v-else>{{ GENRE_ICONS[genre]?.icon ?? '📖' }}</template>
         </span>
       </div>
+
+      <!-- Hover overlay with description -->
+      <div v-if="suggestion.description" class="hover-overlay">
+        <p class="hover-description">{{ suggestion.description }}</p>
+      </div>
     </div>
 
     <!-- Below cover -->
@@ -72,7 +77,6 @@ const emit = defineEmits(['vote'])
 const visibleGenres = computed(() =>
   (props.suggestion.genres || []).slice(0, 3)
 )
-
 </script>
 
 <style scoped>
@@ -118,7 +122,37 @@ const visibleGenres = computed(() =>
   opacity: 0.5;
 }
 
-/* Vote badge — extends .vote-badge from components.css */
+/* Hover overlay */
+.hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 20, 12, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.cover-card:hover .hover-overlay {
+  opacity: 1;
+}
+
+.hover-description {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--text-primary);
+  line-height: 1.55;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 8;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Vote badge */
 .vote-badge {
   position: absolute;
   top: 8px;
@@ -132,7 +166,7 @@ const visibleGenres = computed(() =>
   padding: 0.2rem 0.55rem;
   border-radius: 12px;
   cursor: pointer;
-  z-index: 2;
+  z-index: 3;
   transition: background 0.15s, color 0.15s;
   line-height: 1.4;
 }
@@ -147,7 +181,7 @@ const visibleGenres = computed(() =>
   cursor: default;
 }
 
-/* Read badge — extends .read-badge from components.css */
+/* Read badge */
 .read-badge {
   position: absolute;
   top: 8px;
@@ -159,7 +193,7 @@ const visibleGenres = computed(() =>
   font-size: 0.68rem;
   padding: 0.2rem 0.5rem;
   border-radius: 12px;
-  z-index: 2;
+  z-index: 3;
   line-height: 1.4;
 }
 
