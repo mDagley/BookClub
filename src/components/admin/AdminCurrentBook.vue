@@ -25,7 +25,7 @@
             type="text"
             class="form-input"
             placeholder="Book title"
-            @blur="fetchCover"
+            @blur="fetchBookData"
           />
         </div>
         <div class="form-group">
@@ -35,7 +35,7 @@
             type="text"
             class="form-input"
             placeholder="Author name"
-            @blur="fetchCover"
+            @blur="fetchBookData"
           />
         </div>
       </div>
@@ -306,7 +306,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../firebase.js'
 import { useConfig } from '../../composables/useConfig.js'
 import { usePastBooks } from '../../composables/usePastBooks.js'
-import { fetchCoverUrl } from '../../utils/googleBooks.js'
+import { fetchBookMetadata } from '../../utils/googleBooks.js'
 import { GENRE_LIST } from '../../utils/genres.js'
 
 const { currentBook } = useConfig()
@@ -409,16 +409,17 @@ watch(() => props.prefill, (prefill) => {
   }
 }, { immediate: true })
 
-async function fetchCover() {
-  if (form.value.coverUrl) {
-    coverPreview.value = form.value.coverUrl
-    return
-  }
-  if (!form.value.title && !form.value.author) return
+async function fetchBookData() {
+  if (!form.value.title || !form.value.author) return
   coverFetching.value = true
-  const url = await fetchCoverUrl(form.value.title, form.value.author)
+  const meta = await fetchBookMetadata(form.value.title, form.value.author)
   coverFetching.value = false
-  if (url) coverPreview.value = url
+  if (!meta) return
+
+  if (meta.coverUrl && !form.value.coverUrl) coverPreview.value = meta.coverUrl
+  if (meta.synopsis && !form.value.synopsis) form.value.synopsis = meta.synopsis
+  if (meta.fullDescription && !form.value.description) form.value.description = meta.fullDescription
+  if (meta.genres.length && !form.value.genres.length) form.value.genres = meta.genres
 }
 
 watch(() => form.value.coverUrl, (val) => {

@@ -40,7 +40,9 @@
             placeholder="Author name"
             required
             :disabled="submitting"
+            @blur="autofillFromApi"
           />
+          <span v-if="fetchingMeta" class="fetch-hint">Fetching book info…</span>
         </div>
 
         <!-- Genres — checkbox chips -->
@@ -131,7 +133,7 @@ import { reactive, ref, onMounted, onUnmounted } from 'vue'
 import { db } from '../../firebase.js'
 import { doc, updateDoc } from 'firebase/firestore'
 import { GENRE_ICONS, GENRE_LIST } from '../../utils/genres.js'
-import { fetchCoverUrl } from '../../utils/googleBooks.js'
+import { fetchBookMetadata, fetchCoverUrl } from '../../utils/googleBooks.js'
 
 const props = defineProps({
   addSuggestion: { type: Function, required: true },
@@ -155,6 +157,17 @@ const form = reactive({
 
 const submitting = ref(false)
 const errorMsg = ref('')
+const fetchingMeta = ref(false)
+
+async function autofillFromApi() {
+  if (!form.title || !form.author) return
+  fetchingMeta.value = true
+  const meta = await fetchBookMetadata(form.title, form.author)
+  fetchingMeta.value = false
+  if (!meta) return
+  if (meta.description && !form.description) form.description = meta.description
+  if (meta.genres.length && !form.genres.length) form.genres = meta.genres
+}
 
 async function handleSubmit() {
   errorMsg.value = ''
@@ -407,6 +420,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 }
 
 /* Error */
+.fetch-hint {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
 .form-error {
   font-family: var(--font-sans);
   font-size: 0.8rem;
