@@ -7,14 +7,16 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)       // null = not logged in; object = logged in
   const loading = ref(true)    // true until Firebase Auth resolves on cold start
 
-  // Populate user from Firebase Auth on startup
-  onAuthStateChanged(auth, (firebaseUser) => {
+  // Populate user from Firebase Auth on startup.
+  // displayName is not set on custom-token users, so we read discordUsername
+  // from the ID token claims that the server embedded when creating the token.
+  onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
+      const idTokenResult = await firebaseUser.getIdTokenResult()
       user.value = {
         uid: firebaseUser.uid,
-        discordUsername: firebaseUser.displayName,
-        photoURL: firebaseUser.photoURL,
-        // custom claims are in the ID token; we'll use what firebase gives us
+        discordUsername: idTokenResult.claims.discordUsername || firebaseUser.displayName,
+        photoURL: idTokenResult.claims.discordAvatar || firebaseUser.photoURL,
       }
     } else {
       user.value = null
