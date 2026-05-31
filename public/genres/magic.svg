@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8a828"/>
+      <stop offset="100%" stop-color="#5aabdd"/>
+    </linearGradient>
+  </defs>
+  <!-- Wand -->
+  <line x1="10" y1="30" x2="30" y2="10" stroke="url(#g)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Wand tip star -->
+  <path d="M30 10 L31.5 7 L33 10 L36 10 L34 12.5 L35 16 L32 14 L29 16 L30 12.5 L28 10 Z" stroke="url(#g)" stroke-width="1.5" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.2"/>
+  <!-- Sparkles -->
+  <circle cx="12" cy="14" r="1.5" fill="url(#g)"/>
+  <circle cx="8" cy="22" r="1" fill="url(#g)" opacity="0.8"/>
+  <circle cx="18" cy="8" r="1" fill="url(#g)" opacity="0.8"/>
+  <circle cx="26" cy="28" r="1.2" fill="url(#g)" opacity="0.7"/>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8a828"/>
+      <stop offset="100%" stop-color="#5aabdd"/>
+    </linearGradient>
+  </defs>
+  <!-- Open book left page -->
+  <path d="M6 10 Q6 8 8 8 L19 8 L19 34 Q13 32 6 34 Z" stroke="url(#g)" stroke-width="2" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.08"/>
+  <!-- Open book right page -->
+  <path d="M21 8 L32 8 Q34 8 34 10 L34 34 Q27 32 21 34 Z" stroke="url(#g)" stroke-width="2" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.08"/>
+  <!-- Spine -->
+  <line x1="19" y1="8" x2="21" y2="8" stroke="url(#g)" stroke-width="2.5"/>
+  <line x1="19" y1="34" x2="21" y2="34" stroke="url(#g)" stroke-width="2.5"/>
+  <!-- Text lines left -->
+  <line x1="9" y1="14" x2="17" y2="14" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <line x1="9" y1="18" x2="17" y2="18" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <line x1="9" y1="22" x2="17" y2="22" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <!-- Text lines right -->
+  <line x1="23" y1="14" x2="31" y2="14" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <line x1="23" y1="18" x2="31" y2="18" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <line x1="23" y1="22" x2="31" y2="22" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+</svg>

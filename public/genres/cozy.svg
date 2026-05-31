@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8a828"/>
+      <stop offset="100%" stop-color="#5aabdd"/>
+    </linearGradient>
+  </defs>
+  <!-- Steam wisps -->
+  <path d="M16 12 Q14 9 16 6 Q18 3 16 1" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M22 12 Q20 9 22 6 Q24 3 22 1" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <!-- Cup body -->
+  <path d="M8 16 L11 34 L29 34 L32 16 Z" stroke="url(#g)" stroke-width="2.2" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.1"/>
+  <!-- Handle -->
+  <path d="M32 20 Q38 20 38 26 Q38 32 32 32" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <!-- Saucer -->
+  <line x1="5" y1="34" x2="35" y2="34" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
