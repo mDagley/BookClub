@@ -31,6 +31,8 @@ router.beforeEach(async (to, _from, next) => {
         if (!authStore.loading) { unwatch(); resolve() }
       })
     }
+    // Allow the OAuth callback through so AdminPage can exchange the code.
+    // Without this, the guard redirects to / and the ?code= param is lost.
     if (!authStore.user && !to.query.code) {
       next('/')
       return

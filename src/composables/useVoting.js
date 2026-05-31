@@ -32,7 +32,13 @@ export function useVoting(upvoteSuggestion) {
     // Optimistic update before await prevents double-vote on rapid taps
     votedIds.value = new Set([...votedIds.value, id])
     saveVotedIds(votedIds.value)
-    await upvoteSuggestion(id)
+    try {
+      await upvoteSuggestion(id)
+    } catch {
+      // Roll back so the user can retry if the Firestore write failed
+      votedIds.value = new Set([...votedIds.value].filter(v => v !== id))
+      saveVotedIds(votedIds.value)
+    }
   }
 
   return { hasVoted, castVote }

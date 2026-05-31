@@ -489,7 +489,7 @@ function serializeForm() {
     },
     discordThreads: f.threads.map(({ _key, ...rest }) => rest),
     supplementalMaterials: f.materials.map(({ _key, ...rest }) => ({
-      ...(({ type, ...r }) => r)(rest),
+      ...rest,
       type: rest.type?.toLowerCase() || 'other',
     })),
     characters: f.characters.map(({ _key, _editing, firstAppearance, major, ...rest }) => ({
