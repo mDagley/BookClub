@@ -4,8 +4,9 @@
       v-for="suggestion in suggestions"
       :key="suggestion.id"
       :suggestion="suggestion"
-      :has-voted="hasVoted(suggestion.id)"
-      @vote="castVote(suggestion.id)"
+      :uid="uid"
+      @vote="(dir) => voteOnSuggestion(suggestion.id, uid, dir)"
+      @open-comments="emit('open-comments', suggestion)"
     />
     <div v-if="suggestions.length === 0" class="empty-state">
       <p>No suggestions match your filters.</p>
@@ -18,9 +19,11 @@ import CoverCard from './CoverCard.vue'
 
 defineProps({
   suggestions: { type: Array, required: true },
-  hasVoted: { type: Function, required: true },
-  castVote: { type: Function, required: true },
+  uid: { type: String, default: null },
+  voteOnSuggestion: { type: Function, required: true },
 })
+
+const emit = defineEmits(['open-comments'])
 </script>
 
 <style scoped>
