@@ -5,13 +5,11 @@
       <stop offset="100%" stop-color="#5aabdd"/>
     </linearGradient>
   </defs>
-  <!-- Steam wisps -->
-  <path d="M16 12 Q14 9 16 6 Q18 3 16 1" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-  <path d="M22 12 Q20 9 22 6 Q24 3 22 1" stroke="url(#g)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-  <!-- Cup body -->
-  <path d="M8 16 L11 34 L29 34 L32 16 Z" stroke="url(#g)" stroke-width="2.2" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.1"/>
+  <!-- Two steam wisps (simple S-curves) -->
+  <path d="M15 13 Q13 10 15 7" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <path d="M22 13 Q20 10 22 7" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <!-- Mug body -->
+  <path d="M8 15 L10 34 L30 34 L32 15 Z" stroke="url(#g)" stroke-width="2.5" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.15"/>
   <!-- Handle -->
-  <path d="M32 20 Q38 20 38 26 Q38 32 32 32" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-  <!-- Saucer -->
-  <line x1="5" y1="34" x2="35" y2="34" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M32 19 Q39 19 39 26 Q39 33 32 33" stroke="url(#g)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
 </svg>
