@@ -8,14 +8,31 @@
 }
 
 body {
-  background: var(--bg);
-  background-image:
-    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(42, 82, 50, 0.35) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 30% at 80% 80%, rgba(26, 58, 32, 0.2) 0%, transparent 60%);
+  background-color: var(--bg);
+  background-image: url('/bg-fantasy.svg');
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--text-primary);
   font-family: var(--font-sans);
   line-height: 1.6;
   min-height: 100vh;
+}
+
+/* Darken the bg image enough that content stays legible */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 13, 8, 0.55);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
 }
 
 a {

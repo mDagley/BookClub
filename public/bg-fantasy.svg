@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Deep forest gradient sky -->
+    <radialGradient id="sky" cx="50%" cy="0%" r="80%">
+      <stop offset="0%" stop-color="#1a3d22" stop-opacity="1"/>
+      <stop offset="60%" stop-color="#0e1a10" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#070f08" stop-opacity="1"/>
+    </radialGradient>
+    <!-- Moon glow -->
+    <radialGradient id="moon-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c8963c" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#c8963c" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Tree silhouette gradient -->
+    <linearGradient id="tree-fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d1f0f" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#060d07" stop-opacity="1"/>
+    </linearGradient>
+    <!-- Mist gradient -->
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a3d22" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#1a3d22" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#1a3d22" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="blur-sm">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+    <filter id="blur-md">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <filter id="blur-lg">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="glow-gold">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background sky -->
+  <rect width="1440" height="900" fill="url(#sky)"/>
+
+  <!-- Moon halo -->
+  <ellipse cx="720" cy="120" rx="220" ry="180" fill="url(#moon-glow)" filter="url(#blur-lg)"/>
+
+  <!-- Moon -->
+  <circle cx="720" cy="80" r="38" fill="#e8c87a" opacity="0.22" filter="url(#blur-md)"/>
+  <circle cx="720" cy="80" r="26" fill="#f0d48a" opacity="0.18"/>
+
+  <!-- Stars (scattered) -->
+  <g opacity="0.5" fill="#c8e6c9">
+    <circle cx="120" cy="45" r="1" opacity="0.6"/>
+    <circle cx="180" cy="90" r="1.5" opacity="0.5"/>
+    <circle cx="260" cy="30" r="1" opacity="0.7"/>
+    <circle cx="340" cy="70" r="1" opacity="0.4"/>
+    <circle cx="420" cy="25" r="1.5" opacity="0.6"/>
+    <circle cx="510" cy="55" r="1" opacity="0.5"/>
+    <circle cx="580" cy="100" r="1" opacity="0.3"/>
+    <circle cx="640" cy="40" r="1" opacity="0.6"/>
+    <circle cx="800" cy="35" r="1.5" opacity="0.5"/>
+    <circle cx="870" cy="70" r="1" opacity="0.4"/>
+    <circle cx="940" cy="20" r="1" opacity="0.7"/>
+    <circle cx="1010" cy="55" r="1.5" opacity="0.5"/>
+    <circle cx="1080" cy="85" r="1" opacity="0.4"/>
+    <circle cx="1150" cy="38" r="1" opacity="0.6"/>
+    <circle cx="1230" cy="65" r="1.5" opacity="0.5"/>
+    <circle cx="1310" cy="28" r="1" opacity="0.6"/>
+    <circle cx="1390" cy="72" r="1" opacity="0.4"/>
+    <circle cx="70" cy="130" r="1" opacity="0.3"/>
+    <circle cx="450" cy="140" r="1" opacity="0.3"/>
+    <circle cx="990" cy="125" r="1" opacity="0.35"/>
+    <circle cx="1350" cy="110" r="1" opacity="0.3"/>
+  </g>
+
+  <!-- Far background trees (very dark, blurred) -->
+  <g fill="#0a1a0b" filter="url(#blur-md)" opacity="0.9">
+    <!-- Left cluster far -->
+    <polygon points="0,600 40,480 80,600"/>
+    <polygon points="30,600 80,440 130,600"/>
+    <polygon points="90,600 140,460 190,600"/>
+    <polygon points="150,600 200,420 250,600"/>
+    <polygon points="220,600 270,445 320,600"/>
+    <!-- Right cluster far -->
+    <polygon points="1120,600 1170,425 1220,600"/>
+    <polygon points="1180,600 1240,440 1300,600"/>
+    <polygon points="1250,600 1310,455 1370,600"/>
+    <polygon points="1330,600 1385,420 1440,600"/>
+    <polygon points="1380,600 1440,435 1440,600"/>
+  </g>
+
+  <!-- Mid trees (slightly lighter) -->
+  <g fill="#0c1e0d" opacity="0.95">
+    <!-- Left mid -->
+    <polygon points="-20,780 50,580 120,780"/>
+    <polygon points="60,780 140,560 220,780"/>
+    <polygon points="160,780 250,540 340,780"/>
+    <polygon points="280,780 360,570 440,780"/>
+    <!-- Right mid -->
+    <polygon points="1000,780 1090,545 1180,780"/>
+    <polygon points="1140,780 1220,555 1300,780"/>
+    <polygon points="1260,780 1345,535 1430,780"/>
+    <polygon points="1360,780 1440,550 1440,780"/>
+    <rect x="1360" y="700" width="80" height="80" fill="#0c1e0d"/>
+  </g>
+
+  <!-- Foreground trees left (darkest, tallest) -->
+  <g fill="#071008" opacity="1">
+    <polygon points="-30,900 60,580 150,900"/>
+    <polygon points="80,900 185,520 290,900"/>
+    <polygon points="210,900 320,545 430,900"/>
+    <!-- Tree trunks -->
+    <rect x="55" y="700" width="12" height="200" fill="#060e07"/>
+    <rect x="178" y="680" width="14" height="220" fill="#060e07"/>
+    <rect x="313" y="700" width="12" height="200" fill="#060e07"/>
+  </g>
+
+  <!-- Foreground trees right -->
+  <g fill="#071008" opacity="1">
+    <polygon points="1010,900 1120,545 1230,900"/>
+    <polygon points="1160,900 1260,520 1360,900"/>
+    <polygon points="1290,900 1380,555 1470,900"/>
+    <!-- Trunks -->
+    <rect x="1115" y="690" width="12" height="210" fill="#060e07"/>
+    <rect x="1254" y="680" width="14" height="220" fill="#060e07"/>
+    <rect x="1373" y="700" width="12" height="200" fill="#060e07"/>
+  </g>
+
+  <!-- Ground mist bands -->
+  <ellipse cx="720" cy="820" rx="800" ry="80" fill="#1a3d22" opacity="0.08" filter="url(#blur-lg)"/>
+  <ellipse cx="300" cy="860" rx="400" ry="50" fill="#1a3d22" opacity="0.06" filter="url(#blur-md)"/>
+  <ellipse cx="1140" cy="850" rx="380" ry="45" fill="#1a3d22" opacity="0.06" filter="url(#blur-md)"/>
+
+  <!-- Fireflies / magic particles -->
+  <g fill="#c8e6c9" filter="url(#blur-sm)">
+    <circle cx="180" cy="640" r="2" opacity="0.4"/>
+    <circle cx="260" cy="700" r="1.5" opacity="0.3"/>
+    <circle cx="350" cy="620" r="2" opacity="0.35"/>
+    <circle cx="480" cy="680" r="1.5" opacity="0.25"/>
+    <circle cx="1050" cy="630" r="2" opacity="0.4"/>
+    <circle cx="1160" cy="690" r="1.5" opacity="0.3"/>
+    <circle cx="1270" cy="650" r="2" opacity="0.35"/>
+    <circle cx="1360" cy="720" r="1.5" opacity="0.28"/>
+  </g>
+  <!-- Gold sparkles near moon -->
+  <g fill="#c8963c" filter="url(#blur-sm)">
+    <circle cx="640" cy="150" r="1.5" opacity="0.3"/>
+    <circle cx="800" cy="140" r="2" opacity="0.25"/>
+    <circle cx="680" cy="200" r="1" opacity="0.35"/>
+    <circle cx="760" cy="190" r="1.5" opacity="0.28"/>
+  </g>
+
+  <!-- Subtle vignette overlay - darkens edges -->
+  <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+    <stop offset="0%" stop-color="transparent"/>
+    <stop offset="100%" stop-color="#040a05" stop-opacity="0.6"/>
+  </radialGradient>
+  <rect width="1440" height="900" fill="url(#vignette)"/>
+</svg>
