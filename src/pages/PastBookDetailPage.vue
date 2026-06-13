@@ -73,39 +73,26 @@
         </ul>
       </section>
 
-      <!-- Characters -->
-      <section v-if="book.characters?.length" class="card">
-        <p class="section-title">Characters</p>
-        <div class="character-grid">
-          <div v-for="char in sortedCharacters" :key="char.name" class="character-card">
-            <p class="char-name">{{ char.name }}</p>
-            <p class="char-desc">{{ char.description }}</p>
-            <p class="char-chapter">Introduced in Chapter {{ char.firstAppearanceChapter }}</p>
-          </div>
-        </div>
-      </section>
+      <!-- Spoiler filter (only shown when there's character or timeline data) -->
+      <SpoilerFilter
+        v-if="book.characters?.length || book.timeline?.length"
+        :current-chapter="currentChapter"
+        @update="currentChapter = $event"
+      />
 
-      <!-- Timeline -->
-      <section v-if="book.timeline?.length" class="card">
-        <p class="section-title">Timeline</p>
-        <div class="timeline">
-          <div
-            v-for="(group, gi) in groupedTimeline"
-            :key="gi"
-          >
-            <div class="chapter-divider">Chapter {{ group.chapter }}</div>
-            <div v-for="event in group.events" :key="event.label" class="timeline-item">
-              <div class="timeline-marker">
-                <span class="timeline-dot" />
-              </div>
-              <div class="timeline-content">
-                <p class="timeline-label">{{ event.label }}</p>
-                <p v-if="event.note" class="timeline-note">{{ event.note }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <CharacterGrid
+        v-if="book.characters?.length"
+        :characters="book.characters"
+        :current-chapter="currentChapter"
+        :is-visible="isVisible"
+      />
+
+      <TimelineSection
+        v-if="book.timeline?.length"
+        :timeline="book.timeline"
+        :current-chapter="currentChapter"
+        :is-visible="isVisible"
+      />
     </template>
   </div>
 </template>
@@ -114,11 +101,17 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePastBooks } from '../composables/usePastBooks.js'
+import { useSpoilerFilter } from '../composables/useSpoilerFilter.js'
+import SpoilerFilter from '../components/book/SpoilerFilter.vue'
+import CharacterGrid from '../components/book/CharacterGrid.vue'
+import TimelineSection from '../components/book/TimelineSection.vue'
 
 const route = useRoute()
 const { pastBooks, loading } = usePastBooks()
 
 const book = computed(() => pastBooks.value.find(b => b.id === route.params.id) ?? null)
+
+const { currentChapter, isVisible } = useSpoilerFilter(`bookclub_spoiler_past_${route.params.id}`)
 
 function formatDate(dateRead) {
   if (!dateRead) return ''
@@ -126,30 +119,6 @@ function formatDate(dateRead) {
   if (isNaN(d.getTime())) return ''
   return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 }
-
-const sortedCharacters = computed(() => {
-  if (!book.value?.characters) return []
-  return [...book.value.characters].sort((a, b) => {
-    if (a.isMajor && !b.isMajor) return -1
-    if (!a.isMajor && b.isMajor) return 1
-    return (a.firstAppearanceChapter ?? 0) - (b.firstAppearanceChapter ?? 0)
-  })
-})
-
-const groupedTimeline = computed(() => {
-  if (!book.value?.timeline) return []
-  const sorted = [...book.value.timeline].sort((a, b) => (a.chapter ?? 0) - (b.chapter ?? 0))
-  const groups = []
-  let lastChapter = null
-  for (const event of sorted) {
-    if (event.chapter !== lastChapter) {
-      groups.push({ chapter: event.chapter, events: [] })
-      lastChapter = event.chapter
-    }
-    groups[groups.length - 1].events.push(event)
-  }
-  return groups
-})
 </script>
 
 <style scoped>
@@ -287,52 +256,6 @@ const groupedTimeline = computed(() => {
 .material-link { font-size: 0.9rem; color: var(--text-primary); text-decoration: none; }
 .material-link:hover { color: var(--gold); text-decoration: underline; }
 
-.character-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.75rem;
-}
-.character-card {
-  background: var(--surface-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-.char-name { font-family: var(--font-serif); font-size: 0.95rem; color: var(--gold); }
-.char-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
-.char-chapter { font-family: var(--font-sans); font-size: 0.7rem; color: var(--text-dim); margin-top: auto; }
-
-.timeline { display: flex; flex-direction: column; position: relative; }
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 6px; top: 12px; bottom: 12px;
-  width: 1px;
-  background: var(--border);
-}
-.chapter-divider {
-  font-family: var(--font-sans);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-dim);
-  padding: 0.5rem 0 0.25rem 1.5rem;
-}
-.timeline-item { display: flex; gap: 1rem; padding-bottom: 1.25rem; position: relative; }
-.timeline-marker { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 3px; }
-.timeline-dot {
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  background: var(--border-hover);
-  border: 2px solid var(--surface);
-  z-index: 1;
-}
-.timeline-content { flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
-.timeline-label { font-size: 0.9rem; color: var(--text-primary); line-height: 1.4; }
-.timeline-note { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
 
 @media (max-width: 640px) {
   .book-header { flex-direction: column; }
