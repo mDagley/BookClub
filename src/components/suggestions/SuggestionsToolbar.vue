@@ -1,5 +1,19 @@
 <template>
   <div class="toolbar">
+    <!-- 0. "I am" selector -->
+    <div class="toolbar-group iam-group">
+      <select
+        class="toolbar-select iam-select"
+        :class="{ 'iam-active': selectedName }"
+        :value="selectedName"
+        aria-label="Identify yourself"
+        @change="emit('update:selectedName', $event.target.value)"
+      >
+        <option value="">I am…</option>
+        <option v-for="name in familyMembers" :key="name" :value="name">{{ name }}</option>
+      </select>
+    </div>
+
     <!-- 1. Filter chips -->
     <div class="toolbar-group filter-chips">
       <button
@@ -12,6 +26,12 @@
         :class="{ active: filterMode === 'unread' }"
         @click="emit('update:filterMode', 'unread')"
       >Not read by anyone</button>
+      <button
+        v-if="selectedName"
+        class="chip chip-toggle"
+        :class="{ active: filterMode === 'myNotRead' }"
+        @click="emit('update:filterMode', 'myNotRead')"
+      >I haven't read</button>
     </div>
 
     <!-- 3. Genre multi-select -->
@@ -62,6 +82,7 @@
       >
         <option value="votes">Most votes</option>
         <option value="newest">Newest</option>
+        <option value="az">A–Z</option>
       </select>
     </div>
 
@@ -105,6 +126,8 @@ const props = defineProps({
   sortMode: { type: String, default: 'votes' },
   view: { type: String, default: 'grid' },
   total: { type: Number, default: 0 },
+  selectedName: { type: String, default: '' },
+  familyMembers: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits([
@@ -112,6 +135,7 @@ const emit = defineEmits([
   'update:selectedGenres',
   'update:sortMode',
   'update:view',
+  'update:selectedName',
   'open-modal',
 ])
 
@@ -176,6 +200,16 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 .toolbar-select:focus {
   border-color: var(--border-hover);
   outline: none;
+}
+
+.iam-select {
+  font-style: italic;
+}
+
+.iam-select.iam-active {
+  font-style: normal;
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 /* Filter chip toggles */

@@ -6,10 +6,13 @@
       :sort-mode="sortMode"
       :view="view"
       :total="filteredSuggestions.length"
+      :selected-name="selectedName"
+      :family-members="familyMembers"
       @update:filter-mode="filterMode = $event"
       @update:selected-genres="selectedGenres = $event"
       @update:sort-mode="sortMode = $event"
       @update:view="view = $event"
+      @update:selected-name="handleNameChange"
       @open-modal="showModal = true"
     />
 
@@ -55,6 +58,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useSuggestions } from '../composables/useSuggestions.js'
+import { useConfig } from '../composables/useConfig.js'
 import { useAuthStore } from '../stores/auth.js'
 import SuggestionsToolbar from '../components/suggestions/SuggestionsToolbar.vue'
 import CoverGrid from '../components/suggestions/CoverGrid.vue'
@@ -63,6 +67,7 @@ import SuggestModal from '../components/suggestions/SuggestModal.vue'
 import CommentPanel from '../components/suggestions/CommentPanel.vue'
 
 const { suggestions, loading, addSuggestion, voteOnSuggestion, toggleAlreadyRead } = useSuggestions()
+const { familyMembers } = useConfig()
 const authStore = useAuthStore()
 
 const uid = computed(() => authStore.user?.uid ?? null)
@@ -79,6 +84,16 @@ const showModal = ref(false)
 const commentSuggestion = ref(null)
 const filterMode = ref('all')
 
+const IAM_KEY = 'bookclub_iam'
+const selectedName = ref(localStorage.getItem(IAM_KEY) ?? '')
+
+function handleNameChange(name) {
+  selectedName.value = name
+  if (name) localStorage.setItem(IAM_KEY, name)
+  else localStorage.removeItem(IAM_KEY)
+  if (!name && filterMode.value === 'myNotRead') filterMode.value = 'all'
+}
+
 function openComments(suggestion) {
   commentSuggestion.value = suggestion
 }
@@ -94,6 +109,8 @@ const filteredSuggestions = computed(() => {
 
   if (filterMode.value === 'unread') {
     list = list.filter(s => !s.alreadyRead || s.alreadyRead.length === 0)
+  } else if (filterMode.value === 'myNotRead' && selectedName.value) {
+    list = list.filter(s => !(s.alreadyRead || []).includes(selectedName.value))
   }
 
   if (sortMode.value === 'votes') {
@@ -109,6 +126,8 @@ const filteredSuggestions = computed(() => {
       }
       return toMs(b.createdAt) - toMs(a.createdAt)
     })
+  } else if (sortMode.value === 'az') {
+    list.sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
   }
 
   return list
