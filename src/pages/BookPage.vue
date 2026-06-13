@@ -55,7 +55,7 @@
       </section>
 
       <!-- Sticky spoiler filter -->
-      <SpoilerFilter :current-chapter="currentChapter" @update="currentChapter = $event" />
+      <SpoilerFilter :current-chapter="currentChapter" :hide-when-unset="true" @update="currentChapter = $event" />
 
       <!-- Collapsible sections -->
       <DiscordThreads
@@ -95,7 +95,7 @@ import TimelineSection from '../components/book/TimelineSection.vue'
 import DiscordThreads from '../components/book/DiscordThreads.vue'
 
 const { currentBook, loading: configLoading } = useConfig()
-const { currentChapter, isVisible } = useSpoilerFilter()
+const { currentChapter, isVisible } = useSpoilerFilter('bookclub_spoiler_chapter', { hideWhenUnset: true })
 </script>
 
 <style scoped>

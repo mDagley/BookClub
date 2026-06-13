@@ -15,6 +15,7 @@
     <span v-if="currentChapter > 0" class="filter-status">
       Showing content through Chapter {{ currentChapter }}
     </span>
+    <span v-else-if="hideWhenUnset" class="filter-status">Set your chapter to reveal content</span>
     <span v-else class="filter-status">Showing all content</span>
     <button
       v-if="currentChapter > 0"
@@ -27,6 +28,7 @@
 <script setup>
 defineProps({
   currentChapter: { type: Number, default: 0 },
+  hideWhenUnset: { type: Boolean, default: false },
 })
 defineEmits(['update'])
 </script>
