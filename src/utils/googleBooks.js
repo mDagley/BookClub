@@ -134,6 +134,46 @@ async function fetchFromOpenLibrary(title, author) {
   }
 }
 
+// ── Search (for autocomplete) ─────────────────────────────────────────────────
+
+export async function searchBooks(query) {
+  if (!query || query.length < 2) return []
+  try {
+    const q = encodeURIComponent(query)
+    const key = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY
+    const keyParam = key ? `&key=${key}` : ''
+    const res = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=6${keyParam}`
+    )
+    if (!res.ok) return []
+    const data = await res.json()
+    if (!data.items?.length) return []
+    return data.items
+      .map(item => {
+        const info = item.volumeInfo || {}
+        const rawDesc = info.description || ''
+        const firstPara = rawDesc.split(/\n\n|\r\n\r\n/)[0].trim()
+        const synopsis = firstPara.length > 220 ? firstPara.slice(0, 217) + '…' : firstPara || null
+        const thumbnail = info.imageLinks?.thumbnail
+        const coverUrl = thumbnail
+          ? thumbnail.replace('http://', 'https://').replace('zoom=1', 'zoom=2')
+          : null
+        return {
+          title: info.title || '',
+          author: (info.authors || []).join(', '),
+          coverUrl,
+          synopsis,
+          fullDescription: rawDesc || null,
+          genres: mapCategoriesToGenres(info.categories, rawDesc),
+          publishedDate: info.publishedDate || null,
+        }
+      })
+      .filter(r => r.title)
+  } catch {
+    return []
+  }
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 // Tries Google Books first, then Open Library as fallback.

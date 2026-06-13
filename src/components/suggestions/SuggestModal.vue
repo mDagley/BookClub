@@ -15,18 +15,45 @@
       </div>
 
       <form class="suggest-form" @submit.prevent="handleSubmit">
-        <!-- Title -->
+        <!-- Title + autocomplete -->
         <div class="field">
           <label class="field-label" for="s-title">Title <span class="required">*</span></label>
-          <input
-            id="s-title"
-            v-model="form.title"
-            type="text"
-            class="field-input"
-            placeholder="Book title"
-            required
-            :disabled="submitting"
-          />
+          <div class="input-wrap">
+            <input
+              id="s-title"
+              v-model="form.title"
+              type="text"
+              class="field-input"
+              placeholder="Book title"
+              required
+              :disabled="submitting"
+              autocomplete="off"
+              @input="onTitleInput(form.title)"
+              @keydown="e => onSearchKeydown(e, selectResult)"
+              @blur="closeDropdown"
+            />
+            <span v-if="searching" class="fetch-hint">Searching…</span>
+            <div v-if="showDropdown" class="search-dropdown" role="listbox">
+              <button
+                v-for="(result, i) in searchResults"
+                :key="i"
+                type="button"
+                class="search-result"
+                :class="{ highlighted: i === highlightedIndex }"
+                role="option"
+                @mousedown.prevent="selectResult(result)"
+                @mouseover="highlightedIndex = i"
+              >
+                <img v-if="result.coverUrl" :src="result.coverUrl" class="result-cover" alt="" />
+                <div v-else class="result-cover-empty"></div>
+                <div class="result-info">
+                  <span class="result-title">{{ result.title }}</span>
+                  <span class="result-author">{{ result.author }}</span>
+                </div>
+                <span v-if="result.publishedDate" class="result-year">{{ result.publishedDate.slice(0, 4) }}</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Author -->
@@ -153,6 +180,7 @@ import { db } from '../../firebase.js'
 import { doc, updateDoc } from 'firebase/firestore'
 import { GENRE_ICONS, GENRE_LIST } from '../../utils/genres.js'
 import { fetchBookMetadata, fetchCoverUrl } from '../../utils/googleBooks.js'
+import { useBookSearch } from '../../composables/useBookSearch.js'
 import CoverUpload from '../shared/CoverUpload.vue'
 import { useAuthStore } from '../../stores/auth.js'
 import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
@@ -188,6 +216,18 @@ const form = reactive({
 const submitting = ref(false)
 const errorMsg = ref('')
 const fetchingMeta = ref(false)
+
+const { searchResults, showDropdown, searching, highlightedIndex, onTitleInput, closeDropdown, onSearchKeydown } = useBookSearch()
+
+function selectResult(result) {
+  form.title = result.title
+  form.author = result.author
+  if (result.coverUrl) form.coverUrl = result.coverUrl
+  if (result.fullDescription) form.description = result.fullDescription
+  if (result.genres.length) form.genres = result.genres
+  if (result.publishedDate) form.publishedDate = result.publishedDate
+  closeDropdown()
+}
 
 async function autofillFromApi() {
   if (!form.title || !form.author) return
@@ -517,6 +557,97 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   font-size: 0.75rem;
   color: var(--text-dim);
   font-style: italic;
+}
+
+/* Autocomplete */
+.input-wrap {
+  position: relative;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--surface);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.search-result:last-child { border-bottom: none; }
+
+.search-result:hover,
+.search-result.highlighted {
+  background: var(--surface-subtle);
+}
+
+.result-cover {
+  width: 28px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 2px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.result-cover-empty {
+  width: 28px;
+  height: 42px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.result-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.result-title {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-author {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-year {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .form-error {

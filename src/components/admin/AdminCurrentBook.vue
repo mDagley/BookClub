@@ -20,13 +20,39 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Title</label>
-          <input
-            v-model="form.title"
-            type="text"
-            class="form-input"
-            placeholder="Book title"
-            @blur="fetchBookData"
-          />
+          <div class="input-autocomplete">
+            <input
+              v-model="form.title"
+              type="text"
+              class="form-input"
+              placeholder="Book title"
+              autocomplete="off"
+              @input="onTitleInput(form.title)"
+              @keydown="e => onSearchKeydown(e, selectResult)"
+              @blur="closeDropdown"
+            />
+            <span v-if="searching" class="autocomplete-hint">Searching…</span>
+            <div v-if="showDropdown" class="search-dropdown" role="listbox">
+              <button
+                v-for="(result, i) in searchResults"
+                :key="i"
+                type="button"
+                class="search-result"
+                :class="{ highlighted: i === highlightedIndex }"
+                role="option"
+                @mousedown.prevent="selectResult(result)"
+                @mouseover="highlightedIndex = i"
+              >
+                <img v-if="result.coverUrl" :src="result.coverUrl" class="result-cover" alt="" />
+                <div v-else class="result-cover-empty"></div>
+                <div class="result-info">
+                  <span class="result-title">{{ result.title }}</span>
+                  <span class="result-author">{{ result.author }}</span>
+                </div>
+                <span v-if="result.publishedDate" class="result-year">{{ result.publishedDate.slice(0, 4) }}</span>
+              </button>
+            </div>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Author</label>
@@ -314,6 +340,7 @@ import { db } from '../../firebase.js'
 import { useConfig } from '../../composables/useConfig.js'
 import { usePastBooks } from '../../composables/usePastBooks.js'
 import { fetchBookMetadata } from '../../utils/googleBooks.js'
+import { useBookSearch } from '../../composables/useBookSearch.js'
 import { GENRE_LIST } from '../../utils/genres.js'
 import CoverUpload from '../shared/CoverUpload.vue'
 
@@ -340,6 +367,18 @@ const coverPreview = ref('')
 const coverFetching = ref(false)
 
 const dragState = ref({ list: null, fromIndex: null, overIndex: null })
+
+const { searchResults, showDropdown, searching, highlightedIndex, onTitleInput, closeDropdown, onSearchKeydown } = useBookSearch()
+
+function selectResult(result) {
+  form.value.title = result.title
+  form.value.author = result.author
+  if (result.coverUrl) coverPreview.value = result.coverUrl
+  if (result.synopsis) form.value.synopsis = result.synopsis
+  if (result.fullDescription) form.value.description = result.fullDescription
+  if (result.genres.length) form.value.genres = result.genres
+  closeDropdown()
+}
 
 function emptyForm() {
   return {
@@ -1016,5 +1055,103 @@ async function archiveBook() {
     width: 100%;
     text-align: center;
   }
+}
+
+/* Autocomplete */
+.input-autocomplete {
+  position: relative;
+}
+
+.autocomplete-hint {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--surface);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.search-result:last-child { border-bottom: none; }
+
+.search-result:hover,
+.search-result.highlighted {
+  background: var(--surface-subtle);
+}
+
+.result-cover {
+  width: 28px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 2px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.result-cover-empty {
+  width: 28px;
+  height: 42px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.result-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.result-title {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-author {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-year {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 </style>
