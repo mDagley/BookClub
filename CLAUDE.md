@@ -135,6 +135,11 @@ Shows top 3 suggestions with: cover thumbnail, title, author, description (2-lin
 | `FIREBASE_SERVICE_ACCOUNT` | Base64-encoded service account JSON (server only) |
 | `DISCORD_CLIENT_ID` | Discord OAuth (server only) |
 | `DISCORD_CLIENT_SECRET` | Discord OAuth (server only) |
+| `DISCORD_SUGGESTIONS_WEBHOOK_URL` | Discord webhook for new suggestion notifications (server only) |
+| `DISCORD_BOT_TOKEN` | Discord bot token for channel picker (server only) |
+| `DISCORD_GUILD_ID` | Discord server (guild) ID for channel picker (server only) |
+| `DISCORD_FINISHED_CATEGORY_ID` | Discord category ID for finished book channels — shown in past books picker (server only) |
+| `DISCORD_CURRENT_CATEGORY_ID` | Discord category ID for current/upcoming book channels (server only) |
 
 ## CSS / Styling Notes
 - `src/styles/base.css` — `:root { font-size: 17px }` for readability; all sizing is rem-based

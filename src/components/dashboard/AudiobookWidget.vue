@@ -1,5 +1,5 @@
 <template>
-  <div class="audiobook-widget card">
+  <div class="audiobook-widget">
     <p class="section-title">Audiobook Server</p>
 
     <p class="audiobook-desc">

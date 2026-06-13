@@ -21,8 +21,11 @@
         @open-suggest="showSuggestModal = true"
       />
       <PastBooksWidget :past-books="recentPastBooks" />
-      <AudiobookWidget :audiobook-server="audiobookServer" />
-      <DiscordWidget :discord-invite-url="discordInviteUrl" />
+      <div class="card">
+        <AudiobookWidget :audiobook-server="audiobookServer" />
+        <br />
+        <DiscordWidget :discord-invite-url="discordInviteUrl" />
+      </div>
     </div>
 
     <!-- Suggest modal (opens from TopSuggestions) -->
