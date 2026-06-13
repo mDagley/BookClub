@@ -1,12 +1,17 @@
-import { ref, watch } from 'vue'
+import { computed, ref, unref, watch } from 'vue'
 
 export function useSpoilerFilter(key = 'bookclub_spoiler_chapter', { hideWhenUnset = false } = {}) {
-  const stored = localStorage.getItem(key)
-  const parsed = parseInt(stored, 10)
-  const currentChapter = ref(Number.isFinite(parsed) ? parsed : 0)
+  const storageKey = computed(() => String(unref(key) ?? 'bookclub_spoiler_chapter'))
+  const currentChapter = ref(0)
 
-  watch(currentChapter, (val) => {
-    localStorage.setItem(key, String(val))
+  watch(storageKey, (nextKey) => {
+    const stored = localStorage.getItem(nextKey)
+    const parsed = parseInt(stored, 10)
+    currentChapter.value = Number.isFinite(parsed) ? parsed : 0
+  }, { immediate: true })
+
+  watch([currentChapter, storageKey], ([val, nextKey]) => {
+    localStorage.setItem(nextKey, String(val))
   })
 
   function isVisible(chapter) {
