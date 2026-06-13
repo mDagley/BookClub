@@ -115,6 +115,107 @@
                       </label>
                     </div>
                   </div>
+                  <!-- Supplemental Materials -->
+                  <div class="form-group">
+                    <label class="form-label">Supplemental Materials</label>
+                    <div class="list-editor">
+                      <div
+                        v-for="(material, index) in editForm.materials"
+                        :key="material._key"
+                        class="list-row"
+                        draggable="true"
+                        @dragstart="onEditDragStart($event, 'materials', index)"
+                        @dragover.prevent="onEditDragOver($event, 'materials', index)"
+                        @drop.prevent="onEditDrop($event, 'materials', index)"
+                        @dragend="onEditDragEnd"
+                        :class="{ 'drag-over': editDragState.list === 'materials' && editDragState.overIndex === index }"
+                      >
+                        <span class="drag-handle">⠿</span>
+                        <div class="material-fields">
+                          <input v-model="material.title" type="text" class="form-input" placeholder="Title" />
+                          <input v-model="material.url" type="url" class="form-input" placeholder="https://…" />
+                          <select v-model="material.type" class="form-select">
+                            <option>Article</option>
+                            <option>Video</option>
+                            <option>Podcast</option>
+                            <option>Map</option>
+                            <option>Other</option>
+                          </select>
+                        </div>
+                        <button type="button" class="btn-icon btn-delete" @click="removeEditItem('materials', index)">✕</button>
+                      </div>
+                      <button type="button" class="btn btn-add" @click="addEditMaterial">+ Add Material</button>
+                    </div>
+                  </div>
+
+                  <!-- Characters -->
+                  <div class="form-group">
+                    <label class="form-label">Characters</label>
+                    <div class="cards-editor">
+                      <div v-for="(char, index) in editForm.characters" :key="char._key" class="character-card">
+                        <div v-if="char._editing" class="character-form">
+                          <div class="char-form-row">
+                            <div class="form-group">
+                              <label class="form-label">Name</label>
+                              <input v-model="char.name" type="text" class="form-input" placeholder="Character name" />
+                            </div>
+                            <div class="form-group">
+                              <label class="form-label">First Ch.</label>
+                              <input v-model.number="char.firstAppearance" type="number" class="form-input" placeholder="#" min="1" />
+                            </div>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea v-model="char.description" class="form-textarea" rows="2" placeholder="Character description…"></textarea>
+                          </div>
+                          <label class="checkbox-label">
+                            <input type="checkbox" v-model="char.major" /> Major character
+                          </label>
+                          <button type="button" class="btn btn-primary btn-sm" @click="char._editing = false">Done</button>
+                        </div>
+                        <div v-else class="character-summary">
+                          <div class="char-info">
+                            <strong class="char-name">{{ char.name || '(unnamed)' }}</strong>
+                            <span v-if="char.major" class="major-badge">Major</span>
+                            <span class="char-desc">{{ char.description?.slice(0, 80) }}{{ char.description?.length > 80 ? '…' : '' }}</span>
+                          </div>
+                          <div class="card-actions">
+                            <button type="button" class="btn btn-secondary btn-sm" @click="char._editing = true">Edit</button>
+                            <button type="button" class="btn-icon btn-delete" @click="removeEditItem('characters', index)">✕</button>
+                          </div>
+                        </div>
+                      </div>
+                      <button type="button" class="btn btn-add" @click="addEditCharacter">+ Add Character</button>
+                    </div>
+                  </div>
+
+                  <!-- Timeline -->
+                  <div class="form-group">
+                    <label class="form-label">Timeline <span class="label-note">Drag to reorder</span></label>
+                    <div class="list-editor">
+                      <div
+                        v-for="(event, index) in editForm.timeline"
+                        :key="event._key"
+                        class="list-row"
+                        draggable="true"
+                        @dragstart="onEditDragStart($event, 'timeline', index)"
+                        @dragover.prevent="onEditDragOver($event, 'timeline', index)"
+                        @drop.prevent="onEditDrop($event, 'timeline', index)"
+                        @dragend="onEditDragEnd"
+                        :class="{ 'drag-over': editDragState.list === 'timeline' && editDragState.overIndex === index }"
+                      >
+                        <span class="drag-handle">⠿</span>
+                        <div class="timeline-fields">
+                          <input v-model.number="event.chapter" type="number" class="form-input form-input--narrow" placeholder="Ch." min="1" />
+                          <input v-model="event.label" type="text" class="form-input" placeholder="Event label" />
+                          <input v-model="event.note" type="text" class="form-input" placeholder="Note (optional)" />
+                        </div>
+                        <button type="button" class="btn-icon btn-delete" @click="removeEditItem('timeline', index)">✕</button>
+                      </div>
+                      <button type="button" class="btn btn-add" @click="addEditTimelineEvent">+ Add Event</button>
+                    </div>
+                  </div>
+
                   <div class="edit-actions">
                     <button class="btn btn-secondary btn-sm" @click="cancelEdit">Cancel</button>
                     <button class="btn btn-primary btn-sm" @click="saveEdit(book.id)" :disabled="editSaving">
@@ -213,11 +314,15 @@ import CoverUpload from '../shared/CoverUpload.vue'
 
 const { pastBooks, loading, addPastBook, updatePastBook, deletePastBook } = usePastBooks()
 
+let _keyCounter = 0
+const nextKey = () => ++_keyCounter
+
 const editingId = ref(null)
 const editForm = ref({})
 const editSaving = ref(false)
 const editMessage = ref('')
 const editMessageType = ref('success')
+const editDragState = ref({ list: null, fromIndex: null, overIndex: null })
 
 const addSaving = ref(false)
 const addMessage = ref('')
@@ -260,6 +365,16 @@ function startEdit(book) {
     synopsis: book.synopsis || '',
     fullDescription: book.fullDescription || '',
     genres: Array.isArray(book.genres) ? [...book.genres] : [],
+    materials: (book.supplementalMaterials || []).map(m => ({ ...m, _key: nextKey() })),
+    characters: (book.characters || []).map(c => ({
+      name: c.name || '',
+      description: c.description || '',
+      firstAppearance: c.firstAppearanceChapter ?? null,
+      major: c.isMajor ?? false,
+      _key: nextKey(),
+      _editing: false,
+    })),
+    timeline: (book.timeline || []).map(e => ({ ...e, _key: nextKey() })),
   }
 }
 
@@ -283,12 +398,27 @@ function showAddMessage(msg, type = 'success') {
 async function saveEdit(id) {
   editSaving.value = true
   try {
-    const dateReadTs = editForm.value.dateRead
-      ? Timestamp.fromDate(new Date(editForm.value.dateRead))
-      : null
+    const f = editForm.value
+    const dateReadTs = f.dateRead ? Timestamp.fromDate(new Date(f.dateRead)) : null
     await updatePastBook(id, {
-      ...editForm.value,
+      title: f.title,
+      author: f.author,
       dateRead: dateReadTs,
+      coverUrl: f.coverUrl,
+      discordThreadUrl: f.discordThreadUrl,
+      synopsis: f.synopsis,
+      fullDescription: f.fullDescription,
+      genres: f.genres,
+      supplementalMaterials: f.materials.map(({ _key, ...rest }) => ({
+        ...rest,
+        type: rest.type?.toLowerCase() || 'other',
+      })),
+      characters: f.characters.map(({ _key, _editing, firstAppearance, major, ...rest }) => ({
+        ...rest,
+        firstAppearanceChapter: firstAppearance ?? null,
+        isMajor: major ?? false,
+      })),
+      timeline: f.timeline.map(({ _key, ...rest }) => rest),
     })
     showEditMessage('Saved!')
     setTimeout(() => { cancelEdit() }, 1000)
@@ -298,6 +428,39 @@ async function saveEdit(id) {
   } finally {
     editSaving.value = false
   }
+}
+
+function addEditCharacter() {
+  editForm.value.characters.push({ name: '', description: '', firstAppearance: null, major: false, _key: nextKey(), _editing: true })
+}
+function addEditTimelineEvent() {
+  editForm.value.timeline.push({ label: '', note: '', chapter: null, _key: nextKey() })
+}
+function addEditMaterial() {
+  editForm.value.materials.push({ title: '', url: '', type: 'Article', _key: nextKey() })
+}
+function removeEditItem(list, index) {
+  editForm.value[list].splice(index, 1)
+}
+
+function onEditDragStart(event, list, index) {
+  editDragState.value = { list, fromIndex: index, overIndex: index }
+  event.dataTransfer.effectAllowed = 'move'
+}
+function onEditDragOver(event, list, index) {
+  if (editDragState.value.list !== list) return
+  editDragState.value.overIndex = index
+}
+function onEditDrop(event, list, toIndex) {
+  const { fromIndex } = editDragState.value
+  if (fromIndex === toIndex || fromIndex === null) return
+  const arr = editForm.value[list]
+  const [moved] = arr.splice(fromIndex, 1)
+  arr.splice(toIndex, 0, moved)
+  editDragState.value = { list: null, fromIndex: null, overIndex: null }
+}
+function onEditDragEnd() {
+  editDragState.value = { list: null, fromIndex: null, overIndex: null }
 }
 
 async function deleteBook(book) {
@@ -665,5 +828,183 @@ async function submitAdd() {
   .form-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Rich editors (materials, characters, timeline) ─────────────────────── */
+
+.list-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s;
+}
+
+.list-row.drag-over {
+  border-color: var(--gold);
+}
+
+.drag-handle {
+  color: var(--text-muted);
+  cursor: grab;
+  font-size: 1rem;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.material-fields,
+.timeline-fields {
+  display: flex;
+  flex: 1;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.material-fields .form-input,
+.timeline-fields .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-input--narrow {
+  flex: 0 0 70px !important;
+}
+
+.form-select {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  padding: 0.45rem 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-add {
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  align-self: flex-start;
+}
+
+.btn-add:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.btn-delete:hover { color: #f28b82; }
+
+/* Characters */
+.cards-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.character-card {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+}
+
+.character-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.char-form-row {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 0.5rem;
+}
+
+.character-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.char-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.char-name {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  color: var(--gold);
+}
+
+.major-badge {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: 10px;
+  padding: 0.1rem 0.4rem;
+}
+
+.char-desc {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
 }
 </style>
