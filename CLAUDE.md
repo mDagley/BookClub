@@ -11,13 +11,20 @@ Family book club web app for tracking current/past books, managing suggestions, 
 **Deployment:** Docker multi-stage build on Easy Panel; all `VITE_*` vars passed as build args  
 **Cover storage:** Server-side via `POST /api/upload` (multer), saved to `/app/public/covers/`, served at `/covers/`. Easy Panel mounts a persistent volume at `/app/public/covers/`.
 
-## Worktree Workflow
+## Git Workflow
 
-Active development happens in a git worktree at:
-- **Worktree:** `C:\Users\panda\Claude\BookClub\.claude\worktrees\implement\` (branch: `worktree-implement`)
+Branch off `master` for all new work, then open a PR to merge back:
+
+```
+git checkout -b feature/my-thing origin/master
+# ... make changes, commit ...
+git push -u origin feature/my-thing
+gh pr create --base master
+```
+
 - **Main repo:** `C:\Users\panda\Claude\BookClub\` (branch: `master`)
-
-Work in the worktree, commit there, then cherry-pick commits to master.
+- The old `worktree-implement` branch is retired — do not use it
+- Never commit directly to master; always go through a PR
 
 ## Project Structure
 
