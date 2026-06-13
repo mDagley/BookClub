@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import { useSuggestions } from '../composables/useSuggestions.js'
 import { useConfig } from '../composables/useConfig.js'
 import { useAuthStore } from '../stores/auth.js'
@@ -67,7 +67,7 @@ import SuggestModal from '../components/suggestions/SuggestModal.vue'
 import CommentPanel from '../components/suggestions/CommentPanel.vue'
 
 const { suggestions, loading, addSuggestion, voteOnSuggestion, toggleAlreadyRead } = useSuggestions()
-const { familyMembers } = useConfig()
+const { familyMembers, memberProfiles } = useConfig()
 const authStore = useAuthStore()
 
 const uid = computed(() => authStore.user?.uid ?? null)
@@ -86,6 +86,15 @@ const filterMode = ref('all')
 
 const IAM_KEY = 'bookclub_iam'
 const selectedName = ref(localStorage.getItem(IAM_KEY) ?? '')
+
+watchEffect(() => {
+  if (selectedName.value || !authUsername.value || !memberProfiles.value.length) return
+  const profile = memberProfiles.value.find(p => p.handle === authUsername.value)
+  if (profile?.name) {
+    selectedName.value = profile.name
+    localStorage.setItem(IAM_KEY, profile.name)
+  }
+})
 
 function handleNameChange(name) {
   selectedName.value = name
