@@ -9,6 +9,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  server: {
+    port: 5199,
+    proxy: {
+      '/api': 'http://localhost:3000',
+      '/covers': 'http://localhost:3000',
+    },
+  },
   test: {
     environment: 'jsdom',
   },
