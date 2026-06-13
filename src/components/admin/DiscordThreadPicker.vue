@@ -8,8 +8,8 @@
         placeholder="https://discord.com/channels/…"
         @input="emit('update:modelValue', $event.target.value)"
       />
-      <button type="button" class="btn btn-secondary btn-sm pick-btn" :disabled="loading" @click="fetchThreads">
-        {{ loading ? 'Loading…' : 'Pick Thread' }}
+      <button type="button" class="btn btn-secondary btn-sm pick-btn" :disabled="loading" @click="fetchChannels">
+        {{ loading ? 'Loading…' : 'Pick Channel' }}
       </button>
     </div>
 
@@ -22,24 +22,23 @@
           v-model="search"
           type="text"
           class="thread-search"
-          placeholder="Search threads…"
+          placeholder="Search channels…"
           @keydown.escape.stop="showDropdown = false"
         />
         <button type="button" class="close-picker" @click="showDropdown = false">✕</button>
       </div>
       <div class="thread-list">
         <button
-          v-for="thread in filteredThreads"
-          :key="thread.id"
+          v-for="channel in filteredChannels"
+          :key="channel.id"
           type="button"
           class="thread-option"
-          @click="selectThread(thread)"
+          @click="selectChannel(channel)"
         >
-          <span class="thread-name">{{ thread.name }}</span>
-          <span v-if="thread.createdAt" class="thread-date">{{ formatDate(thread.createdAt) }}</span>
+          <span class="thread-name"># {{ channel.name }}</span>
         </button>
-        <div v-if="!filteredThreads.length" class="thread-empty">
-          No threads match "{{ search }}"
+        <div v-if="!filteredChannels.length" class="thread-empty">
+          No channels match "{{ search }}"
         </div>
       </div>
     </div>
@@ -54,31 +53,31 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-const threads = ref([])
+const channels = ref([])
 const loading = ref(false)
 const error = ref('')
 const showDropdown = ref(false)
 const search = ref('')
 const searchInput = ref(null)
 
-const filteredThreads = computed(() => {
-  if (!search.value.trim()) return threads.value
+const filteredChannels = computed(() => {
+  if (!search.value.trim()) return channels.value
   const q = search.value.toLowerCase()
-  return threads.value.filter(t => t.name.toLowerCase().includes(q))
+  return channels.value.filter(c => c.name.toLowerCase().includes(q))
 })
 
-async function fetchThreads() {
+async function fetchChannels() {
   loading.value = true
   error.value = ''
   showDropdown.value = false
   try {
-    const res = await fetch('/api/discord-threads')
+    const res = await fetch('/api/discord-channels')
     const data = await res.json()
     if (!res.ok) {
-      error.value = data.error || 'Failed to load threads'
+      error.value = data.error || 'Failed to load channels'
       return
     }
-    threads.value = data.threads || []
+    channels.value = data.channels || []
     search.value = ''
     showDropdown.value = true
     await nextTick()
@@ -90,16 +89,9 @@ async function fetchThreads() {
   }
 }
 
-function selectThread(thread) {
-  emit('update:modelValue', thread.url)
+function selectChannel(channel) {
+  emit('update:modelValue', channel.url)
   showDropdown.value = false
-}
-
-function formatDate(iso) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (isNaN(d)) return ''
-  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 </script>
 
@@ -174,8 +166,6 @@ function formatDate(iso) {
 .thread-option {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
   width: 100%;
   padding: 0.5rem 0.75rem;
   background: transparent;
@@ -193,17 +183,6 @@ function formatDate(iso) {
   font-family: var(--font-sans);
   font-size: 0.85rem;
   color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.thread-date {
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .thread-empty {

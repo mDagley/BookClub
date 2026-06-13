@@ -136,8 +136,9 @@ Shows top 3 suggestions with: cover thumbnail, title, author, description (2-lin
 | `DISCORD_CLIENT_ID` | Discord OAuth (server only) |
 | `DISCORD_CLIENT_SECRET` | Discord OAuth (server only) |
 | `DISCORD_SUGGESTIONS_WEBHOOK_URL` | Discord webhook for new suggestion notifications (server only) |
-| `DISCORD_BOT_TOKEN` | Discord bot token for thread picker (server only) |
-| `DISCORD_BOOK_CHANNEL_ID` | Discord channel ID to fetch book discussion threads from (server only) |
+| `DISCORD_BOT_TOKEN` | Discord bot token for channel picker (server only) |
+| `DISCORD_GUILD_ID` | Discord server (guild) ID for channel picker (server only) |
+| `DISCORD_BOOK_CATEGORY_ID` | Optional: category ID to filter channel list to book channels only (server only) |
 
 ## CSS / Styling Notes
 - `src/styles/base.css` — `:root { font-size: 17px }` for readability; all sizing is rem-based
