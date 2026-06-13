@@ -10,8 +10,8 @@ export function useSpoilerFilter(key = 'bookclub_spoiler_chapter', { hideWhenUns
     currentChapter.value = Number.isFinite(parsed) ? parsed : 0
   }, { immediate: true })
 
-  watch([currentChapter, storageKey], ([val, nextKey]) => {
-    localStorage.setItem(nextKey, String(val))
+  watch(currentChapter, (val) => {
+    localStorage.setItem(storageKey.value, String(val))
   })
 
   function isVisible(chapter) {
