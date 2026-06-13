@@ -111,8 +111,8 @@ const { pastBooks, loading } = usePastBooks()
 
 const book = computed(() => pastBooks.value.find(b => b.id === route.params.id) ?? null)
 
-const { currentChapter, isVisible } = useSpoilerFilter(`bookclub_spoiler_past_${route.params.id}`)
-
+const spoilerKey = computed(() => `bookclub_spoiler_past_${String(route.params.id ?? '')}`)
+const { currentChapter, isVisible } = useSpoilerFilter(spoilerKey)
 function formatDate(dateRead) {
   if (!dateRead) return ''
   const d = typeof dateRead.toDate === 'function' ? dateRead.toDate() : new Date(dateRead)
