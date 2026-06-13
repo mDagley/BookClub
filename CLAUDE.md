@@ -135,6 +135,7 @@ Shows top 3 suggestions with: cover thumbnail, title, author, description (2-lin
 | `FIREBASE_SERVICE_ACCOUNT` | Base64-encoded service account JSON (server only) |
 | `DISCORD_CLIENT_ID` | Discord OAuth (server only) |
 | `DISCORD_CLIENT_SECRET` | Discord OAuth (server only) |
+| `DISCORD_SUGGESTIONS_WEBHOOK_URL` | Discord webhook for new suggestion notifications (server only) |
 
 ## CSS / Styling Notes
 - `src/styles/base.css` — `:root { font-size: 17px }` for readability; all sizing is rem-based

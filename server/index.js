@@ -184,6 +184,61 @@ app.post('/api/send-webhook', async (req, res) => {
   }
 })
 
+// --- New suggestion → Discord embed ---
+app.post('/api/suggest-webhook', async (req, res) => {
+  const webhookUrl = process.env.DISCORD_SUGGESTIONS_WEBHOOK_URL
+  if (!webhookUrl) {
+    // Silently succeed if not configured so the frontend doesn't error
+    return res.json({ ok: true, skipped: true })
+  }
+
+  const { title, author, description, coverUrl, genres, suggestedBy } = req.body
+
+  const safeTitle = String(title || 'Untitled').slice(0, 200)
+  const safeAuthor = String(author || 'Unknown').slice(0, 100)
+  const safeDescription = String(description || '').slice(0, 1800)
+  const safeSuggestedBy = String(suggestedBy || '').replace(/@/g, '@ ').slice(0, 100)
+
+  const genreLine = Array.isArray(genres) && genres.length
+    ? genres.map(g => `\`${g}\``).join(' ')
+    : null
+
+  const embedDescription = [safeDescription, genreLine].filter(Boolean).join('\n\n')
+
+  const embed = {
+    title: `${safeTitle} — ${safeAuthor}`,
+    description: embedDescription,
+    color: 0xC8963C,
+  }
+
+  if (coverUrl && typeof coverUrl === 'string' && coverUrl.startsWith('http')) {
+    embed.image = { url: coverUrl }
+  }
+
+  if (safeSuggestedBy) {
+    embed.footer = { text: `📖 Suggested by ${safeSuggestedBy}` }
+  }
+
+  try {
+    const webhookRes = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embeds: [embed] }),
+    })
+
+    if (!webhookRes.ok) {
+      const err = await webhookRes.text()
+      console.error('Suggestions webhook failed:', err)
+      return res.status(500).json({ error: 'Failed to send webhook' })
+    }
+
+    return res.json({ ok: true })
+  } catch (err) {
+    console.error('suggest-webhook error:', err)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 // --- Cover image upload ---
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' })

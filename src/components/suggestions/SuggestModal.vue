@@ -240,6 +240,14 @@ async function autofillFromApi() {
   if (meta.publishedDate && !form.publishedDate) form.publishedDate = meta.publishedDate
 }
 
+function fireWebhook(title, author, description, coverUrl, genres, suggestedBy) {
+  fetch('/api/suggest-webhook', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, author, description, coverUrl, genres, suggestedBy }),
+  }).catch(() => {})
+}
+
 async function handleSubmit() {
   errorMsg.value = ''
 
@@ -255,15 +263,22 @@ async function handleSubmit() {
       ? [form.suggestedBy.trim()]
       : []
 
+    const title = form.title.trim()
+    const author = form.author.trim()
+    const description = form.description.trim()
+    const suggestedBy = form.suggestedBy.trim()
+    const genres = form.genres
+    const knownCoverUrl = form.coverUrl || null
+
     // Submit immediately with coverUrl null
     const docRef = await props.addSuggestion({
-      title: form.title.trim(),
-      author: form.author.trim(),
-      genres: form.genres,
-      description: form.description.trim(),
+      title,
+      author,
+      genres,
+      description,
       publishedDate: form.publishedDate || null,
       alreadyRead,
-      suggestedBy: form.suggestedBy.trim(),
+      suggestedBy,
       coverUrl: null,
     })
 
@@ -271,13 +286,25 @@ async function handleSubmit() {
     submitting.value = false
     emit('submitted')
 
-    // Fetch cover in background and update if found
-    if (docRef?.id) {
-      fetchCoverUrl(form.title.trim(), form.author.trim()).then((coverUrl) => {
+    // Background: fetch cover, update Firestore, then fire webhook with final cover URL
+    if (knownCoverUrl) {
+      // Cover already known from autocomplete/upload — fire webhook immediately
+      fireWebhook(title, author, description, knownCoverUrl, genres, suggestedBy)
+      if (docRef?.id) {
+        updateDoc(doc(db, 'suggestions', docRef.id), { coverUrl: knownCoverUrl }).catch(() => {})
+      }
+    } else if (docRef?.id) {
+      // No cover yet — fetch in background, update Firestore, then notify Discord
+      fetchCoverUrl(title, author).then((coverUrl) => {
         if (coverUrl) {
           updateDoc(doc(db, 'suggestions', docRef.id), { coverUrl }).catch(() => {})
         }
-      }).catch(() => {})
+        fireWebhook(title, author, description, coverUrl || null, genres, suggestedBy)
+      }).catch(() => {
+        fireWebhook(title, author, description, null, genres, suggestedBy)
+      })
+    } else {
+      fireWebhook(title, author, description, null, genres, suggestedBy)
     }
   } catch (err) {
     console.error('addSuggestion error:', err)
