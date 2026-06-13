@@ -16,6 +16,7 @@ Family book club web app for tracking current/past books, managing suggestions, 
 Branch off `master` for all new work, then open a PR to merge back:
 
 ```
+git fetch origin
 git checkout -b feature/my-thing origin/master
 # ... make changes, commit ...
 git push -u origin feature/my-thing
