@@ -30,6 +30,16 @@
           <h1 class="book-title">{{ currentBook.title }}</h1>
           <p class="book-author">{{ currentBook.author }}</p>
           <p class="book-description">{{ currentBook.fullDescription || currentBook.synopsis }}</p>
+          <div class="book-actions">
+            <a
+              v-if="currentBook.goodreadsUrl"
+              :href="currentBook.goodreadsUrl"
+              target="_blank"
+              rel="noopener"
+              class="btn"
+            >View on Goodreads</a>
+          </div>
+
           <div v-if="currentBook.meeting" class="book-meeting-summary">
             <span>📅 {{ currentBook.meeting.date }}</span>
             <span v-if="currentBook.meeting.location">· {{ currentBook.meeting.location }}</span>
@@ -160,6 +170,13 @@ const { currentChapter, isVisible } = useSpoilerFilter()
   color: var(--text-secondary);
   line-height: 1.7;
   font-size: 0.95rem;
+}
+
+.book-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
 }
 
 .book-meeting-summary {

@@ -37,15 +37,22 @@
 
           <p v-if="book.synopsis" class="book-synopsis">{{ book.synopsis }}</p>
 
-          <a
-            v-if="book.discordThreadUrl"
-            :href="book.discordThreadUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn btn-discord"
-          >
-            💬 View Discord Discussion →
-          </a>
+          <div class="book-actions">
+            <a
+              v-if="book.goodreadsUrl"
+              :href="book.goodreadsUrl"
+              target="_blank"
+              rel="noopener"
+              class="btn"
+            >View on Goodreads</a>
+            <a
+              v-if="book.discordThreadUrl"
+              :href="book.discordThreadUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-discord"
+            >💬 View Discord Discussion →</a>
+          </div>
         </div>
       </section>
 
@@ -232,6 +239,14 @@ const groupedTimeline = computed(() => {
   font-size: 0.85rem;
   color: var(--text-muted);
   font-style: italic;
+}
+
+.book-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.25rem;
 }
 
 .book-synopsis {
