@@ -265,9 +265,9 @@ app.get('/api/discord-channels', async (req, res) => {
     }
     const allChannels = await res2.json()
 
-    // Type 0 = GUILD_TEXT; optionally filter by parent category
+    // Type 0 = GUILD_TEXT, Type 15 = GUILD_FORUM; optionally filter by parent category
     const channels = allChannels
-      .filter(c => c.type === 0 && (!categoryId || c.parent_id === categoryId))
+      .filter(c => (c.type === 0 || c.type === 15) && (!categoryId || c.parent_id === categoryId))
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
       .map(c => ({
         id: c.id,
