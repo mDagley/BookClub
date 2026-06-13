@@ -89,8 +89,12 @@
                     <input v-model="editForm.discordThreadUrl" type="url" class="form-input" placeholder="https://discord.com/channels/…" />
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Synopsis</label>
+                    <label class="form-label">Synopsis <span class="label-note">(short, shown on card)</span></label>
                     <textarea v-model="editForm.synopsis" class="form-textarea" rows="3"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Full Description <span class="label-note">(shown on detail page)</span></label>
+                    <textarea v-model="editForm.fullDescription" class="form-textarea" rows="6"></textarea>
                   </div>
                   <div class="form-group">
                     <label class="form-label">Genres</label>
@@ -164,8 +168,12 @@
         <input v-model="addForm.discordThreadUrl" type="url" class="form-input" placeholder="https://discord.com/channels/…" />
       </div>
       <div class="form-group">
-        <label class="form-label">Synopsis</label>
+        <label class="form-label">Synopsis <span class="label-note">(short, shown on card)</span></label>
         <textarea v-model="addForm.synopsis" class="form-textarea" rows="3" placeholder="Brief synopsis…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Full Description <span class="label-note">(shown on detail page)</span></label>
+        <textarea v-model="addForm.fullDescription" class="form-textarea" rows="6" placeholder="Full book description…"></textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Genres</label>
@@ -216,7 +224,7 @@ const addMessage = ref('')
 const addMessageType = ref('success')
 
 function emptyAddForm() {
-  return { title: '', author: '', dateRead: '', coverUrl: '', discordThreadUrl: '', synopsis: '', genres: [] }
+  return { title: '', author: '', dateRead: '', coverUrl: '', discordThreadUrl: '', synopsis: '', fullDescription: '', genres: [] }
 }
 
 const addForm = ref(emptyAddForm())
@@ -250,6 +258,7 @@ function startEdit(book) {
     coverUrl: book.coverUrl || '',
     discordThreadUrl: book.discordThreadUrl || '',
     synopsis: book.synopsis || '',
+    fullDescription: book.fullDescription || '',
     genres: Array.isArray(book.genres) ? [...book.genres] : [],
   }
 }
