@@ -248,7 +248,13 @@ app.get('/api/discord-channels', async (req, res) => {
   if (!guildId) return res.status(400).json({ error: 'No guild ID configured. Set DISCORD_GUILD_ID.' })
 
   const headers = { Authorization: `Bot ${botToken}` }
-  const categoryId = process.env.DISCORD_BOOK_CATEGORY_ID || null
+  // Map named categories to env vars so IDs are never exposed to the frontend
+  const categoryMap = {
+    finished: process.env.DISCORD_FINISHED_CATEGORY_ID,
+    current:  process.env.DISCORD_CURRENT_CATEGORY_ID,
+  }
+  const categoryKey = req.query.category
+  const categoryId = (categoryKey && categoryMap[categoryKey]) || process.env.DISCORD_BOOK_CATEGORY_ID || null
 
   try {
     const res2 = await fetch(`https://discord.com/api/v10/guilds/${guildId}/channels`, { headers })

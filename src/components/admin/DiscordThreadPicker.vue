@@ -50,6 +50,7 @@ import { ref, computed, nextTick } from 'vue'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
+  category: { type: String, default: '' },
 })
 const emit = defineEmits(['update:modelValue'])
 
@@ -71,7 +72,8 @@ async function fetchChannels() {
   error.value = ''
   showDropdown.value = false
   try {
-    const res = await fetch('/api/discord-channels')
+    const url = props.category ? `/api/discord-channels?category=${props.category}` : '/api/discord-channels'
+    const res = await fetch(url)
     const data = await res.json()
     if (!res.ok) {
       error.value = data.error || 'Failed to load channels'

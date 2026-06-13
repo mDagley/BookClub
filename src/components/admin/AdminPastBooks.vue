@@ -86,7 +86,7 @@
                   </div>
                   <div class="form-group">
                     <label class="form-label">Discord Thread URL</label>
-                    <DiscordThreadPicker v-model="editForm.discordThreadUrl" />
+                    <DiscordThreadPicker v-model="editForm.discordThreadUrl" category="finished" />
                   </div>
                   <div class="form-group">
                     <label class="form-label">Synopsis <span class="label-note">(short, shown on card)</span></label>
@@ -266,7 +266,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Discord Thread URL</label>
-        <DiscordThreadPicker v-model="addForm.discordThreadUrl" />
+        <DiscordThreadPicker v-model="addForm.discordThreadUrl" category="finished" />
       </div>
       <div class="form-group">
         <label class="form-label">Synopsis <span class="label-note">(short, shown on card)</span></label>
