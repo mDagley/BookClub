@@ -86,7 +86,7 @@
                   </div>
                   <div class="form-group">
                     <label class="form-label">Discord Thread URL</label>
-                    <input v-model="editForm.discordThreadUrl" type="url" class="form-input" placeholder="https://discord.com/channels/…" />
+                    <DiscordThreadPicker v-model="editForm.discordThreadUrl" />
                   </div>
                   <div class="form-group">
                     <label class="form-label">Synopsis <span class="label-note">(short, shown on card)</span></label>
@@ -266,7 +266,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Discord Thread URL</label>
-        <input v-model="addForm.discordThreadUrl" type="url" class="form-input" placeholder="https://discord.com/channels/…" />
+        <DiscordThreadPicker v-model="addForm.discordThreadUrl" />
       </div>
       <div class="form-group">
         <label class="form-label">Synopsis <span class="label-note">(short, shown on card)</span></label>
@@ -311,6 +311,7 @@ import { Timestamp } from 'firebase/firestore'
 import { usePastBooks } from '../../composables/usePastBooks.js'
 import { GENRE_LIST } from '../../utils/genres.js'
 import CoverUpload from '../shared/CoverUpload.vue'
+import DiscordThreadPicker from './DiscordThreadPicker.vue'
 
 const { pastBooks, loading, addPastBook, updatePastBook, deletePastBook } = usePastBooks()
 

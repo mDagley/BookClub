@@ -239,6 +239,65 @@ app.post('/api/suggest-webhook', async (req, res) => {
   }
 })
 
+// --- Discord thread list (for admin thread picker) ---
+app.get('/api/discord-threads', async (req, res) => {
+  const botToken = process.env.DISCORD_BOT_TOKEN
+  if (!botToken) return res.status(404).json({ error: 'Discord bot not configured' })
+
+  const channelId = req.query.channelId || process.env.DISCORD_BOOK_CHANNEL_ID
+  if (!channelId) return res.status(400).json({ error: 'No channel ID configured. Set DISCORD_BOOK_CHANNEL_ID.' })
+
+  const headers = { Authorization: `Bot ${botToken}` }
+
+  try {
+    // Get channel to find guild_id
+    const channelRes = await fetch(`https://discord.com/api/v10/channels/${channelId}`, { headers })
+    if (!channelRes.ok) {
+      const err = await channelRes.text()
+      console.error('Discord channel fetch failed:', err)
+      return res.status(channelRes.status).json({ error: 'Could not fetch channel — check bot permissions and channel ID' })
+    }
+    const channel = await channelRes.json()
+    const guildId = channel.guild_id
+    if (!guildId) return res.status(400).json({ error: 'Channel is not in a guild' })
+
+    // Fetch active threads across the guild, filter to this channel
+    const activeRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/threads/active`, { headers })
+    const activeData = activeRes.ok ? await activeRes.json() : { threads: [] }
+    const activeThreads = (activeData.threads || []).filter(t => t.parent_id === channelId)
+
+    // Fetch archived threads for this channel (up to 100)
+    const archivedRes = await fetch(
+      `https://discord.com/api/v10/channels/${channelId}/threads/archived/public?limit=100`,
+      { headers }
+    )
+    const archivedData = archivedRes.ok ? await archivedRes.json() : { threads: [] }
+    const archivedThreads = archivedData.threads || []
+
+    // Merge, deduplicate, format
+    const seen = new Set()
+    const threads = [...activeThreads, ...archivedThreads]
+      .filter(t => { if (seen.has(t.id)) return false; seen.add(t.id); return true })
+      .map(t => ({
+        id: t.id,
+        name: t.name,
+        url: `https://discord.com/channels/${guildId}/${t.id}`,
+        createdAt: t.thread_metadata?.create_timestamp || null,
+      }))
+      .sort((a, b) => {
+        if (!a.createdAt && !b.createdAt) return 0
+        if (!a.createdAt) return 1
+        if (!b.createdAt) return -1
+        return new Date(b.createdAt) - new Date(a.createdAt)
+      })
+
+    return res.json({ threads })
+  } catch (err) {
+    console.error('discord-threads error:', err)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 // --- Cover image upload ---
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
