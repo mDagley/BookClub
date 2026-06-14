@@ -102,7 +102,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useConfig } from '../composables/useConfig.js'
 import { useSpoilerFilter } from '../composables/useSpoilerFilter.js'
 import SpoilerFilter from '../components/book/SpoilerFilter.vue'
@@ -132,6 +132,18 @@ function scrollTo(id) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+function observeSections(sections) {
+  if (!observer) return
+  observer.disconnect()
+  activeSection.value = ''
+  nextTick(() => {
+    sections.forEach(s => {
+      const el = document.getElementById(s.id)
+      if (el) observer.observe(el)
+    })
+  })
+}
+
 let observer = null
 onMounted(() => {
   observer = new IntersectionObserver(entries => {
@@ -139,14 +151,13 @@ onMounted(() => {
       if (e.isIntersecting) activeSection.value = e.target.id
     }
   }, { rootMargin: '-30% 0px -60% 0px' })
-
-  setTimeout(() => {
-    navSections.value.forEach(s => {
-      const el = document.getElementById(s.id)
-      if (el) observer.observe(el)
-    })
-  }, 100)
+  // Handle case where currentBook is already loaded before mount
+  observeSections(navSections.value)
 })
+
+// Re-observe whenever sections change (currentBook loads async from Firestore)
+watch(navSections, observeSections)
+
 onUnmounted(() => observer?.disconnect())
 </script>
 
