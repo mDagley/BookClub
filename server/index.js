@@ -282,6 +282,204 @@ app.get('/api/discord-channels', async (req, res) => {
   }
 })
 
+// --- Discord book-promotion automation ---
+// Creates a forum channel for the new book, populates it with starter threads,
+// and optionally moves the previous book's channel to the finished category.
+// Requires a valid Firebase ID token in the Authorization header.
+app.post('/api/discord-promote-book', async (req, res) => {
+  // Auth: verify Firebase ID token sent by the admin UI
+  const authHeader = req.headers.authorization
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authorization required' })
+  }
+  try {
+    await admin.auth().verifyIdToken(authHeader.slice(7))
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' })
+  }
+
+  const botToken = process.env.DISCORD_BOT_TOKEN
+  const guildId = process.env.DISCORD_GUILD_ID
+  const currentCategoryId = process.env.DISCORD_CURRENT_CATEGORY_ID
+  const finishedCategoryId = process.env.DISCORD_FINISHED_CATEGORY_ID
+
+  if (!botToken || !guildId || !currentCategoryId) {
+    return res.status(500).json({ error: 'DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, and DISCORD_CURRENT_CATEGORY_ID are required' })
+  }
+
+  const { bookTitle, bookAuthor } = req.body
+  const previousChannelId = String(req.body.previousChannelId || '').trim()
+
+  if (!bookTitle || typeof bookTitle !== 'string' || !bookTitle.trim()) {
+    return res.status(400).json({ error: 'bookTitle is required' })
+  }
+  if (previousChannelId && !finishedCategoryId) {
+    return res.status(400).json({ error: 'DISCORD_FINISHED_CATEGORY_ID must be configured to move the previous channel' })
+  }
+
+  const title = bookTitle.trim()
+  const author = (bookAuthor || '').trim()
+  const headers = { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' }
+
+  function dApi(method, path, body) {
+    return fetch(`https://discord.com/api/v10${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    }).then(r => r.json().then(b => ({ ok: r.ok, status: r.status, body: b })))
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
+
+  try {
+    // 1. Create forum channel in the current-books category
+    // Normalize diacritics to ASCII so titles like "Naïve" don't produce an empty slug
+    const normalized = title.normalize('NFD').replace(/[̀-ͯ]/g, '')
+    const channelName = (
+      normalized.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100)
+    ) || 'book-channel'
+
+    const channelRes = await dApi('POST', `/guilds/${guildId}/channels`, {
+      name: channelName,
+      type: 15, // GUILD_FORUM
+      parent_id: currentCategoryId,
+      topic: author ? `${title} by ${author}` : title,
+    })
+    if (!channelRes.ok) {
+      return res.status(500).json({ error: 'Failed to create Discord channel', details: channelRes.body })
+    }
+    const channelId = channelRes.body.id
+    await sleep(500)
+
+    // 2. Add standard forum tags — fail fast if this doesn't work
+    const tagDefs = [
+      { name: 'General',    emoji_name: '💬' },
+      { name: 'Characters', emoji_name: '👤' },
+      { name: 'Background', emoji_name: '🌍' },
+      { name: 'Spoilers',   emoji_name: '⚠️' },
+      { name: 'Ch. 1–10',   emoji_name: '1️⃣' },
+      { name: 'Ch. 11–20',  emoji_name: '2️⃣' },
+      { name: 'Ch. 21–30',  emoji_name: '3️⃣' },
+      { name: 'Ch. 31–40',  emoji_name: '4️⃣' },
+      { name: 'Finished',   emoji_name: '📚' },
+    ]
+    const tagRes = await dApi('PATCH', `/channels/${channelId}`, { available_tags: tagDefs })
+    if (!tagRes.ok || !tagRes.body.available_tags) {
+      return res.status(500).json({ error: 'Failed to configure channel tags', details: tagRes.body })
+    }
+    const tagMap = {}
+    for (const t of tagRes.body.available_tags) tagMap[t.name] = t.id
+    await sleep(500)
+
+    // 3. Look up current book data from Firestore for character list.
+    // Only use the character data if the saved book title matches the one being promoted —
+    // guards against populating the thread with a previous book's characters.
+    const configDoc = await db.doc('config/main').get()
+    const book = (configDoc.exists && configDoc.data().currentBook) || {}
+    const titleMatches = book.title?.trim().toLowerCase() === title.toLowerCase()
+    const characters = (titleMatches && Array.isArray(book.characters)) ? book.characters : []
+
+    // 4. Build starter thread definitions
+    const starterThreads = [
+      {
+        name: 'So Far',
+        tags: [tagMap['General']].filter(Boolean),
+        content: `Use this thread to share your thoughts as you read — vibes, reactions, confusion, excitement, all welcome.\n\nA few gentle rules:\n🔒 No major spoilers — keep it vague if you're ahead of others\n📚 Drop in wherever you are, no need to have finished\n😵 "I have no idea what's going on but I'm intrigued" is a completely valid update\n\nWhere are you in the book and what are you thinking so far?`,
+      },
+      {
+        name: 'Discussion Questions',
+        tags: [tagMap['General']].filter(Boolean),
+        content: `Some questions to kick off discussion — no pressure to answer all of them!\n\n**1.** What were your first impressions? Did the writing style and world-building draw you in or take some adjustment?\n\n**2.** Which character did you connect with most? Which surprised you?\n\n**3.** How did you feel about the pacing? Were there sections that dragged or sections you couldn't put down?\n\n**4.** What do you think the book is ultimately *about* — beyond the plot?\n\n**5.** ⚠️ *Finish the book before answering:* What did the ending mean to you? Were you satisfied?`,
+      },
+      {
+        name: 'Themes',
+        tags: [tagMap['Background']].filter(Boolean),
+        content: `Some of the big ideas running through *${title}*:\n\n💬 **Add themes as the group discovers them!**\n\nAs you read, drop themes you notice here — motifs, recurring imagery, questions the book seems to be asking. We'll build this thread out together.`,
+      },
+      {
+        name: 'Additional Resources',
+        tags: [tagMap['Background']].filter(Boolean),
+        content: `Links, articles, and context for *${title}*${author ? ` by ${author}` : ''}.\n\nShare anything you find helpful: author interviews, genre context, historical background, related reading. No spoilers in titles please — use a spoiler tag if the link itself contains them.`,
+      },
+    ]
+
+    // Add characters thread if book data is available
+    if (characters.length > 0) {
+      const lines = characters.map(c => `**${c.name}** — ${c.description || 'No description yet.'}`).join('\n')
+      const intro = `A guide to the characters of *${title}*. Minor spoilers for introductions only.\n\n`
+      const chunks = []
+      let current = intro
+      for (const line of lines.split('\n')) {
+        if (current.length + line.length + 1 > 1950) {
+          chunks.push(current)
+          current = line + '\n'
+        } else {
+          current += line + '\n'
+        }
+      }
+      if (current.trim()) chunks.push(current)
+      starterThreads.splice(1, 0, {
+        name: 'Characters',
+        tags: [tagMap['Characters']].filter(Boolean),
+        content: chunks[0],
+        extraMessages: chunks.slice(1),
+      })
+    }
+
+    // 5. Create threads — collect warnings instead of silently skipping failures
+    const createdThreads = []
+    const warnings = []
+    for (const def of starterThreads) {
+      await sleep(1200)
+      const threadRes = await dApi('POST', `/channels/${channelId}/threads`, {
+        name: def.name,
+        auto_archive_duration: 10080,
+        applied_tags: def.tags,
+        message: { content: def.content },
+      })
+      if (!threadRes.ok) {
+        console.error(`Failed to create thread "${def.name}":`, threadRes.body)
+        warnings.push(`Thread "${def.name}" could not be created: ${threadRes.body?.message || threadRes.status}`)
+        continue
+      }
+      const threadId = threadRes.body.id
+      for (const extra of (def.extraMessages || [])) {
+        await sleep(800)
+        const extraRes = await dApi('POST', `/channels/${threadId}/messages`, { content: extra })
+        if (!extraRes.ok) {
+          console.error(`Failed to post continuation in "${def.name}":`, extraRes.body)
+          warnings.push(`Continuation message in "${def.name}" failed: ${extraRes.body?.message || extraRes.status}`)
+        }
+      }
+      createdThreads.push({
+        name: def.name,
+        id: threadId,
+        url: `https://discord.com/channels/${guildId}/${threadId}`,
+      })
+    }
+
+    // 6. Move old channel to finished category if provided
+    if (previousChannelId) {
+      await sleep(500)
+      const moveRes = await dApi('PATCH', `/channels/${previousChannelId}`, { parent_id: finishedCategoryId })
+      if (!moveRes.ok) {
+        console.error('Failed to move previous channel:', moveRes.body)
+        warnings.push(`Previous channel move failed: ${moveRes.body?.message || moveRes.status}`)
+      }
+    }
+
+    return res.json({
+      channelId,
+      channelUrl: `https://discord.com/channels/${guildId}/${channelId}`,
+      threads: createdThreads,
+      ...(warnings.length ? { warnings } : {}),
+    })
+  } catch (err) {
+    console.error('discord-promote-book error:', err)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 // --- Cover image upload ---
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
