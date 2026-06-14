@@ -371,10 +371,13 @@ app.post('/api/discord-promote-book', async (req, res) => {
     for (const t of tagRes.body.available_tags) tagMap[t.name] = t.id
     await sleep(500)
 
-    // 3. Look up current book data from Firestore for character list
+    // 3. Look up current book data from Firestore for character list.
+    // Only use the character data if the saved book title matches the one being promoted —
+    // guards against populating the thread with a previous book's characters.
     const configDoc = await db.doc('config/main').get()
     const book = (configDoc.exists && configDoc.data().currentBook) || {}
-    const characters = Array.isArray(book.characters) ? book.characters : []
+    const titleMatches = book.title?.trim().toLowerCase() === title.toLowerCase()
+    const characters = (titleMatches && Array.isArray(book.characters)) ? book.characters : []
 
     // 4. Build starter thread definitions
     const starterThreads = [
@@ -423,8 +426,9 @@ app.post('/api/discord-promote-book', async (req, res) => {
       })
     }
 
-    // 5. Create threads
+    // 5. Create threads — collect warnings instead of silently skipping failures
     const createdThreads = []
+    const warnings = []
     for (const def of starterThreads) {
       await sleep(1200)
       const threadRes = await dApi('POST', `/channels/${channelId}/threads`, {
@@ -435,12 +439,17 @@ app.post('/api/discord-promote-book', async (req, res) => {
       })
       if (!threadRes.ok) {
         console.error(`Failed to create thread "${def.name}":`, threadRes.body)
+        warnings.push(`Thread "${def.name}" could not be created: ${threadRes.body?.message || threadRes.status}`)
         continue
       }
       const threadId = threadRes.body.id
       for (const extra of (def.extraMessages || [])) {
         await sleep(800)
-        await dApi('POST', `/channels/${threadId}/messages`, { content: extra })
+        const extraRes = await dApi('POST', `/channels/${threadId}/messages`, { content: extra })
+        if (!extraRes.ok) {
+          console.error(`Failed to post continuation in "${def.name}":`, extraRes.body)
+          warnings.push(`Continuation message in "${def.name}" failed: ${extraRes.body?.message || extraRes.status}`)
+        }
       }
       createdThreads.push({
         name: def.name,
@@ -450,7 +459,6 @@ app.post('/api/discord-promote-book', async (req, res) => {
     }
 
     // 6. Move old channel to finished category if provided
-    const warnings = []
     if (previousChannelId) {
       await sleep(500)
       const moveRes = await dApi('PATCH', `/channels/${previousChannelId}`, { parent_id: finishedCategoryId })
