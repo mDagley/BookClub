@@ -45,13 +45,6 @@
               rel="noopener"
               class="btn"
             >View on Goodreads</a>
-            <a
-              v-if="book.discordThreadUrl"
-              :href="book.discordThreadUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-discord"
-            >💬 View Discord Discussion →</a>
           </div>
         </div>
       </section>
@@ -63,14 +56,22 @@
       </section>
 
       <!-- Supplemental materials -->
-      <section v-if="book.supplementalMaterials?.length" class="card">
-        <p class="section-title">Supplemental Materials</p>
-        <ul class="materials-list">
-          <li v-for="m in book.supplementalMaterials" :key="m.url" class="material-row">
-            <span class="type-badge" :class="`type-${m.type}`">{{ m.type }}</span>
-            <a :href="m.url" target="_blank" rel="noopener" class="material-link">{{ m.title }}</a>
-          </li>
-        </ul>
+      <SupplementalMaterials
+        v-if="book.supplementalMaterials?.length"
+        :materials="book.supplementalMaterials"
+      />
+
+      <!-- Discord discussion -->
+      <section v-if="book.discordSummary || book.discordThreadUrl" class="book-section card">
+        <p class="section-title">Community Discussion</p>
+        <p v-if="book.discordSummary" class="discord-summary">{{ book.discordSummary }}</p>
+        <a
+          v-if="book.discordThreadUrl"
+          :href="book.discordThreadUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="discord-thread-link"
+        >💬 View Full Discussion on Discord →</a>
       </section>
 
       <!-- Spoiler filter (only shown when there's character or timeline data) -->
@@ -105,6 +106,7 @@ import { useSpoilerFilter } from '../composables/useSpoilerFilter.js'
 import SpoilerFilter from '../components/book/SpoilerFilter.vue'
 import CharacterGrid from '../components/book/CharacterGrid.vue'
 import TimelineSection from '../components/book/TimelineSection.vue'
+import SupplementalMaterials from '../components/book/SupplementalMaterials.vue'
 
 const route = useRoute()
 const { pastBooks, loading } = usePastBooks()
@@ -231,30 +233,26 @@ function formatDate(dateRead) {
   white-space: pre-line;
 }
 
-.materials-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+.discord-summary {
+  color: var(--text-secondary);
+  line-height: 1.75;
+  font-size: 0.95rem;
+  white-space: pre-line;
+  margin-bottom: 0.85rem;
 }
-.material-row { display: flex; align-items: center; gap: 0.6rem; }
-.type-badge {
+
+.discord-thread-link {
+  display: inline-block;
+  color: #7289da;
+  font-size: 0.9rem;
+  text-decoration: none;
   font-family: var(--font-sans);
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 0.15rem 0.45rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  white-space: nowrap;
 }
-.type-article  { border-color: #5865F2; color: #8891f7; }
-.type-video    { border-color: #c8963c; color: var(--gold); }
-.type-podcast  { border-color: #7ab87a; color: #7ab87a; }
-.type-map      { border-color: #4a8a52; color: #7ab87a; }
-.material-link { font-size: 0.9rem; color: var(--text-primary); text-decoration: none; }
-.material-link:hover { color: var(--gold); text-decoration: underline; }
+
+.discord-thread-link:hover {
+  text-decoration: underline;
+  color: var(--gold);
+}
 
 
 @media (max-width: 640px) {

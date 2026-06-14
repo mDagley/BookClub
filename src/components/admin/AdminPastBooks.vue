@@ -97,6 +97,10 @@
                     <textarea v-model="editForm.fullDescription" class="form-textarea" rows="6"></textarea>
                   </div>
                   <div class="form-group">
+                    <label class="form-label">Discord Discussion Summary <span class="label-note">(highlights from the group discussion)</span></label>
+                    <textarea v-model="editForm.discordSummary" class="form-textarea" rows="4" placeholder="Summarize the key themes, opinions, and moments from the Discord discussion…"></textarea>
+                  </div>
+                  <div class="form-group">
                     <label class="form-label">Genres</label>
                     <div class="genre-grid">
                       <label
@@ -277,6 +281,10 @@
         <textarea v-model="addForm.fullDescription" class="form-textarea" rows="6" placeholder="Full book description…"></textarea>
       </div>
       <div class="form-group">
+        <label class="form-label">Discord Discussion Summary <span class="label-note">(highlights from the group discussion)</span></label>
+        <textarea v-model="addForm.discordSummary" class="form-textarea" rows="4" placeholder="Summarize the key themes, opinions, and moments from the Discord discussion…"></textarea>
+      </div>
+      <div class="form-group">
         <label class="form-label">Genres</label>
         <div class="genre-grid">
           <label
@@ -330,7 +338,7 @@ const addMessage = ref('')
 const addMessageType = ref('success')
 
 function emptyAddForm() {
-  return { title: '', author: '', dateRead: '', coverUrl: '', discordThreadUrl: '', synopsis: '', fullDescription: '', genres: [] }
+  return { title: '', author: '', dateRead: '', coverUrl: '', discordThreadUrl: '', synopsis: '', fullDescription: '', discordSummary: '', genres: [] }
 }
 
 const addForm = ref(emptyAddForm())
@@ -365,6 +373,7 @@ function startEdit(book) {
     discordThreadUrl: book.discordThreadUrl || '',
     synopsis: book.synopsis || '',
     fullDescription: book.fullDescription || '',
+    discordSummary: book.discordSummary || '',
     genres: Array.isArray(book.genres) ? [...book.genres] : [],
     materials: (book.supplementalMaterials || []).map(m => ({ ...m, _key: nextKey() })),
     characters: (book.characters || []).map(c => ({
@@ -409,6 +418,7 @@ async function saveEdit(id) {
       discordThreadUrl: f.discordThreadUrl,
       synopsis: f.synopsis,
       fullDescription: f.fullDescription,
+      discordSummary: f.discordSummary,
       genres: f.genres,
       supplementalMaterials: f.materials.map(({ _key, ...rest }) => ({
         ...rest,
