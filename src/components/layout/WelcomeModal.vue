@@ -63,6 +63,11 @@ const steps = [
     body: 'This is where we track what we\'re reading, vote on the next book, and share our thoughts. Everything is in one place — the current book, past reads, and all the suggestions.',
   },
   {
+    icon: '🔍',
+    title: 'Spoiler-free browsing',
+    body: 'On the current book page and any past book page, you can <strong>set your chapter number</strong> to hide characters and story timeline events you haven\'t reached yet. Everything past your chapter stays hidden until you\'re ready.',
+  },
+  {
     icon: '🗳️',
     title: 'Suggest and vote on books',
     body: 'Anyone in the family can suggest books for the club to read next. <strong>Voting, suggesting, and marking books as read all require a Discord login.</strong> Browse without logging in anytime you like.',
