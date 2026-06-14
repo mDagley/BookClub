@@ -74,8 +74,8 @@
 
           <!-- Discord discussion link -->
           <a
-            v-if="book.discordThreadUrl"
-            :href="book.discordThreadUrl"
+            v-if="primaryThreadUrl(book)"
+            :href="primaryThreadUrl(book)"
             target="_blank"
             rel="noopener noreferrer"
             class="btn btn-discord discord-btn"
@@ -91,6 +91,7 @@
 <script setup>
 import { usePastBooks } from '../composables/usePastBooks.js'
 import { GENRE_ICONS } from '../utils/genres.js'
+import { primaryThreadUrl } from '../utils/discordThreads.js'
 
 const { pastBooks, loading } = usePastBooks()
 
@@ -100,7 +101,6 @@ function formatDate(dateRead) {
   if (isNaN(d.getTime())) return ''
   return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 }
-
 
 function visibleGenres(book) {
   return (book.genres || []).slice(0, 3)

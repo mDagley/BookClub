@@ -663,9 +663,19 @@ async function archiveBook() {
   if (discordThreadUrl === null) return // user cancelled
 
   const snapshot = serializeForm()
+  const trimmed = discordThreadUrl.trim()
+  const existingThreads = (snapshot.discordThreads || [])
+    .filter(t => t.url?.trim())
+    .map(({ title, url }) => ({ title, url: url.trim() }))
+  const archivedThreads = trimmed
+    ? [...existingThreads, { title: 'Discussion', url: trimmed }]
+    : existingThreads
   saving.value = true
   try {
-    await addPastBook({ ...snapshot, discordThreadUrl: discordThreadUrl.trim() })
+    await addPastBook({
+      ...snapshot,
+      discordThreads: archivedThreads,
+    })
     await updateDoc(doc(db, 'config', 'main'), { currentBook: null })
     form.value = emptyForm()
     coverPreview.value = ''

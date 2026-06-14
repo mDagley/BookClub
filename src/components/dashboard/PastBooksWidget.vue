@@ -22,8 +22,8 @@
           <span class="past-author">{{ book.author }}</span>
           <span class="past-date">{{ formatDate(book.dateRead) }}</span>
           <a
-            v-if="book.discordThreadUrl"
-            :href="book.discordThreadUrl"
+            v-if="primaryThreadUrl(book)"
+            :href="primaryThreadUrl(book)"
             target="_blank"
             rel="noopener"
             class="past-thread"
@@ -39,6 +39,8 @@
 </template>
 
 <script setup>
+import { primaryThreadUrl } from '../../utils/discordThreads.js'
+
 defineProps({
   pastBooks: { type: Array, default: () => [] },
 })

@@ -98,17 +98,13 @@
       </section>
 
       <!-- Discord discussion -->
-      <section v-if="book.discordSummary || book.discordThreadUrl" id="discussion" class="book-section card">
-        <p class="section-title">Community Discussion</p>
-        <p v-if="book.discordSummary" class="discord-summary">{{ book.discordSummary }}</p>
-        <a
-          v-if="book.discordThreadUrl"
-          :href="book.discordThreadUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="discord-thread-link"
-        >💬 View Full Discussion on Discord →</a>
-      </section>
+      <div v-if="book.discordSummary || discussionThreads.length" id="discussion" class="discussion-sections">
+        <section v-if="book.discordSummary" class="book-section card">
+          <p class="section-title">Community Discussion</p>
+          <p class="discord-summary">{{ book.discordSummary }}</p>
+        </section>
+        <DiscordThreads v-if="discussionThreads.length" :threads="discussionThreads" />
+      </div>
 
       <!-- Spoiler filter -->
       <SpoilerFilter
@@ -177,6 +173,7 @@ import CharacterGrid from '../components/book/CharacterGrid.vue'
 import TimelineSection from '../components/book/TimelineSection.vue'
 import SupplementalMaterials from '../components/book/SupplementalMaterials.vue'
 import QuotesCarousel from '../components/book/QuotesCarousel.vue'
+import DiscordThreads from '../components/book/DiscordThreads.vue'
 
 const route = useRoute()
 const { pastBooks, loading } = usePastBooks()
@@ -184,6 +181,18 @@ const { pastBooks, loading } = usePastBooks()
 // pastBooks is already sorted descending (newest first) from usePastBooks
 const currentIndex = computed(() => pastBooks.value.findIndex(b => b.id === route.params.id))
 const book = computed(() => pastBooks.value[currentIndex.value] ?? null)
+
+const discussionThreads = computed(() => {
+  const b = book.value
+  if (!b) return []
+  const valid = b.discordThreads
+    ?.filter(t => t.url?.trim())
+    .map(t => ({ title: t.title?.trim() || 'Discussion', url: t.url.trim() }))
+  if (valid?.length) return valid
+  const legacy = b.discordThreadUrl?.trim()
+  if (legacy) return [{ title: 'Discussion', url: legacy }]
+  return []
+})
 const newerBook = computed(() => currentIndex.value > 0 ? pastBooks.value[currentIndex.value - 1] : null)
 const olderBook = computed(() => {
   const i = currentIndex.value
@@ -200,7 +209,7 @@ const navSections = computed(() => {
   if (b.fullDescription) sections.push({ id: 'about', label: 'About' })
   if (b.quotes?.length) sections.push({ id: 'quotes', label: 'Quotes' })
   if (b.supplementalMaterials?.length) sections.push({ id: 'materials', label: 'Materials' })
-  if (b.discordSummary || b.discordThreadUrl) sections.push({ id: 'discussion', label: 'Discussion' })
+  if (b.discordSummary || discussionThreads.value.length) sections.push({ id: 'discussion', label: 'Discussion' })
   if (b.characters?.length) sections.push({ id: 'characters', label: 'Characters' })
   if (b.timeline?.length) sections.push({ id: 'timeline', label: 'Timeline' })
   return sections
@@ -425,6 +434,12 @@ function formatDate(dateRead) {
 .description-section .description-text:last-child { margin-bottom: 0; }
 
 /* Discord discussion */
+.discussion-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .discord-summary {
   color: var(--text-secondary);
   line-height: 1.75;
