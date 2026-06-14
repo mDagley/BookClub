@@ -4,13 +4,13 @@
     <p class="page-subtitle">What's new in the family book club.</p>
 
     <div class="releases">
-      <section v-for="release in releases" :key="release.date" class="release card">
+      <section v-for="release in releases" :key="release.date + release.label" class="release card">
         <div class="release-header">
           <span class="release-date">{{ release.date }}</span>
           <span v-if="release.label" class="release-label">{{ release.label }}</span>
         </div>
         <ul class="entry-list">
-          <li v-for="entry in release.entries" :key="entry.text" class="entry">
+          <li v-for="(entry, i) in release.entries" :key="i" class="entry">
             <span class="entry-badge" :class="`badge-${entry.type}`">
               {{ entry.type === 'feature' ? 'New' : 'Fix' }}
             </span>
