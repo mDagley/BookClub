@@ -3,6 +3,7 @@
     <div class="section-header">
       <h2 class="section-heading">Suggestions</h2>
       <button
+        type="button"
         class="btn btn-secondary btn-sm"
         :disabled="refreshing"
         @click="refreshMissingCovers"
@@ -172,7 +173,14 @@ async function fetchCoverForEdit() {
   fetchingCover.value = true
   try {
     const meta = await fetchBookMetadata(editForm.value.title, editForm.value.author)
-    if (meta?.coverUrl) editForm.value.coverUrl = meta.coverUrl
+    if (meta?.coverUrl) {
+      editForm.value.coverUrl = meta.coverUrl
+    } else {
+      alert('No cover found for this title.')
+    }
+  } catch (err) {
+    console.error('Cover fetch error:', err)
+    alert('Cover fetch failed: ' + (err.message || 'Unknown error'))
   } finally {
     fetchingCover.value = false
   }
@@ -184,16 +192,21 @@ async function refreshMissingCovers() {
   refreshing.value = true
   let done = 0
   refreshProgress.value = `0/${missing.length}`
-  for (const s of missing) {
-    try {
-      const meta = await fetchBookMetadata(s.title, s.author)
-      if (meta?.coverUrl) await updateSuggestion(s.id, { coverUrl: meta.coverUrl })
-    } catch { /* skip failures silently */ }
-    done++
-    refreshProgress.value = `${done}/${missing.length}`
+  try {
+    for (const s of missing) {
+      try {
+        const meta = await fetchBookMetadata(s.title, s.author)
+        if (meta?.coverUrl) await updateSuggestion(s.id, { coverUrl: meta.coverUrl })
+      } catch (err) {
+        console.error(`Cover fetch failed for "${s.title}":`, err)
+      }
+      done++
+      refreshProgress.value = `${done}/${missing.length}`
+    }
+  } finally {
+    refreshing.value = false
+    refreshProgress.value = ''
   }
-  refreshing.value = false
-  refreshProgress.value = ''
 }
 
 function startEdit(suggestion) {
