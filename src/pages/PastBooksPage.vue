@@ -91,6 +91,7 @@
 <script setup>
 import { usePastBooks } from '../composables/usePastBooks.js'
 import { GENRE_ICONS } from '../utils/genres.js'
+import { primaryThreadUrl } from '../utils/discordThreads.js'
 
 const { pastBooks, loading } = usePastBooks()
 
@@ -99,12 +100,6 @@ function formatDate(dateRead) {
   const d = typeof dateRead.toDate === 'function' ? dateRead.toDate() : new Date(dateRead)
   if (isNaN(d.getTime())) return ''
   return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-}
-
-
-function primaryThreadUrl(book) {
-  const found = book.discordThreads?.find(t => t.url?.trim())
-  return found ? found.url.trim() : (book.discordThreadUrl?.trim() ?? null)
 }
 
 function visibleGenres(book) {

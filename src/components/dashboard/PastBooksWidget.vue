@@ -39,14 +39,11 @@
 </template>
 
 <script setup>
+import { primaryThreadUrl } from '../../utils/discordThreads.js'
+
 defineProps({
   pastBooks: { type: Array, default: () => [] },
 })
-
-function primaryThreadUrl(book) {
-  const found = book.discordThreads?.find(t => t.url?.trim())
-  return found ? found.url.trim() : (book.discordThreadUrl?.trim() ?? null)
-}
 
 function formatDate(ts) {
   if (!ts) return ''

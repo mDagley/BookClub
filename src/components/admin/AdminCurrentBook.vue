@@ -664,7 +664,9 @@ async function archiveBook() {
 
   const snapshot = serializeForm()
   const trimmed = discordThreadUrl.trim()
-  const existingThreads = snapshot.discordThreads || []
+  const existingThreads = (snapshot.discordThreads || [])
+    .filter(t => t.url?.trim())
+    .map(({ title, url }) => ({ title, url: url.trim() }))
   const archivedThreads = trimmed
     ? [...existingThreads, { title: 'Discussion', url: trimmed }]
     : existingThreads

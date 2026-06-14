@@ -39,8 +39,8 @@
               <td class="col-thread">
                 <template v-if="book.discordThreads?.some(t => t.url?.trim())">
                   <a
-                    v-for="(t, i) in book.discordThreads.filter(t => t.url?.trim())"
-                    :key="i"
+                    v-for="t in book.discordThreads.filter(t => t.url?.trim())"
+                    :key="t.url.trim()"
                     :href="t.url.trim()"
                     target="_blank"
                     rel="noopener"
