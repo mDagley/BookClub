@@ -37,9 +37,9 @@
               <td class="col-author">{{ book.author }}</td>
               <td class="col-date">{{ formatDate(book.dateRead) }}</td>
               <td class="col-thread">
-                <template v-if="book.discordThreads?.length">
+                <template v-if="book.discordThreads?.some(t => t.url?.trim())">
                   <a
-                    v-for="t in book.discordThreads"
+                    v-for="t in book.discordThreads.filter(t => t.url?.trim())"
                     :key="t.url"
                     :href="t.url"
                     target="_blank"
@@ -315,7 +315,7 @@
         <div class="list-editor">
           <div
             v-for="(thread, index) in addForm.discordThreads"
-            :key="thread._key"
+            :key="index"
             class="list-row"
           >
             <div class="thread-fields">
@@ -324,7 +324,7 @@
             </div>
             <button type="button" class="btn-icon btn-delete" @click="addForm.discordThreads.splice(index, 1)">✕</button>
           </div>
-          <button type="button" class="btn btn-add" @click="addForm.discordThreads.push({ title: '', url: '', _key: nextKey() })">+ Add Thread</button>
+          <button type="button" class="btn btn-add" @click="addForm.discordThreads.push({ title: '', url: '' })">+ Add Thread</button>
         </div>
       </div>
       <div class="form-group">
@@ -475,7 +475,7 @@ async function saveEdit(id) {
       author: f.author,
       dateRead: dateReadTs,
       coverUrl: f.coverUrl,
-      discordThreads: f.discordThreads.map(({ _key, ...rest }) => rest).filter(t => t.url),
+      discordThreads: f.discordThreads.map(({ _key, title, url }) => ({ title, url: url?.trim() ?? '' })).filter(t => t.url),
       synopsis: f.synopsis,
       fullDescription: f.fullDescription,
       discordSummary: f.discordSummary,
@@ -558,9 +558,11 @@ async function submitAdd() {
     const dateReadTs = addForm.value.dateRead
       ? Timestamp.fromDate(new Date(addForm.value.dateRead))
       : null
+    const f = addForm.value
     await addPastBook({
-      ...addForm.value,
+      ...f,
       dateRead: dateReadTs,
+      discordThreads: f.discordThreads.filter(t => t.url?.trim()).map(({ title, url }) => ({ title, url: url.trim() })),
     })
     addForm.value = emptyAddForm()
     showAddMessage('Past book added!')

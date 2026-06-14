@@ -183,8 +183,10 @@ const book = computed(() => pastBooks.value[currentIndex.value] ?? null)
 const discussionThreads = computed(() => {
   const b = book.value
   if (!b) return []
-  if (b.discordThreads?.length) return b.discordThreads
-  if (b.discordThreadUrl) return [{ title: 'Discussion', url: b.discordThreadUrl }]
+  const valid = b.discordThreads?.filter(t => t.url?.trim())
+  if (valid?.length) return valid
+  const legacy = b.discordThreadUrl?.trim()
+  if (legacy) return [{ title: 'Discussion', url: legacy }]
   return []
 })
 const newerBook = computed(() => currentIndex.value > 0 ? pastBooks.value[currentIndex.value - 1] : null)

@@ -74,8 +74,8 @@
 
           <!-- Discord discussion link -->
           <a
-            v-if="book.discordThreads?.length || book.discordThreadUrl"
-            :href="book.discordThreads?.[0]?.url ?? book.discordThreadUrl"
+            v-if="primaryThreadUrl(book)"
+            :href="primaryThreadUrl(book)"
             target="_blank"
             rel="noopener noreferrer"
             class="btn btn-discord discord-btn"
@@ -101,6 +101,10 @@ function formatDate(dateRead) {
   return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 }
 
+
+function primaryThreadUrl(book) {
+  return book.discordThreads?.find(t => t.url?.trim())?.url ?? book.discordThreadUrl ?? null
+}
 
 function visibleGenres(book) {
   return (book.genres || []).slice(0, 3)
