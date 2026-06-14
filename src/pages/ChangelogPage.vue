@@ -51,6 +51,7 @@ const releases = [
       { type: 'feature', text: 'Past book pages now show all Discord discussion threads, not just one — admin can add as many threads as needed per book.' },
       { type: 'fix',     text: 'Book cover images are now fetched at higher resolution — blurry thumbnails replaced with sharper versions.' },
       { type: 'feature', text: 'Admin cover fetch now shows a grid of options to choose from instead of auto-filling the first result.' },
+      { type: 'fix',     text: 'Cover thumbnails in the admin suggestions table are now larger and display at the correct 2:3 book cover ratio.' },
       { type: 'feature', text: 'Discord sync now automatically links discussion threads for all past books and the current book — forum channels list every sub-thread individually.' },
       { type: 'feature', text: 'Discord sync now includes the current book: quotes and supplemental materials are pulled daily from its Discord channel, just like past books.' },
     ],
