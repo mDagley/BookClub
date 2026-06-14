@@ -72,6 +72,7 @@ async function getMessages(channelId, limit = 100) {
 
 // Active-threads cache — fetched once per run, reused by findThread + getForumThreads
 let _activeThreads = null
+let _warnedNoCategory = false
 async function getActiveThreads() {
   if (_activeThreads) return _activeThreads
   try {
@@ -85,13 +86,24 @@ async function getActiveThreads() {
 
 async function findThread(forumId, name) {
   const lname = name.toLowerCase()
-  try {
-    const archived = await discord(`/channels/${forumId}/threads/archived/public?limit=50`)
-    const found = archived.threads?.find(t => t.name.toLowerCase().includes(lname))
-    if (found) return found.id
-  } catch {}
+  // Check active threads first — Quotes/Resources threads may still be active on current book
   const active = await getActiveThreads()
-  return active.find(t => t.parent_id === forumId && t.name.toLowerCase().includes(lname))?.id ?? null
+  const inActive = active.find(t => t.parent_id === forumId && t.name.toLowerCase().includes(lname))
+  if (inActive) return inActive.id
+  // Paginate through all archived threads so we don't miss older named threads
+  let before = null
+  while (true) {
+    const qs = `limit=100${before ? `&before=${encodeURIComponent(before)}` : ''}`
+    let page
+    try { page = await discord(`/channels/${forumId}/threads/archived/public?${qs}`) } catch { break }
+    const found = page.threads?.find(t => t.name.toLowerCase().includes(lname))
+    if (found) return found.id
+    if (!page.has_more) break
+    const last = page.threads?.[page.threads.length - 1]
+    before = last?.thread_metadata?.archive_timestamp ?? null
+    if (!before) break
+  }
+  return null
 }
 
 // ── Channel discovery ─────────────────────────────────────────────────────────
@@ -128,8 +140,9 @@ function resolveChannel(bookTitle, allChannels, categoryId) {
   const candidates = categoryId
     ? allChannels.filter(c => c.parent_id === categoryId)
     : allChannels // fallback: search all channels if category env var not set
-  if (!categoryId) {
-    console.warn(`  Warning: no category ID set for "${bookTitle}" — searching all channels`)
+  if (!categoryId && !_warnedNoCategory) {
+    _warnedNoCategory = true
+    console.warn('  Warning: category ID env var not set — auto-discovery searching all channels')
   }
   return candidates.find(c => {
     if (c.type !== 0 && c.type !== 15) return false
