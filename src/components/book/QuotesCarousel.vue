@@ -2,13 +2,15 @@
   <section class="book-section card quotes-carousel">
     <p class="section-title">Quotes</p>
 
-    <div class="carousel" @mouseenter="pause" @mouseleave="resume">
-      <Transition :name="direction" mode="out-in">
-        <div class="quote-slide" :key="current">
-          <blockquote class="quote-text">{{ quotes[current].text }}</blockquote>
-          <cite v-if="quotes[current].attribution" class="quote-attribution">— {{ quotes[current].attribution }}</cite>
-        </div>
-      </Transition>
+    <div class="carousel" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+      <div class="quote-area">
+        <Transition :name="direction" mode="out-in">
+          <div class="quote-slide" :key="current">
+            <blockquote class="quote-text">{{ quotes[current].text }}</blockquote>
+            <cite v-if="quotes[current].attribution" class="quote-attribution">— {{ quotes[current].attribution }}</cite>
+          </div>
+        </Transition>
+      </div>
 
       <div v-if="quotes.length > 1" class="carousel-controls">
         <button class="nav-btn" @click="prev" aria-label="Previous quote">‹</button>
@@ -23,6 +25,15 @@
           />
         </div>
         <button class="nav-btn" @click="next" aria-label="Next quote">›</button>
+        <button
+          type="button"
+          class="pause-btn"
+          :class="{ paused: userPaused }"
+          :aria-pressed="userPaused"
+          :aria-label="userPaused ? 'Play' : 'Pause'"
+          :title="userPaused ? 'Play' : 'Pause'"
+          @click="togglePause"
+        >{{ userPaused ? '▶' : '⏸' }}</button>
       </div>
     </div>
   </section>
@@ -35,8 +46,12 @@ const props = defineProps({
   quotes: { type: Array, required: true },
 })
 
+const INTERVAL = 20000
+
 const current = ref(0)
 const direction = ref('slide-next')
+const userPaused = ref(false)
+const isHovered = ref(false)
 let timer = null
 
 function goTo(i) {
@@ -58,16 +73,26 @@ function prev() {
 }
 
 function start() {
-  if (props.quotes.length <= 1) return
-  timer = setInterval(next, 5000)
+  if (timer || props.quotes.length <= 1 || userPaused.value || isHovered.value) return
+  timer = setInterval(() => {
+    direction.value = 'slide-next'
+    current.value = (current.value + 1) % props.quotes.length
+  }, INTERVAL)
 }
 
-function pause() { clearInterval(timer); timer = null }
-function resume() { start() }
-function restart() { pause(); start() }
+function stop() { clearInterval(timer); timer = null }
+function restart() { stop(); start() }
+
+function togglePause() {
+  userPaused.value = !userPaused.value
+  userPaused.value ? stop() : start()
+}
+
+function onMouseEnter() { isHovered.value = true; if (!userPaused.value) stop() }
+function onMouseLeave() { isHovered.value = false; if (!userPaused.value) start() }
 
 onMounted(start)
-onUnmounted(pause)
+onUnmounted(stop)
 </script>
 
 <style scoped>
@@ -80,13 +105,22 @@ onUnmounted(pause)
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  min-height: 110px;
+}
+
+/* Fixed-height area so varying quote lengths don't shift the page layout */
+.quote-area {
+  position: relative;
+  width: 100%;
+  min-height: 10rem;
 }
 
 .quote-slide {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.6rem;
   padding: 0 1.5rem;
 }
@@ -146,6 +180,22 @@ onUnmounted(pause)
 }
 
 .dot.active { background: var(--gold); }
+
+.pause-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+  margin-left: 0.25rem;
+}
+
+.pause-btn:hover { color: var(--gold); }
+.pause-btn.paused { color: var(--gold); }
 
 /* Slide transitions */
 .slide-next-enter-active,
