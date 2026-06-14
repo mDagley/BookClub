@@ -354,7 +354,7 @@ function promote(suggestion) {
 
 .suggestion-row:hover td { background: rgba(46, 112, 160, 0.12); }
 
-.col-cover { width: 48px; }
+.col-cover { width: 64px; }
 .col-title { min-width: 130px; }
 .col-author { min-width: 100px; color: var(--text-secondary); }
 .col-published { width: 80px; color: var(--text-muted); font-size: 0.78rem; }
@@ -363,8 +363,8 @@ function promote(suggestion) {
 .col-readby { min-width: 100px; }
 .col-actions { width: 170px; white-space: nowrap; }
 
-.cover-thumb { width: 40px; height: 56px; object-fit: cover; border-radius: var(--radius-sm); display: block; }
-.cover-placeholder { width: 40px; height: 56px; background: var(--surface-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.cover-thumb { width: 54px; aspect-ratio: 2/3; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+.cover-placeholder { width: 54px; aspect-ratio: 2/3; background: var(--surface-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border); }
 
 .book-title { display: block; font-weight: 600; }
 .genre-list { display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
