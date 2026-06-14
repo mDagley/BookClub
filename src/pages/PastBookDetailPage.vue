@@ -14,7 +14,7 @@
 
     <template v-else>
       <!-- Header -->
-      <section class="book-header card">
+      <section id="overview" class="book-header card">
         <div class="cover-area">
           <img
             v-if="book.coverUrl"
@@ -49,20 +49,40 @@
         </div>
       </section>
 
+      <!-- Subnav -->
+      <nav v-if="navSections.length" class="subnav card">
+        <a
+          v-for="s in navSections"
+          :key="s.id"
+          :href="`#${s.id}`"
+          class="subnav-link"
+          :class="{ active: activeSection === s.id }"
+          @click.prevent="scrollTo(s.id)"
+        >{{ s.label }}</a>
+      </nav>
+
       <!-- Full description -->
-      <section v-if="book.fullDescription" class="card description-section">
+      <section v-if="book.fullDescription" id="about" class="card description-section">
         <p class="section-title">About the Book</p>
-        <p class="description-text">{{ book.fullDescription }}</p>
+        <p
+          v-for="(para, i) in book.fullDescription.split('\n\n')"
+          :key="i"
+          class="description-text"
+        >{{ para }}</p>
+      </section>
+
+      <!-- Quotes carousel -->
+      <section v-if="book.quotes?.length" id="quotes">
+        <QuotesCarousel :quotes="book.quotes" />
       </section>
 
       <!-- Supplemental materials -->
-      <SupplementalMaterials
-        v-if="book.supplementalMaterials?.length"
-        :materials="book.supplementalMaterials"
-      />
+      <section v-if="book.supplementalMaterials?.length" id="materials">
+        <SupplementalMaterials :materials="book.supplementalMaterials" />
+      </section>
 
       <!-- Discord discussion -->
-      <section v-if="book.discordSummary || book.discordThreadUrl" class="book-section card">
+      <section v-if="book.discordSummary || book.discordThreadUrl" id="discussion" class="book-section card">
         <p class="section-title">Community Discussion</p>
         <p v-if="book.discordSummary" class="discord-summary">{{ book.discordSummary }}</p>
         <a
@@ -74,9 +94,10 @@
         >💬 View Full Discussion on Discord →</a>
       </section>
 
-      <!-- Spoiler filter (only shown when there's character or timeline data) -->
+      <!-- Spoiler filter -->
       <SpoilerFilter
         v-if="book.characters?.length || book.timeline?.length"
+        id="characters"
         :current-chapter="currentChapter"
         @update="currentChapter = $event"
       />
@@ -90,6 +111,7 @@
 
       <TimelineSection
         v-if="book.timeline?.length"
+        id="timeline"
         :timeline="book.timeline"
         :current-chapter="currentChapter"
         :is-visible="isVisible"
@@ -99,7 +121,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePastBooks } from '../composables/usePastBooks.js'
 import { useSpoilerFilter } from '../composables/useSpoilerFilter.js'
@@ -107,6 +129,7 @@ import SpoilerFilter from '../components/book/SpoilerFilter.vue'
 import CharacterGrid from '../components/book/CharacterGrid.vue'
 import TimelineSection from '../components/book/TimelineSection.vue'
 import SupplementalMaterials from '../components/book/SupplementalMaterials.vue'
+import QuotesCarousel from '../components/book/QuotesCarousel.vue'
 
 const route = useRoute()
 const { pastBooks, loading } = usePastBooks()
@@ -115,6 +138,44 @@ const book = computed(() => pastBooks.value.find(b => b.id === route.params.id) 
 
 const spoilerKey = computed(() => `bookclub_spoiler_past_${String(route.params.id ?? '')}`)
 const { currentChapter, isVisible } = useSpoilerFilter(spoilerKey)
+
+const navSections = computed(() => {
+  if (!book.value) return []
+  const b = book.value
+  const sections = []
+  if (b.fullDescription) sections.push({ id: 'about', label: 'About' })
+  if (b.quotes?.length) sections.push({ id: 'quotes', label: 'Quotes' })
+  if (b.supplementalMaterials?.length) sections.push({ id: 'materials', label: 'Materials' })
+  if (b.discordSummary || b.discordThreadUrl) sections.push({ id: 'discussion', label: 'Discussion' })
+  if (b.characters?.length) sections.push({ id: 'characters', label: 'Characters' })
+  if (b.timeline?.length) sections.push({ id: 'timeline', label: 'Timeline' })
+  return sections
+})
+
+const activeSection = ref('')
+
+function scrollTo(id) {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+let observer = null
+onMounted(() => {
+  observer = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (e.isIntersecting) activeSection.value = e.target.id
+    }
+  }, { rootMargin: '-30% 0px -60% 0px' })
+
+  setTimeout(() => {
+    navSections.value.forEach(s => {
+      const el = document.getElementById(s.id)
+      if (el) observer.observe(el)
+    })
+  }, 100)
+})
+onUnmounted(() => observer?.disconnect())
+
 function formatDate(dateRead) {
   if (!dateRead) return ''
   const d = typeof dateRead.toDate === 'function' ? dateRead.toDate() : new Date(dateRead)
@@ -147,6 +208,33 @@ function formatDate(dateRead) {
   padding: 4rem 1.5rem;
 }
 
+/* Subnav */
+.subnav {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.subnav-link {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.subnav-link:hover { color: var(--text-primary); background: var(--surface-subtle); }
+.subnav-link.active { color: var(--gold); background: rgba(200, 150, 60, 0.1); }
+
+/* Book header */
 .book-header {
   display: flex;
   gap: 1.5rem;
@@ -226,13 +314,17 @@ function formatDate(dateRead) {
   font-size: 0.95rem;
 }
 
+/* Description */
 .description-section .description-text {
   color: var(--text-secondary);
   line-height: 1.8;
   font-size: 0.95rem;
-  white-space: pre-line;
+  margin-bottom: 0.9rem;
 }
 
+.description-section .description-text:last-child { margin-bottom: 0; }
+
+/* Discord discussion */
 .discord-summary {
   color: var(--text-secondary);
   line-height: 1.75;
@@ -253,7 +345,6 @@ function formatDate(dateRead) {
   text-decoration: underline;
   color: var(--gold);
 }
-
 
 @media (max-width: 640px) {
   .book-header { flex-direction: column; }

@@ -220,6 +220,25 @@
                     </div>
                   </div>
 
+                  <!-- Quotes -->
+                  <div class="form-group">
+                    <label class="form-label">Quotes <span class="label-note">Memorable lines from the book</span></label>
+                    <div class="list-editor">
+                      <div
+                        v-for="(quote, index) in editForm.quotes"
+                        :key="quote._key"
+                        class="list-row quote-row"
+                      >
+                        <div class="quote-fields">
+                          <textarea v-model="quote.text" class="form-textarea" rows="2" placeholder="Quote text…"></textarea>
+                          <input v-model="quote.attribution" type="text" class="form-input" placeholder="Speaker / context (optional)" />
+                        </div>
+                        <button type="button" class="btn-icon btn-delete" @click="removeEditItem('quotes', index)">✕</button>
+                      </div>
+                      <button type="button" class="btn btn-add" @click="addEditQuote">+ Add Quote</button>
+                    </div>
+                  </div>
+
                   <div class="edit-actions">
                     <button class="btn btn-secondary btn-sm" @click="cancelEdit">Cancel</button>
                     <button class="btn btn-primary btn-sm" @click="saveEdit(book.id)" :disabled="editSaving">
@@ -385,6 +404,7 @@ function startEdit(book) {
       _editing: false,
     })),
     timeline: (book.timeline || []).map(e => ({ ...e, _key: nextKey() })),
+    quotes: (book.quotes || []).map(q => ({ ...q, _key: nextKey() })),
   }
 }
 
@@ -430,6 +450,7 @@ async function saveEdit(id) {
         isMajor: major ?? false,
       })),
       timeline: f.timeline.map(({ _key, ...rest }) => rest),
+      quotes: f.quotes.map(({ _key, ...rest }) => rest),
     })
     showEditMessage('Saved!')
     setTimeout(() => { cancelEdit() }, 1000)
@@ -449,6 +470,9 @@ function addEditTimelineEvent() {
 }
 function addEditMaterial() {
   editForm.value.materials.push({ title: '', url: '', type: 'Article', _key: nextKey() })
+}
+function addEditQuote() {
+  editForm.value.quotes.push({ text: '', attribution: '', _key: nextKey() })
 }
 function removeEditItem(list, index) {
   editForm.value[list].splice(index, 1)
@@ -932,6 +956,16 @@ async function submitAdd() {
 }
 
 .btn-delete:hover { color: #f28b82; }
+
+.quote-row { align-items: flex-start; }
+.quote-fields {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.quote-fields .form-textarea { resize: vertical; }
 
 /* Characters */
 .cards-editor {
