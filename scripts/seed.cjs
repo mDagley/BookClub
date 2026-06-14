@@ -19,7 +19,8 @@ let credential
 try {
   const serviceAccount = require('../service-account.json')
   credential = admin.credential.cert(serviceAccount)
-} catch {
+} catch (err) {
+  if (err.code !== 'MODULE_NOT_FOUND') throw err
   credential = admin.credential.applicationDefault()
 }
 
