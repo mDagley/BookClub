@@ -2,7 +2,7 @@
   <section class="book-section card">
     <p class="section-title">Supplemental Materials</p>
     <ul class="materials-list">
-      <li v-for="m in materials" :key="`${m.type}-${m.title}`" class="material-row">
+      <li v-for="(m, i) in materials" :key="m.url || `${m.type}-${m.title}-${i}`" class="material-row">
         <span class="type-badge" :class="`type-${m.type}`">{{ m.type }}</span>
         <a v-if="m.url" :href="m.url" target="_blank" rel="noopener" class="material-link">
           {{ m.title }}
