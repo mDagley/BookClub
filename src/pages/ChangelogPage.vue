@@ -27,6 +27,10 @@ const releases = [
   {
     date: 'June 2026',
     entries: [
+      { type: 'feature', text: 'SuperSummary study guide links added to all current and past book pages.' },
+      { type: 'feature', text: 'Characters and chapter timelines added for Butter, The Long Way to a Small, Angry Planet, and The Tainted Cup.' },
+      { type: 'feature', text: 'Welcome modal now explains the spoiler filter feature on its own step.' },
+      { type: 'feature', text: 'Supplemental materials support entries without a link — title-only items display as plain text.' },
       { type: 'feature', text: 'Admin can now create a Discord channel for a new book in one click — sets up forum tags (General, Characters, Background, Spoilers, chapter ranges) and creates starter threads automatically. Optionally moves the previous book\'s channel to the Finished category.' },
       { type: 'fix',     text: '"I haven\'t read" filter now correctly hides books you\'ve marked as read via the read button, not just ones set through the admin panel.' },
       { type: 'feature', text: 'Spoiler filter on past book pages — set your current chapter to hide characters and timeline events you haven\'t reached yet.' },
