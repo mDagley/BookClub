@@ -10,17 +10,25 @@
  *
  * Usage:
  *   npm install firebase-admin   (if not already installed)
- *   node scripts/seed.js
+ *   node scripts/seed-legacy.cjs
+ *
+ * Auth (pick one):
+ *   A) Set GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+ *   B) Place service-account.json in the project root (git-ignored)
  */
 
 const admin = require('firebase-admin')
-// Users must set GOOGLE_APPLICATION_CREDENTIALS env var or pass serviceAccount directly
-// For simplicity: read from a local service-account.json file if it exists
-const serviceAccount = require('../service-account.json') // excluded from git
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-})
+let credential
+try {
+  const serviceAccount = require('../service-account.json')
+  credential = admin.credential.cert(serviceAccount)
+} catch {
+  // Fall back to GOOGLE_APPLICATION_CREDENTIALS env var
+  credential = admin.credential.applicationDefault()
+}
+
+admin.initializeApp({ credential })
 
 const db = admin.firestore()
 
@@ -65,7 +73,7 @@ async function seed () {
     discordGuildUrl: 'https://discord.gg/your-invite',
     goodreadsGroupUrl: 'https://www.goodreads.com/group/show/your-group',
     audiobookServerUrl: 'https://audiobooks.example.com',
-    discordWebhookUrl: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_URL'
+    discordWebhookUrl: null
   })
   console.log('  ✓ config/main written')
 
@@ -77,7 +85,7 @@ async function seed () {
       genres: ['Epic Fantasy', 'Series'],
       description: 'Roshar is a world of stone and storms.',
       coverUrl: null,
-      alreadyRead: ['Alice'],
+      alreadyRead: [],
       suggestedBy: 'Bob',
       votes: 5,
       createdAt: admin.firestore.Timestamp.now()

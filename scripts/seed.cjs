@@ -14,11 +14,16 @@
  */
 
 const admin = require('firebase-admin')
-const serviceAccount = require('../service-account.json')
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-})
+let credential
+try {
+  const serviceAccount = require('../service-account.json')
+  credential = admin.credential.cert(serviceAccount)
+} catch {
+  credential = admin.credential.applicationDefault()
+}
+
+admin.initializeApp({ credential })
 
 const db = admin.firestore()
 
