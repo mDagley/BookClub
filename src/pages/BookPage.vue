@@ -54,22 +54,37 @@
         </div>
       </section>
 
+      <!-- Subnav -->
+      <nav v-if="navSections.length" class="subnav card">
+        <a
+          v-for="s in navSections"
+          :key="s.id"
+          :href="`#${s.id}`"
+          class="subnav-link"
+          :class="{ active: activeSection === s.id }"
+          @click.prevent="scrollTo(s.id)"
+        >{{ s.label }}</a>
+      </nav>
+
       <!-- Sticky spoiler filter -->
       <SpoilerFilter :current-chapter="currentChapter" :hide-when-unset="true" @update="currentChapter = $event" />
 
       <!-- Collapsible sections -->
       <DiscordThreads
         v-if="currentBook.discordThreads?.length"
+        id="discussion"
         :threads="currentBook.discordThreads"
       />
 
       <SupplementalMaterials
         v-if="currentBook.supplementalMaterials?.length"
+        id="materials"
         :materials="currentBook.supplementalMaterials"
       />
 
       <CharacterGrid
         v-if="currentBook.characters?.length"
+        id="characters"
         :characters="currentBook.characters"
         :current-chapter="currentChapter"
         :is-visible="isVisible"
@@ -77,6 +92,7 @@
 
       <TimelineSection
         v-if="currentBook.timeline?.length"
+        id="timeline"
         :timeline="currentBook.timeline"
         :current-chapter="currentChapter"
         :is-visible="isVisible"
@@ -86,6 +102,7 @@
 </template>
 
 <script setup>
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useConfig } from '../composables/useConfig.js'
 import { useSpoilerFilter } from '../composables/useSpoilerFilter.js'
 import SpoilerFilter from '../components/book/SpoilerFilter.vue'
@@ -96,6 +113,41 @@ import DiscordThreads from '../components/book/DiscordThreads.vue'
 
 const { currentBook, loading: configLoading } = useConfig()
 const { currentChapter, isVisible } = useSpoilerFilter('bookclub_spoiler_chapter', { hideWhenUnset: true })
+
+const navSections = computed(() => {
+  if (!currentBook.value) return []
+  const b = currentBook.value
+  const sections = []
+  if (b.discordThreads?.length) sections.push({ id: 'discussion', label: 'Discussion' })
+  if (b.supplementalMaterials?.length) sections.push({ id: 'materials', label: 'Materials' })
+  if (b.characters?.length) sections.push({ id: 'characters', label: 'Characters' })
+  if (b.timeline?.length) sections.push({ id: 'timeline', label: 'Timeline' })
+  return sections
+})
+
+const activeSection = ref('')
+
+function scrollTo(id) {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+let observer = null
+onMounted(() => {
+  observer = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (e.isIntersecting) activeSection.value = e.target.id
+    }
+  }, { rootMargin: '-30% 0px -60% 0px' })
+
+  setTimeout(() => {
+    navSections.value.forEach(s => {
+      const el = document.getElementById(s.id)
+      if (el) observer.observe(el)
+    })
+  }, 100)
+})
+onUnmounted(() => observer?.disconnect())
 </script>
 
 <style scoped>
@@ -107,6 +159,31 @@ const { currentChapter, isVisible } = useSpoilerFilter('bookclub_spoiler_chapter
   flex-direction: column;
   gap: 1.25rem;
 }
+
+.subnav {
+  position: sticky;
+  top: 3.75rem;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.subnav-link {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.subnav-link:hover { color: var(--text-primary); background: var(--surface-subtle); }
+.subnav-link.active { color: var(--gold); background: rgba(200, 150, 60, 0.1); }
 
 .book-empty {
   text-align: center;

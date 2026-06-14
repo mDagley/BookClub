@@ -224,7 +224,6 @@ function selectResult(result) {
   form.author = result.author
   if (result.coverUrl) form.coverUrl = result.coverUrl
   if (result.fullDescription) form.description = result.fullDescription
-  if (result.genres.length) form.genres = result.genres
   if (result.publishedDate) form.publishedDate = result.publishedDate
   closeDropdown()
 }
@@ -236,7 +235,6 @@ async function autofillFromApi() {
   fetchingMeta.value = false
   if (!meta) return
   if (meta.fullDescription && !form.description) form.description = meta.fullDescription
-  if (meta.genres.length && !form.genres.length) form.genres = meta.genres
   if (meta.publishedDate && !form.publishedDate) form.publishedDate = meta.publishedDate
 }
 
@@ -259,8 +257,8 @@ async function handleSubmit() {
 
   submitting.value = true
   try {
-    const alreadyRead = form.iAlreadyRead && form.suggestedBy.trim()
-      ? [form.suggestedBy.trim()]
+    const alreadyRead = form.iAlreadyRead && authStore.user?.discordUsername
+      ? [authStore.user.discordUsername]
       : []
 
     const title = form.title.trim()

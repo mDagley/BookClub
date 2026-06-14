@@ -211,7 +211,7 @@ function formatDate(dateRead) {
 /* Subnav */
 .subnav {
   position: sticky;
-  top: 0.75rem;
+  top: 3.75rem;
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
