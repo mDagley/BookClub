@@ -97,6 +97,10 @@
                     <textarea v-model="editForm.fullDescription" class="form-textarea" rows="6"></textarea>
                   </div>
                   <div class="form-group">
+                    <label class="form-label">Discord Discussion Summary <span class="label-note">(highlights from the group discussion)</span></label>
+                    <textarea v-model="editForm.discordSummary" class="form-textarea" rows="4" placeholder="Summarize the key themes, opinions, and moments from the Discord discussion…"></textarea>
+                  </div>
+                  <div class="form-group">
                     <label class="form-label">Genres</label>
                     <div class="genre-grid">
                       <label
@@ -216,6 +220,25 @@
                     </div>
                   </div>
 
+                  <!-- Quotes -->
+                  <div class="form-group">
+                    <label class="form-label">Quotes <span class="label-note">Memorable lines from the book</span></label>
+                    <div class="list-editor">
+                      <div
+                        v-for="(quote, index) in editForm.quotes"
+                        :key="quote._key"
+                        class="list-row quote-row"
+                      >
+                        <div class="quote-fields">
+                          <textarea v-model="quote.text" class="form-textarea" rows="2" placeholder="Quote text…"></textarea>
+                          <input v-model="quote.attribution" type="text" class="form-input" placeholder="Speaker / context (optional)" />
+                        </div>
+                        <button type="button" class="btn-icon btn-delete" @click="removeEditItem('quotes', index)">✕</button>
+                      </div>
+                      <button type="button" class="btn btn-add" @click="addEditQuote">+ Add Quote</button>
+                    </div>
+                  </div>
+
                   <div class="edit-actions">
                     <button class="btn btn-secondary btn-sm" @click="cancelEdit">Cancel</button>
                     <button class="btn btn-primary btn-sm" @click="saveEdit(book.id)" :disabled="editSaving">
@@ -277,6 +300,10 @@
         <textarea v-model="addForm.fullDescription" class="form-textarea" rows="6" placeholder="Full book description…"></textarea>
       </div>
       <div class="form-group">
+        <label class="form-label">Discord Discussion Summary <span class="label-note">(highlights from the group discussion)</span></label>
+        <textarea v-model="addForm.discordSummary" class="form-textarea" rows="4" placeholder="Summarize the key themes, opinions, and moments from the Discord discussion…"></textarea>
+      </div>
+      <div class="form-group">
         <label class="form-label">Genres</label>
         <div class="genre-grid">
           <label
@@ -330,7 +357,7 @@ const addMessage = ref('')
 const addMessageType = ref('success')
 
 function emptyAddForm() {
-  return { title: '', author: '', dateRead: '', coverUrl: '', discordThreadUrl: '', synopsis: '', fullDescription: '', genres: [] }
+  return { title: '', author: '', dateRead: '', coverUrl: '', discordThreadUrl: '', synopsis: '', fullDescription: '', discordSummary: '', genres: [] }
 }
 
 const addForm = ref(emptyAddForm())
@@ -365,6 +392,7 @@ function startEdit(book) {
     discordThreadUrl: book.discordThreadUrl || '',
     synopsis: book.synopsis || '',
     fullDescription: book.fullDescription || '',
+    discordSummary: book.discordSummary || '',
     genres: Array.isArray(book.genres) ? [...book.genres] : [],
     materials: (book.supplementalMaterials || []).map(m => ({ ...m, _key: nextKey() })),
     characters: (book.characters || []).map(c => ({
@@ -376,6 +404,7 @@ function startEdit(book) {
       _editing: false,
     })),
     timeline: (book.timeline || []).map(e => ({ ...e, _key: nextKey() })),
+    quotes: (book.quotes || []).map(q => ({ ...q, _key: nextKey() })),
   }
 }
 
@@ -409,6 +438,7 @@ async function saveEdit(id) {
       discordThreadUrl: f.discordThreadUrl,
       synopsis: f.synopsis,
       fullDescription: f.fullDescription,
+      discordSummary: f.discordSummary,
       genres: f.genres,
       supplementalMaterials: f.materials.map(({ _key, ...rest }) => ({
         ...rest,
@@ -420,6 +450,7 @@ async function saveEdit(id) {
         isMajor: major ?? false,
       })),
       timeline: f.timeline.map(({ _key, ...rest }) => rest),
+      quotes: f.quotes.map(({ _key, ...rest }) => rest),
     })
     showEditMessage('Saved!')
     setTimeout(() => { cancelEdit() }, 1000)
@@ -439,6 +470,9 @@ function addEditTimelineEvent() {
 }
 function addEditMaterial() {
   editForm.value.materials.push({ title: '', url: '', type: 'Article', _key: nextKey() })
+}
+function addEditQuote() {
+  editForm.value.quotes.push({ text: '', attribution: '', _key: nextKey() })
 }
 function removeEditItem(list, index) {
   editForm.value[list].splice(index, 1)
@@ -922,6 +956,16 @@ async function submitAdd() {
 }
 
 .btn-delete:hover { color: #f28b82; }
+
+.quote-row { align-items: flex-start; }
+.quote-fields {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.quote-fields .form-textarea { resize: vertical; }
 
 /* Characters */
 .cards-editor {
