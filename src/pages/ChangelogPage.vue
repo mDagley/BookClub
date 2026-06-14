@@ -48,6 +48,7 @@ const releases = [
       { type: 'feature', text: 'Past book pages now have a back button and top-bar links to navigate to the next and previous books in reading order.' },
       { type: 'feature', text: 'Quotes carousel now auto-advances every 20 seconds and has a pause/play button — hover also pauses the carousel.' },
       { type: 'feature', text: 'Admin can now refresh missing cover images in bulk, or fetch a cover for any individual suggestion.' },
+      { type: 'feature', text: 'Past book pages now show all Discord discussion threads, not just one — admin can add as many threads as needed per book.' },
       { type: 'fix',     text: 'Book cover images are now fetched at higher resolution — blurry thumbnails replaced with sharper versions.' },
     ],
   },

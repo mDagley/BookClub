@@ -22,8 +22,8 @@
           <span class="past-author">{{ book.author }}</span>
           <span class="past-date">{{ formatDate(book.dateRead) }}</span>
           <a
-            v-if="book.discordThreadUrl"
-            :href="book.discordThreadUrl"
+            v-if="book.discordThreads?.length || book.discordThreadUrl"
+            :href="book.discordThreads?.[0]?.url ?? book.discordThreadUrl"
             target="_blank"
             rel="noopener"
             class="past-thread"

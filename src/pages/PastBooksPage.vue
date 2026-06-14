@@ -74,8 +74,8 @@
 
           <!-- Discord discussion link -->
           <a
-            v-if="book.discordThreadUrl"
-            :href="book.discordThreadUrl"
+            v-if="book.discordThreads?.length || book.discordThreadUrl"
+            :href="book.discordThreads?.[0]?.url ?? book.discordThreadUrl"
             target="_blank"
             rel="noopener noreferrer"
             class="btn btn-discord discord-btn"

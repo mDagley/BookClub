@@ -37,8 +37,18 @@
               <td class="col-author">{{ book.author }}</td>
               <td class="col-date">{{ formatDate(book.dateRead) }}</td>
               <td class="col-thread">
+                <template v-if="book.discordThreads?.length">
+                  <a
+                    v-for="t in book.discordThreads"
+                    :key="t.url"
+                    :href="t.url"
+                    target="_blank"
+                    rel="noopener"
+                    class="thread-link"
+                  >{{ t.title || 'Thread' }} ↗</a>
+                </template>
                 <a
-                  v-if="book.discordThreadUrl"
+                  v-else-if="book.discordThreadUrl"
                   :href="book.discordThreadUrl"
                   target="_blank"
                   rel="noopener"
@@ -85,8 +95,21 @@
                     </div>
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Discord Thread URL</label>
-                    <DiscordThreadPicker v-model="editForm.discordThreadUrl" category="finished" />
+                    <label class="form-label">Discord Threads</label>
+                    <div class="list-editor">
+                      <div
+                        v-for="(thread, index) in editForm.discordThreads"
+                        :key="thread._key"
+                        class="list-row"
+                      >
+                        <div class="thread-fields">
+                          <input v-model="thread.title" type="text" class="form-input" placeholder="e.g. General Discussion" />
+                          <DiscordThreadPicker v-model="thread.url" category="finished" />
+                        </div>
+                        <button type="button" class="btn-icon btn-delete" @click="removeEditItem('discordThreads', index)">✕</button>
+                      </div>
+                      <button type="button" class="btn btn-add" @click="addEditThread">+ Add Thread</button>
+                    </div>
                   </div>
                   <div class="form-group">
                     <label class="form-label">Synopsis <span class="label-note">(short, shown on card)</span></label>
@@ -288,8 +311,21 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Discord Thread URL</label>
-        <DiscordThreadPicker v-model="addForm.discordThreadUrl" category="finished" />
+        <label class="form-label">Discord Threads</label>
+        <div class="list-editor">
+          <div
+            v-for="(thread, index) in addForm.discordThreads"
+            :key="thread._key"
+            class="list-row"
+          >
+            <div class="thread-fields">
+              <input v-model="thread.title" type="text" class="form-input" placeholder="e.g. General Discussion" />
+              <DiscordThreadPicker v-model="thread.url" category="finished" />
+            </div>
+            <button type="button" class="btn-icon btn-delete" @click="addForm.discordThreads.splice(index, 1)">✕</button>
+          </div>
+          <button type="button" class="btn btn-add" @click="addForm.discordThreads.push({ title: '', url: '', _key: nextKey() })">+ Add Thread</button>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Synopsis <span class="label-note">(short, shown on card)</span></label>
@@ -357,7 +393,7 @@ const addMessage = ref('')
 const addMessageType = ref('success')
 
 function emptyAddForm() {
-  return { title: '', author: '', dateRead: '', coverUrl: '', discordThreadUrl: '', synopsis: '', fullDescription: '', discordSummary: '', genres: [] }
+  return { title: '', author: '', dateRead: '', coverUrl: '', discordThreads: [], synopsis: '', fullDescription: '', discordSummary: '', genres: [] }
 }
 
 const addForm = ref(emptyAddForm())
@@ -389,7 +425,11 @@ function startEdit(book) {
     author: book.author || '',
     dateRead: dateStr,
     coverUrl: book.coverUrl || '',
-    discordThreadUrl: book.discordThreadUrl || '',
+    discordThreads: book.discordThreads?.length
+      ? book.discordThreads.map(t => ({ ...t, _key: nextKey() }))
+      : book.discordThreadUrl
+        ? [{ title: 'Discussion', url: book.discordThreadUrl, _key: nextKey() }]
+        : [],
     synopsis: book.synopsis || '',
     fullDescription: book.fullDescription || '',
     discordSummary: book.discordSummary || '',
@@ -435,7 +475,7 @@ async function saveEdit(id) {
       author: f.author,
       dateRead: dateReadTs,
       coverUrl: f.coverUrl,
-      discordThreadUrl: f.discordThreadUrl,
+      discordThreads: f.discordThreads.map(({ _key, ...rest }) => rest).filter(t => t.url),
       synopsis: f.synopsis,
       fullDescription: f.fullDescription,
       discordSummary: f.discordSummary,
@@ -473,6 +513,9 @@ function addEditMaterial() {
 }
 function addEditQuote() {
   editForm.value.quotes.push({ text: '', attribution: '', _key: nextKey() })
+}
+function addEditThread() {
+  editForm.value.discordThreads.push({ title: '', url: '', _key: nextKey() })
 }
 function removeEditItem(list, index) {
   editForm.value[list].splice(index, 1)
@@ -637,6 +680,14 @@ async function submitAdd() {
 }
 
 .thread-link:hover { text-decoration: underline; }
+.thread-link + .thread-link { margin-top: 0.2rem; display: block; }
+
+.thread-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
 
 .empty-cell {
   color: var(--text-muted);
