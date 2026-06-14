@@ -27,11 +27,11 @@ Family book club web app. Vue 3 (Composition API, `<script setup>`) + Vite front
 
 ## Tests
 
-This project has no test suite yet. Until one is established:
+Vitest is configured (`npm test`) but the repo currently has no test files. Until tests are added:
 
-- Flag any PR that adds new utility functions in `src/utils/` without accompanying unit tests.
+- Flag any PR that adds new utility functions in `src/utils/` without accompanying unit tests — these are pure functions that can be tested with Vitest without any browser or Firestore dependency.
 - Flag any PR that adds or modifies data-transformation logic (filtering, sorting, mapping) in composables without tests.
-- Do not flag missing tests for Vue components, pages, or Firestore-dependent composables — those require integration infrastructure that doesn't exist yet.
+- Do not flag missing tests for Vue components, pages, or Firestore-dependent composables — those require integration infrastructure not yet in place.
 - When flagging a missing test, suggest a specific test case (input → expected output), not just "add tests."
 
 ---
@@ -62,7 +62,7 @@ This project has no test suite yet. Until one is established:
 - Composables that use `onSnapshot` must call `onUnmounted(unsubscribe)` to clean up listeners. Flag any `onSnapshot` without cleanup.
 - `alreadyRead` arrays store Discord handles (e.g. `"pandamel"`), never display names. Flag any code that writes a display name or full name into an `alreadyRead` field.
 - Firestore writes from client code use `updateDoc` / `addDoc` / `arrayUnion` / `arrayRemove` from `firebase/firestore`. Flag any direct use of the Admin SDK from `src/`.
-- One-off admin scripts live in `scripts/` with a `.cjs` extension (root `package.json` has `"type": "module"`). Flag `.js` scripts in `scripts/` that use `require()`.
+- One-off admin scripts live in `scripts/`. Because root `package.json` has `"type": "module"`, any script using `require()` must use the `.cjs` extension or Node will throw. Flag any new `.js` file added to `scripts/` that contains `require()` calls.
 
 ---
 
