@@ -71,7 +71,7 @@ function prev() {
 }
 
 function start() {
-  if (props.quotes.length <= 1 || userPaused.value || isHovered.value) return
+  if (timer || props.quotes.length <= 1 || userPaused.value || isHovered.value) return
   timer = setInterval(() => {
     direction.value = 'slide-next'
     current.value = (current.value + 1) % props.quotes.length
