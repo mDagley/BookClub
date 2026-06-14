@@ -26,11 +26,13 @@
         </div>
         <button class="nav-btn" @click="next" aria-label="Next quote">›</button>
         <button
+          type="button"
           class="pause-btn"
           :class="{ paused: userPaused }"
-          @click="togglePause"
+          :aria-pressed="userPaused"
           :aria-label="userPaused ? 'Play' : 'Pause'"
           :title="userPaused ? 'Play' : 'Pause'"
+          @click="togglePause"
         >{{ userPaused ? '▶' : '⏸' }}</button>
       </div>
     </div>
