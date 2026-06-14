@@ -1,7 +1,23 @@
 <template>
   <div class="past-book-detail">
-    <!-- Back link -->
-    <RouterLink to="/past-books" class="back-link">← Past Books</RouterLink>
+    <!-- Top bar: back link + neighbour nav -->
+    <div class="top-bar">
+      <RouterLink to="/past-books" class="back-btn">← Past Books</RouterLink>
+      <div v-if="!loading && pastBooks.length > 1" class="top-nav">
+        <RouterLink
+          v-if="newerBook"
+          :to="`/past-books/${newerBook.id}`"
+          class="top-nav-link"
+          :title="newerBook.title"
+        >← {{ newerBook.title }}</RouterLink>
+        <RouterLink
+          v-if="olderBook"
+          :to="`/past-books/${olderBook.id}`"
+          class="top-nav-link"
+          :title="olderBook.title"
+        >{{ olderBook.title }} →</RouterLink>
+      </div>
+    </div>
 
     <div v-if="loading" class="detail-loading">
       <div class="skeleton" style="height: 300px; border-radius: var(--radius-md);" />
@@ -116,12 +132,43 @@
         :current-chapter="currentChapter"
         :is-visible="isVisible"
       />
+
+      <!-- Bottom book navigation -->
+      <nav v-if="newerBook || olderBook" class="book-nav">
+        <RouterLink
+          v-if="newerBook"
+          :to="`/past-books/${newerBook.id}`"
+          class="book-nav-card book-nav-prev"
+        >
+          <img v-if="newerBook.coverUrl" :src="newerBook.coverUrl" :alt="newerBook.title" class="nav-cover" />
+          <div v-else class="nav-cover nav-cover-placeholder"><img src="/book-icon.svg" class="nav-placeholder-icon" alt="" /></div>
+          <div class="nav-book-info">
+            <span class="nav-direction">← More recent</span>
+            <span class="nav-title">{{ newerBook.title }}</span>
+            <span class="nav-date">{{ formatDate(newerBook.dateRead) }}</span>
+          </div>
+        </RouterLink>
+
+        <RouterLink
+          v-if="olderBook"
+          :to="`/past-books/${olderBook.id}`"
+          class="book-nav-card book-nav-next"
+        >
+          <div class="nav-book-info nav-book-info-right">
+            <span class="nav-direction">Older read →</span>
+            <span class="nav-title">{{ olderBook.title }}</span>
+            <span class="nav-date">{{ formatDate(olderBook.dateRead) }}</span>
+          </div>
+          <img v-if="olderBook.coverUrl" :src="olderBook.coverUrl" :alt="olderBook.title" class="nav-cover" />
+          <div v-else class="nav-cover nav-cover-placeholder"><img src="/book-icon.svg" class="nav-placeholder-icon" alt="" /></div>
+        </RouterLink>
+      </nav>
     </template>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePastBooks } from '../composables/usePastBooks.js'
 import { useSpoilerFilter } from '../composables/useSpoilerFilter.js'
@@ -135,6 +182,14 @@ const route = useRoute()
 const { pastBooks, loading } = usePastBooks()
 
 const book = computed(() => pastBooks.value.find(b => b.id === route.params.id) ?? null)
+
+// pastBooks is already sorted descending (newest first) from usePastBooks
+const currentIndex = computed(() => pastBooks.value.findIndex(b => b.id === route.params.id))
+const newerBook = computed(() => currentIndex.value > 0 ? pastBooks.value[currentIndex.value - 1] : null)
+const olderBook = computed(() => {
+  const i = currentIndex.value
+  return i >= 0 && i < pastBooks.value.length - 1 ? pastBooks.value[i + 1] : null
+})
 
 const spoilerKey = computed(() => `bookclub_spoiler_past_${String(route.params.id ?? '')}`)
 const { currentChapter, isVisible } = useSpoilerFilter(spoilerKey)
@@ -159,6 +214,18 @@ function scrollTo(id) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+function observeSections(sections) {
+  if (!observer) return
+  observer.disconnect()
+  activeSection.value = ''
+  nextTick(() => {
+    sections.forEach(s => {
+      const el = document.getElementById(s.id)
+      if (el) observer.observe(el)
+    })
+  })
+}
+
 let observer = null
 onMounted(() => {
   observer = new IntersectionObserver(entries => {
@@ -166,14 +233,10 @@ onMounted(() => {
       if (e.isIntersecting) activeSection.value = e.target.id
     }
   }, { rootMargin: '-30% 0px -60% 0px' })
-
-  setTimeout(() => {
-    navSections.value.forEach(s => {
-      const el = document.getElementById(s.id)
-      if (el) observer.observe(el)
-    })
-  }, 100)
+  observeSections(navSections.value)
 })
+
+watch(navSections, observeSections)
 onUnmounted(() => observer?.disconnect())
 
 function formatDate(dateRead) {
@@ -194,13 +257,47 @@ function formatDate(dateRead) {
   gap: 1.25rem;
 }
 
-.back-link {
+/* Top bar */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   color: var(--text-muted);
   font-family: var(--font-sans);
   font-size: 0.85rem;
   text-decoration: none;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, border-color 0.15s;
 }
-.back-link:hover { color: var(--gold); }
+.back-btn:hover { color: var(--gold); border-color: var(--gold); }
+
+.top-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.top-nav-link {
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  text-decoration: none;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s;
+}
+.top-nav-link:hover { color: var(--gold); }
 
 .detail-loading,
 .detail-empty {
@@ -346,9 +443,100 @@ function formatDate(dateRead) {
   color: var(--gold);
 }
 
+/* Bottom book navigation */
+.book-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.book-nav-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 0;
+}
+
+.book-nav-card:hover {
+  border-color: var(--gold);
+  background: rgba(200, 150, 60, 0.04);
+}
+
+.book-nav-next {
+  justify-content: flex-end;
+}
+
+.nav-cover {
+  flex-shrink: 0;
+  width: 44px;
+  height: 62px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.nav-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-subtle);
+}
+
+.nav-placeholder-icon {
+  width: 55%;
+  opacity: 0.4;
+}
+
+.nav-book-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.nav-book-info-right {
+  text-align: right;
+}
+
+.nav-direction {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.nav-title {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--gold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-date {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 @media (max-width: 640px) {
   .book-header { flex-direction: column; }
   .cover-img { width: 120px; }
   .book-title { font-size: 1.4rem; }
+
+  .top-nav { display: none; }
+
+  .book-nav { grid-template-columns: 1fr; }
+  .book-nav-next { justify-content: flex-start; flex-direction: row-reverse; }
+  .nav-book-info-right { text-align: left; }
 }
 </style>
