@@ -49,6 +49,7 @@ const INTERVAL = 20000
 const current = ref(0)
 const direction = ref('slide-next')
 const userPaused = ref(false)
+const isHovered = ref(false)
 let timer = null
 
 function goTo(i) {
@@ -70,7 +71,7 @@ function prev() {
 }
 
 function start() {
-  if (props.quotes.length <= 1 || userPaused.value) return
+  if (props.quotes.length <= 1 || userPaused.value || isHovered.value) return
   timer = setInterval(() => {
     direction.value = 'slide-next'
     current.value = (current.value + 1) % props.quotes.length
@@ -85,9 +86,8 @@ function togglePause() {
   userPaused.value ? stop() : start()
 }
 
-// Hover pause — only acts when the user hasn't manually paused
-function onMouseEnter() { if (!userPaused.value) stop() }
-function onMouseLeave() { if (!userPaused.value) start() }
+function onMouseEnter() { isHovered.value = true; if (!userPaused.value) stop() }
+function onMouseLeave() { isHovered.value = false; if (!userPaused.value) start() }
 
 onMounted(start)
 onUnmounted(stop)
