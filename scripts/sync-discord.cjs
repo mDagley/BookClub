@@ -1,9 +1,17 @@
 #!/usr/bin/env node
-// Syncs data from Discord book channels to Firestore past books.
-// Pulls: quotes from "Quotes" threads, supplemental materials from
-// "Supplemental Materials" / "Additional Resources" / "Resources" threads.
-// Deduplicates against existing Firestore data before writing.
-// Run manually: node scripts/sync-discord.js
+// Syncs data from Discord book channels to Firestore.
+//
+// Past books — for each book in the finished category (or CHANNEL_MAP):
+//   - discordThreads: derived from channel (text channel → one entry; forum → all threads)
+//   - quotes: extracted from Quotes threads
+//   - supplementalMaterials: extracted from Resources threads
+//
+// Current book — finds the channel in the current category by title slug:
+//   - discordThreads: all threads in the channel
+//   - quotes: extracted from Quotes thread
+//   - supplementalMaterials: extracted from Resources thread
+//
+// Run manually: node scripts/sync-discord.cjs
 // Run in CI: triggered by GitHub Actions (see .github/workflows/discord-sync.yml)
 
 const fs = require('fs')
@@ -18,13 +26,20 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
   const envPath = candidates.find(p => fs.existsSync(p))
   if (envPath) {
     for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-      const m = line.match(/^(FIREBASE_SERVICE_ACCOUNT|DISCORD_BOT_TOKEN|DISCORD_GUILD_ID)\s*=\s*(.+)$/)
+      const m = line.match(/^(FIREBASE_SERVICE_ACCOUNT|DISCORD_BOT_TOKEN|DISCORD_GUILD_ID|DISCORD_FINISHED_CATEGORY_ID|DISCORD_CURRENT_CATEGORY_ID)\s*=\s*(.+)$/)
       if (m) process.env[m[1]] = m[2].trim()
     }
   }
 }
 
-const { FIREBASE_SERVICE_ACCOUNT, DISCORD_BOT_TOKEN, DISCORD_GUILD_ID } = process.env
+const {
+  FIREBASE_SERVICE_ACCOUNT,
+  DISCORD_BOT_TOKEN,
+  DISCORD_GUILD_ID,
+  DISCORD_FINISHED_CATEGORY_ID,
+  DISCORD_CURRENT_CATEGORY_ID,
+} = process.env
+
 if (!FIREBASE_SERVICE_ACCOUNT || !DISCORD_BOT_TOKEN || !DISCORD_GUILD_ID) {
   console.error('Missing required environment variables')
   process.exit(1)
@@ -55,11 +70,91 @@ async function getMessages(channelId, limit = 100) {
   return Array.isArray(msgs) ? msgs.reverse() : []
 }
 
-// Find a thread by name in archived public threads for a forum channel
 async function findThread(forumId, name) {
-  const archived = await discord(`/channels/${forumId}/threads/archived/public?limit=50`)
   const lname = name.toLowerCase()
-  return archived.threads?.find(t => t.name.toLowerCase().includes(lname))?.id ?? null
+  try {
+    const archived = await discord(`/channels/${forumId}/threads/archived/public?limit=50`)
+    const found = archived.threads?.find(t => t.name.toLowerCase().includes(lname))
+    if (found) return found.id
+  } catch {}
+  try {
+    const active = await discord(`/guilds/${DISCORD_GUILD_ID}/threads/active`)
+    const found = active.threads?.find(t => t.parent_id === forumId && t.name.toLowerCase().includes(lname))
+    if (found) return found.id
+  } catch {}
+  return null
+}
+
+// ── Channel discovery ─────────────────────────────────────────────────────────
+
+// Explicit channel overrides — used when the channel name doesn't match the title slug
+// or to lock in a specific channel ID. Auto-discovery fills gaps for all other books.
+const CHANNEL_MAP = {
+  'Butter':                                      { id: '1388506469275795538', type: 0 },
+  'The Long Way to a Small, Angry Planet':       { id: '1360980434309087262', type: 0 },
+  'Juniper & Thorn':                             { id: '1418927009555546192', type: 15 },
+  'The Tainted Cup':                             { id: '1439335057042051123', type: 0 },
+  'Dawn':                                        { id: '1479843880814907442', type: 15 },
+}
+
+function titleToSlug(title) {
+  return title
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function resolveChannel(bookTitle, allChannels, categoryId) {
+  // Explicit override takes priority
+  const mapped = CHANNEL_MAP[bookTitle]
+  if (mapped) {
+    const full = allChannels.find(c => c.id === mapped.id)
+    return full ?? { id: mapped.id, type: mapped.type, name: bookTitle }
+  }
+  // Auto-discover by slug match within the category
+  if (!categoryId) return null
+  const slug = titleToSlug(bookTitle)
+  const inCategory = allChannels.filter(c => c.parent_id === categoryId)
+  return inCategory.find(c => {
+    const cSlug = titleToSlug(c.name)
+    return cSlug === slug || cSlug.startsWith(slug) || slug.startsWith(cSlug)
+  }) ?? null
+}
+
+// ── Thread enumeration ────────────────────────────────────────────────────────
+
+async function getForumThreads(channelId) {
+  const threads = []
+  // Archived (most discussions end up here)
+  try {
+    const archived = await discord(`/channels/${channelId}/threads/archived/public?limit=100`)
+    threads.push(...(archived.threads || []))
+  } catch {}
+  // Active threads
+  try {
+    const active = await discord(`/guilds/${DISCORD_GUILD_ID}/threads/active`)
+    const archivedIds = new Set(threads.map(t => t.id))
+    const here = (active.threads || []).filter(t => t.parent_id === channelId && !archivedIds.has(t.id))
+    threads.push(...here)
+  } catch {}
+  return threads
+}
+
+async function buildDiscordThreads(channel) {
+  const base = `https://discord.com/channels/${DISCORD_GUILD_ID}`
+  if (channel.type === 0) {
+    const title = channel.name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    return [{ title, url: `${base}/${channel.id}` }]
+  }
+  if (channel.type === 15) {
+    const threads = await getForumThreads(channel.id)
+    if (!threads.length) return [{ title: 'Discussion', url: `${base}/${channel.id}` }]
+    return threads.map(t => ({ title: t.name, url: `${base}/${t.id}` }))
+  }
+  return []
 }
 
 // ── Quotes extraction ─────────────────────────────────────────────────────────
@@ -101,12 +196,10 @@ function typeFromUrl(url) {
 
 function titleFromContext(message, url) {
   const text = message.replace(url, '').trim()
-  // Take the last non-empty line before the URL as the title
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i]
     if (line.length > 4 && !line.startsWith('http') && !line.startsWith('-')) {
-      // Strip list markers and trailing punctuation
       return line.replace(/^[-*•]\s*/, '').replace(/[.:,]$/, '').trim()
     }
   }
@@ -126,7 +219,6 @@ function extractMaterialsFromMessages(messages) {
     for (const url of urls) {
       if (seen.has(url)) continue
       seen.add(url)
-      // Skip Discord invite / hulu / subscription-only links
       if (/discord\.gg|discord\.com\/api/i.test(url)) continue
       const title = titleFromContext(content, url)
       const type = typeFromUrl(url)
@@ -164,65 +256,50 @@ function mergeMaterials(existing, incoming) {
   return added
 }
 
-// ── Channel map ───────────────────────────────────────────────────────────────
-// Maps Firestore pastBook title → Discord channel info
-// type 0 = text channel, type 15 = forum channel
+// ── Sync a single channel's quotes + materials ────────────────────────────────
 
-const CHANNEL_MAP = {
-  'Butter': { id: '1388506469275795538', type: 0 },
-  'The Long Way to a Small, Angry Planet': { id: '1360980434309087262', type: 0 },
-  'Juniper & Thorn': { id: '1418927009555546192', type: 15 },
-  'The Tainted Cup': { id: '1439335057042051123', type: 0 },
-  'Dawn': { id: '1479843880814907442', type: 15 },
-}
-
-// ── Main ──────────────────────────────────────────────────────────────────────
-
-async function syncBook(book, channel) {
+async function syncContentFromChannel(channel, existing) {
+  const quotes = existing.quotes ? [...existing.quotes] : []
+  const materials = existing.supplementalMaterials ? [...existing.supplementalMaterials] : []
   let newQuotes = 0
   let newMaterials = 0
 
-  const quotes = book.quotes ? [...book.quotes] : []
-  const materials = book.supplementalMaterials ? [...book.supplementalMaterials] : []
-
   if (channel.type === 15) {
-    // Forum channel — look for named threads
     const quotesThreadId = await findThread(channel.id, 'quotes')
     if (quotesThreadId) {
       const msgs = await getMessages(quotesThreadId)
-      const extracted = extractQuotesFromMessages(msgs)
-      newQuotes = mergeQuotes(quotes, extracted).length
+      newQuotes = mergeQuotes(quotes, extractQuotesFromMessages(msgs)).length
     }
-
-    for (const threadName of ['supplemental material', 'additional resource', 'resource', 'material']) {
-      const threadId = await findThread(channel.id, threadName)
+    for (const name of ['supplemental material', 'additional resource', 'resource', 'material']) {
+      const threadId = await findThread(channel.id, name)
       if (threadId) {
         const msgs = await getMessages(threadId)
-        const extracted = extractMaterialsFromMessages(msgs)
-        newMaterials += mergeMaterials(materials, extracted).length
+        newMaterials += mergeMaterials(materials, extractMaterialsFromMessages(msgs)).length
         break
       }
     }
   } else {
-    // Text channel — scan all messages for quotes and URLs
     const msgs = await getMessages(channel.id)
-    const extractedQ = extractQuotesFromMessages(msgs)
-    newQuotes = mergeQuotes(quotes, extractedQ).length
-    const extractedM = extractMaterialsFromMessages(msgs)
-    newMaterials = mergeMaterials(materials, extractedM).length
+    newQuotes = mergeQuotes(quotes, extractQuotesFromMessages(msgs)).length
+    newMaterials = mergeMaterials(materials, extractMaterialsFromMessages(msgs)).length
   }
 
-  if (newQuotes > 0 || newMaterials > 0) {
-    const update = {}
-    if (newQuotes > 0) update.quotes = quotes
-    if (newMaterials > 0) update.supplementalMaterials = materials
-    await db.collection('pastBooks').doc(book.id).update(update)
-  }
-
-  return { newQuotes, newMaterials }
+  return { quotes, materials, newQuotes, newMaterials }
 }
 
+// ── Main ──────────────────────────────────────────────────────────────────────
+
 async function main() {
+  // Fetch all guild channels once — used for auto-discovery
+  let allChannels = []
+  try {
+    allChannels = await discord(`/guilds/${DISCORD_GUILD_ID}/channels`)
+  } catch (err) {
+    console.warn('Could not fetch guild channels (auto-discovery disabled):', err.message)
+  }
+
+  // ── Past books ──────────────────────────────────────────────────────────────
+  console.log('── Past books ──')
   const snap = await db.collection('pastBooks').get()
   const books = snap.docs.map(d => ({ id: d.id, ...d.data() }))
 
@@ -230,24 +307,63 @@ async function main() {
   let totalMaterials = 0
 
   for (const book of books) {
-    const channel = CHANNEL_MAP[book.title]
+    const channel = resolveChannel(book.title, allChannels, DISCORD_FINISHED_CATEGORY_ID)
     if (!channel) {
-      console.log(`"${book.title}": no Discord channel mapped — skipping`)
+      console.log(`  "${book.title}": no Discord channel found — skipping`)
       continue
     }
-    process.stdout.write(`"${book.title}"… `)
+    process.stdout.write(`  "${book.title}"… `)
     try {
-      const { newQuotes, newMaterials } = await syncBook(book, channel)
+      const threads = await buildDiscordThreads(channel)
+      const { quotes, materials, newQuotes, newMaterials } = await syncContentFromChannel(channel, book)
+
+      const update = { discordThreads: threads }
+      if (newQuotes > 0) update.quotes = quotes
+      if (newMaterials > 0) update.supplementalMaterials = materials
+      await db.collection('pastBooks').doc(book.id).update(update)
+
       totalQuotes += newQuotes
       totalMaterials += newMaterials
-      console.log(
-        newQuotes || newMaterials
-          ? `+${newQuotes} quotes, +${newMaterials} materials`
-          : 'nothing new'
-      )
+      const parts = [`${threads.length} thread(s)`]
+      if (newQuotes) parts.push(`+${newQuotes} quotes`)
+      if (newMaterials) parts.push(`+${newMaterials} materials`)
+      console.log(parts.join(', '))
     } catch (err) {
       console.log(`error: ${err.message}`)
     }
+  }
+
+  // ── Current book ────────────────────────────────────────────────────────────
+  console.log('\n── Current book ──')
+  try {
+    const configDoc = await db.collection('config').doc('main').get()
+    const currentBook = configDoc.data()?.currentBook
+    if (!currentBook?.title) {
+      console.log('  Not set — skipping')
+    } else {
+      const channel = resolveChannel(currentBook.title, allChannels, DISCORD_CURRENT_CATEGORY_ID)
+      if (!channel) {
+        console.log(`  "${currentBook.title}": no Discord channel found`)
+      } else {
+        process.stdout.write(`  "${currentBook.title}"… `)
+        const threads = await buildDiscordThreads(channel)
+        const { quotes, materials, newQuotes, newMaterials } = await syncContentFromChannel(channel, currentBook)
+
+        const update = { 'currentBook.discordThreads': threads }
+        if (newQuotes > 0) update['currentBook.quotes'] = quotes
+        if (newMaterials > 0) update['currentBook.supplementalMaterials'] = materials
+        await db.collection('config').doc('main').update(update)
+
+        totalQuotes += newQuotes
+        totalMaterials += newMaterials
+        const parts = [`${threads.length} thread(s)`]
+        if (newQuotes) parts.push(`+${newQuotes} quotes`)
+        if (newMaterials) parts.push(`+${newMaterials} materials`)
+        console.log(parts.join(', '))
+      }
+    }
+  } catch (err) {
+    console.log(`  error: ${err.message}`)
   }
 
   console.log(`\nDone. Total new: ${totalQuotes} quotes, ${totalMaterials} materials.`)
