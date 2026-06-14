@@ -62,7 +62,7 @@ async function fetchFromGoogleBooks(title, author) {
     const synopsis = firstPara.length > 220 ? firstPara.slice(0, 217) + '…' : firstPara || null
     const thumbnail = info.imageLinks?.thumbnail
     let coverUrl = thumbnail
-      ? thumbnail.replace('http://', 'https://').replace('zoom=1', 'zoom=2')
+      ? thumbnail.replace('http://', 'https://').replace(/zoom=\d/, 'zoom=3')
       : null
 
     if (coverUrl && await isGenericCover(coverUrl)) coverUrl = null
@@ -156,7 +156,7 @@ export async function searchBooks(query) {
         const synopsis = firstPara.length > 220 ? firstPara.slice(0, 217) + '…' : firstPara || null
         const thumbnail = info.imageLinks?.thumbnail
         const coverUrl = thumbnail
-          ? thumbnail.replace('http://', 'https://').replace('zoom=1', 'zoom=2')
+          ? thumbnail.replace('http://', 'https://').replace(/zoom=\d/, 'zoom=3')
           : null
         return {
           title: info.title || '',
