@@ -194,7 +194,7 @@ async function fetchCoverForEdit() {
     const parts = []
     if (editForm.value.title) parts.push(`intitle:${editForm.value.title}`)
     if (editForm.value.author) parts.push(`inauthor:${editForm.value.author}`)
-    const query = parts.join('+')
+    const query = parts.join(' ')
     const results = await searchBooks(query)
     const withCovers = results.filter(r => r.coverUrl)
     if (withCovers.length) {

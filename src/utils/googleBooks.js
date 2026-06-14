@@ -47,14 +47,18 @@ function isGenericCover(url) {
 // ── Google Books ──────────────────────────────────────────────────────────────
 
 // Produces the highest-quality cover URL Google Books can serve for a thumbnail link.
-// fife=w480 overrides the zoom level and forces a 480px-wide image from Google's CDN.
+// fife=w480 forces a 480px-wide image from Google's CDN; edge=curl is a decorative artifact.
 function betterCoverUrl(thumbnail) {
   if (!thumbnail) return null
-  return thumbnail
-    .replace('http://', 'https://')
-    .replace(/zoom=\d+/, 'zoom=3')
-    .replace(/&edge=curl/, '')
-    + '&fife=w480'
+  try {
+    const u = new URL(thumbnail.replace('http://', 'https://'))
+    u.searchParams.delete('edge')
+    u.searchParams.set('zoom', '3')
+    u.searchParams.set('fife', 'w480')
+    return u.toString()
+  } catch {
+    return thumbnail.replace('http://', 'https://')
+  }
 }
 
 async function fetchFromGoogleBooks(title, author) {
