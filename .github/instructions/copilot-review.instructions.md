@@ -6,7 +6,7 @@ Family book club web app. Vue 3 (Composition API, `<script setup>`) + Vite front
 
 ---
 
-## Changelog
+## Changelog and README
 
 **Every PR that adds a feature or fixes a bug must update `src/pages/ChangelogPage.vue`.**
 
@@ -15,6 +15,13 @@ Family book club web app. Vue 3 (Composition API, `<script setup>`) + Vite front
 - Entry text should be user-facing and plain-English — describe what changed from the user's perspective, not the implementation.
 - Flag any PR that modifies component, page, composable, utility, or server files without a corresponding changelog entry.
 - Pure refactors, dependency bumps, config-only changes, and infrastructure files (workflows, scripts) do not need changelog entries.
+
+**`README.md` must also be kept up to date.**
+
+- Flag any PR that adds or removes a major feature, changes environment variables, alters the project structure, or updates deployment/setup steps without a corresponding README update.
+- Flag any PR that adds new `scripts/` files without documenting their purpose and usage in the README.
+- Flag any PR that adds or removes GitHub Actions workflows without updating the README's CI/automation section (if one exists).
+- Minor bug fixes and cosmetic changes do not require a README update.
 
 ---
 
