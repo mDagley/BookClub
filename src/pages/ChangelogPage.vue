@@ -27,6 +27,7 @@ const releases = [
   {
     date: 'June 2026',
     entries: [
+      { type: 'feature', text: 'Admin can now create a Discord channel for a new book in one click — sets up forum tags (General, Characters, Background, Spoilers, chapter ranges) and creates starter threads automatically. Optionally moves the previous book\'s channel to the Finished category.' },
       { type: 'fix',     text: '"I haven\'t read" filter now correctly hides books you\'ve marked as read via the read button, not just ones set through the admin panel.' },
       { type: 'feature', text: 'Spoiler filter on past book pages — set your current chapter to hide characters and timeline events you haven\'t reached yet.' },
       { type: 'feature', text: 'Current book page now hides all characters and timeline events by default. Enter your chapter number to reveal content up to that point.' },

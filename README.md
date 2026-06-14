@@ -200,7 +200,7 @@ Navigate to `/admin` and log in with Discord. The server validates that you are 
 
 From the admin panel you can:
 
-- **Current Book** — set title, author, cover, genres, synopsis, Goodreads link, meeting details, Discord thread links, supplemental materials, characters, and story timeline
+- **Current Book** — set title, author, cover, genres, synopsis, Goodreads link, meeting details, Discord thread links, supplemental materials, characters, and story timeline; **Discord Channel Setup** button creates a forum channel with standard tags and starter threads, and optionally moves the previous book's channel to the Finished category (requires `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_CURRENT_CATEGORY_ID`)
 - **Past Books** — add, edit, and delete past books; same fields as current book plus date read
 - **Suggestions** — edit or delete any suggestion; promote a suggestion directly to the current book
 - **Members** — map Discord usernames to display names shown across the site
