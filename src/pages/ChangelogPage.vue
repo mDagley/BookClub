@@ -45,6 +45,10 @@ const releases = [
       { type: 'feature', text: 'Spoiler filter on past book pages — set your current chapter to hide characters and timeline events you haven\'t reached yet.' },
       { type: 'feature', text: 'Current book page now hides all characters and timeline events by default. Enter your chapter number to reveal content up to that point.' },
       { type: 'feature', text: 'Gideon the Ninth character list and full story timeline added to the current book page.' },
+      { type: 'feature', text: 'Past book pages now have a back button and top-bar links to navigate to the next and previous books in reading order.' },
+      { type: 'feature', text: 'Quotes carousel now auto-advances every 20 seconds and has a pause/play button — hover also pauses the carousel.' },
+      { type: 'feature', text: 'Admin can now refresh missing cover images in bulk, or fetch a cover for any individual suggestion.' },
+      { type: 'fix',     text: 'Book cover images are now fetched at higher resolution — blurry thumbnails replaced with sharper versions.' },
     ],
   },
   {
