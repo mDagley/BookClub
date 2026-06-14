@@ -3,7 +3,7 @@
     <!-- Top bar: back link + neighbour nav -->
     <div class="top-bar">
       <RouterLink to="/past-books" class="back-btn">← Past Books</RouterLink>
-      <div v-if="!loading && pastBooks.length > 1" class="top-nav">
+      <div v-if="newerBook || olderBook" class="top-nav">
         <RouterLink
           v-if="newerBook"
           :to="`/past-books/${newerBook.id}`"
@@ -181,10 +181,9 @@ import QuotesCarousel from '../components/book/QuotesCarousel.vue'
 const route = useRoute()
 const { pastBooks, loading } = usePastBooks()
 
-const book = computed(() => pastBooks.value.find(b => b.id === route.params.id) ?? null)
-
 // pastBooks is already sorted descending (newest first) from usePastBooks
 const currentIndex = computed(() => pastBooks.value.findIndex(b => b.id === route.params.id))
+const book = computed(() => pastBooks.value[currentIndex.value] ?? null)
 const newerBook = computed(() => currentIndex.value > 0 ? pastBooks.value[currentIndex.value - 1] : null)
 const olderBook = computed(() => {
   const i = currentIndex.value
