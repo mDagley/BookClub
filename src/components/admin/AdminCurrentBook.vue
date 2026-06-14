@@ -196,7 +196,7 @@
     <div class="form-section">
       <h3 class="form-section-title">Discord Channel Setup</h3>
       <p class="section-note">
-        Creates a forum channel for this book in Discord, adds starter threads (So Far, Characters, Discussion Questions, Themes, Resources), and optionally moves the previous book's channel to the Finished category.
+        Creates a forum channel for this book in Discord, adds starter threads (So Far, Characters, Discussion Questions, Themes, Additional Resources), and optionally moves the previous book's channel to the Finished category.
         Save the book first so character data is included.
       </p>
 
@@ -211,6 +211,9 @@
             <span class="result-thread-name">{{ thread.name }}</span>
             <a :href="thread.url" target="_blank" rel="noopener" class="result-thread-url">{{ thread.url }}</a>
           </div>
+        </div>
+        <div v-if="discordSetupResult.warnings?.length" class="result-warnings">
+          <p v-for="(w, i) in discordSetupResult.warnings" :key="i" class="result-warning">⚠️ {{ w }}</p>
         </div>
       </div>
 
@@ -378,7 +381,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { doc, updateDoc } from 'firebase/firestore'
-import { db } from '../../firebase.js'
+import { db, auth } from '../../firebase.js'
 import { useConfig } from '../../composables/useConfig.js'
 import { usePastBooks } from '../../composables/usePastBooks.js'
 import { fetchBookMetadata } from '../../utils/googleBooks.js'
@@ -607,6 +610,11 @@ async function setupDiscordChannel() {
   discordSetupError.value = ''
   discordSetupResult.value = null
   try {
+    const idToken = await auth.currentUser?.getIdToken()
+    if (!idToken) {
+      discordSetupError.value = 'You must be logged in to create a Discord channel'
+      return
+    }
     const body = {
       bookTitle: form.value.title,
       bookAuthor: form.value.author,
@@ -616,7 +624,10 @@ async function setupDiscordChannel() {
     }
     const res = await fetch('/api/discord-promote-book', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`,
+      },
       body: JSON.stringify(body),
     })
     const data = await res.json()
@@ -626,7 +637,7 @@ async function setupDiscordChannel() {
       discordSetupResult.value = data
     }
   } catch (err) {
-    discordSetupError.value = 'Network error: ' + err.message
+    discordSetupError.value = 'Network error: ' + (err instanceof Error ? err.message : String(err))
   } finally {
     discordSetting.value = false
   }
@@ -1199,6 +1210,19 @@ async function archiveBook() {
 
 .result-thread-url:hover {
   color: var(--gold);
+}
+
+.result-warnings {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.result-warning {
+  font-size: 0.8rem;
+  color: #f6c16a;
+  margin: 0;
 }
 
 /* Autocomplete */

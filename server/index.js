@@ -285,7 +285,19 @@ app.get('/api/discord-channels', async (req, res) => {
 // --- Discord book-promotion automation ---
 // Creates a forum channel for the new book, populates it with starter threads,
 // and optionally moves the previous book's channel to the finished category.
+// Requires a valid Firebase ID token in the Authorization header.
 app.post('/api/discord-promote-book', async (req, res) => {
+  // Auth: verify Firebase ID token sent by the admin UI
+  const authHeader = req.headers.authorization
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authorization required' })
+  }
+  try {
+    await admin.auth().verifyIdToken(authHeader.slice(7))
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' })
+  }
+
   const botToken = process.env.DISCORD_BOT_TOKEN
   const guildId = process.env.DISCORD_GUILD_ID
   const currentCategoryId = process.env.DISCORD_CURRENT_CATEGORY_ID
@@ -295,9 +307,14 @@ app.post('/api/discord-promote-book', async (req, res) => {
     return res.status(500).json({ error: 'DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, and DISCORD_CURRENT_CATEGORY_ID are required' })
   }
 
-  const { bookTitle, bookAuthor, previousChannelId } = req.body
+  const { bookTitle, bookAuthor } = req.body
+  const previousChannelId = String(req.body.previousChannelId || '').trim()
+
   if (!bookTitle || typeof bookTitle !== 'string' || !bookTitle.trim()) {
     return res.status(400).json({ error: 'bookTitle is required' })
+  }
+  if (previousChannelId && !finishedCategoryId) {
+    return res.status(400).json({ error: 'DISCORD_FINISHED_CATEGORY_ID must be configured to move the previous channel' })
   }
 
   const title = bookTitle.trim()
@@ -316,7 +333,12 @@ app.post('/api/discord-promote-book', async (req, res) => {
 
   try {
     // 1. Create forum channel in the current-books category
-    const channelName = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 100)
+    // Normalize diacritics to ASCII so titles like "Naïve" don't produce an empty slug
+    const normalized = title.normalize('NFD').replace(/[̀-ͯ]/g, '')
+    const channelName = (
+      normalized.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100)
+    ) || 'book-channel'
+
     const channelRes = await dApi('POST', `/guilds/${guildId}/channels`, {
       name: channelName,
       type: 15, // GUILD_FORUM
@@ -329,7 +351,7 @@ app.post('/api/discord-promote-book', async (req, res) => {
     const channelId = channelRes.body.id
     await sleep(500)
 
-    // 2. Add standard forum tags
+    // 2. Add standard forum tags — fail fast if this doesn't work
     const tagDefs = [
       { name: 'General',    emoji_name: '💬' },
       { name: 'Characters', emoji_name: '👤' },
@@ -342,10 +364,11 @@ app.post('/api/discord-promote-book', async (req, res) => {
       { name: 'Finished',   emoji_name: '📚' },
     ]
     const tagRes = await dApi('PATCH', `/channels/${channelId}`, { available_tags: tagDefs })
-    const tagMap = {}
-    if (tagRes.ok && tagRes.body.available_tags) {
-      for (const t of tagRes.body.available_tags) tagMap[t.name] = t.id
+    if (!tagRes.ok || !tagRes.body.available_tags) {
+      return res.status(500).json({ error: 'Failed to configure channel tags', details: tagRes.body })
     }
+    const tagMap = {}
+    for (const t of tagRes.body.available_tags) tagMap[t.name] = t.id
     await sleep(500)
 
     // 3. Look up current book data from Firestore for character list
@@ -427,15 +450,21 @@ app.post('/api/discord-promote-book', async (req, res) => {
     }
 
     // 6. Move old channel to finished category if provided
-    if (previousChannelId && finishedCategoryId) {
+    const warnings = []
+    if (previousChannelId) {
       await sleep(500)
-      await dApi('PATCH', `/channels/${previousChannelId}`, { parent_id: finishedCategoryId })
+      const moveRes = await dApi('PATCH', `/channels/${previousChannelId}`, { parent_id: finishedCategoryId })
+      if (!moveRes.ok) {
+        console.error('Failed to move previous channel:', moveRes.body)
+        warnings.push(`Previous channel move failed: ${moveRes.body?.message || moveRes.status}`)
+      }
     }
 
     return res.json({
       channelId,
       channelUrl: `https://discord.com/channels/${guildId}/${channelId}`,
       threads: createdThreads,
+      ...(warnings.length ? { warnings } : {}),
     })
   } catch (err) {
     console.error('discord-promote-book error:', err)
