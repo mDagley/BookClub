@@ -46,6 +46,21 @@ function isGenericCover(url) {
 
 // ── Google Books ──────────────────────────────────────────────────────────────
 
+// Produces the highest-quality cover URL Google Books can serve for a thumbnail link.
+// fife=w480 forces a 480px-wide image from Google's CDN; edge=curl is a decorative artifact.
+function betterCoverUrl(thumbnail) {
+  if (!thumbnail) return null
+  try {
+    const u = new URL(thumbnail.replace('http://', 'https://'))
+    u.searchParams.delete('edge')
+    u.searchParams.set('zoom', '3')
+    u.searchParams.set('fife', 'w480')
+    return u.toString()
+  } catch {
+    return thumbnail.replace('http://', 'https://')
+  }
+}
+
 async function fetchFromGoogleBooks(title, author) {
   try {
     const q = encodeURIComponent(`intitle:${title}${author ? ` inauthor:${author}` : ''}`)
@@ -61,9 +76,7 @@ async function fetchFromGoogleBooks(title, author) {
     const firstPara = rawDesc.split(/\n\n|\r\n\r\n/)[0].trim()
     const synopsis = firstPara.length > 220 ? firstPara.slice(0, 217) + '…' : firstPara || null
     const thumbnail = info.imageLinks?.thumbnail
-    let coverUrl = thumbnail
-      ? thumbnail.replace('http://', 'https://').replace(/zoom=\d+/, 'zoom=3')
-      : null
+    let coverUrl = betterCoverUrl(thumbnail)
 
     if (coverUrl && await isGenericCover(coverUrl)) coverUrl = null
 
@@ -155,9 +168,7 @@ export async function searchBooks(query) {
         const firstPara = rawDesc.split(/\n\n|\r\n\r\n/)[0].trim()
         const synopsis = firstPara.length > 220 ? firstPara.slice(0, 217) + '…' : firstPara || null
         const thumbnail = info.imageLinks?.thumbnail
-        const coverUrl = thumbnail
-          ? thumbnail.replace('http://', 'https://').replace(/zoom=\d+/, 'zoom=3')
-          : null
+        const coverUrl = betterCoverUrl(thumbnail)
         return {
           title: info.title || '',
           author: (info.authors || []).join(', '),
@@ -192,7 +203,7 @@ export async function fetchBookMetadata(title, author) {
   if (!gb && !ol) return null
 
   return {
-    coverUrl:        gb?.coverUrl        ?? ol?.coverUrl        ?? null,
+    coverUrl:        ol?.coverUrl        ?? gb?.coverUrl        ?? null,
     synopsis:        gb?.synopsis        ?? ol?.synopsis        ?? null,
     fullDescription: gb?.fullDescription ?? ol?.fullDescription ?? null,
     genres:          (gb?.genres?.length ? gb.genres : ol?.genres) ?? [],
