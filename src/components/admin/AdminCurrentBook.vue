@@ -664,11 +664,15 @@ async function archiveBook() {
 
   const snapshot = serializeForm()
   const trimmed = discordThreadUrl.trim()
+  const existingThreads = snapshot.discordThreads || []
+  const archivedThreads = trimmed
+    ? [...existingThreads, { title: 'Discussion', url: trimmed }]
+    : existingThreads
   saving.value = true
   try {
     await addPastBook({
       ...snapshot,
-      discordThreads: trimmed ? [{ title: 'Discussion', url: trimmed }] : [],
+      discordThreads: archivedThreads,
     })
     await updateDoc(doc(db, 'config', 'main'), { currentBook: null })
     form.value = emptyForm()

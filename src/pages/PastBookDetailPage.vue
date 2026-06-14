@@ -98,11 +98,13 @@
       </section>
 
       <!-- Discord discussion -->
-      <section v-if="book.discordSummary || discussionThreads.length" id="discussion" class="book-section card">
-        <p class="section-title">Community Discussion</p>
-        <p v-if="book.discordSummary" class="discord-summary">{{ book.discordSummary }}</p>
+      <div v-if="book.discordSummary || discussionThreads.length" id="discussion" class="discussion-sections">
+        <section v-if="book.discordSummary" class="book-section card">
+          <p class="section-title">Community Discussion</p>
+          <p class="discord-summary">{{ book.discordSummary }}</p>
+        </section>
         <DiscordThreads v-if="discussionThreads.length" :threads="discussionThreads" />
-      </section>
+      </div>
 
       <!-- Spoiler filter -->
       <SpoilerFilter
@@ -183,7 +185,9 @@ const book = computed(() => pastBooks.value[currentIndex.value] ?? null)
 const discussionThreads = computed(() => {
   const b = book.value
   if (!b) return []
-  const valid = b.discordThreads?.filter(t => t.url?.trim())
+  const valid = b.discordThreads
+    ?.filter(t => t.url?.trim())
+    .map(t => ({ title: t.title?.trim() || 'Discussion', url: t.url.trim() }))
   if (valid?.length) return valid
   const legacy = b.discordThreadUrl?.trim()
   if (legacy) return [{ title: 'Discussion', url: legacy }]
@@ -430,6 +434,12 @@ function formatDate(dateRead) {
 .description-section .description-text:last-child { margin-bottom: 0; }
 
 /* Discord discussion */
+.discussion-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .discord-summary {
   color: var(--text-secondary);
   line-height: 1.75;

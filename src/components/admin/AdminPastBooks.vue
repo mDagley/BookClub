@@ -39,9 +39,9 @@
               <td class="col-thread">
                 <template v-if="book.discordThreads?.some(t => t.url?.trim())">
                   <a
-                    v-for="t in book.discordThreads.filter(t => t.url?.trim())"
-                    :key="t.url"
-                    :href="t.url"
+                    v-for="(t, i) in book.discordThreads.filter(t => t.url?.trim())"
+                    :key="i"
+                    :href="t.url.trim()"
                     target="_blank"
                     rel="noopener"
                     class="thread-link"
@@ -315,7 +315,7 @@
         <div class="list-editor">
           <div
             v-for="(thread, index) in addForm.discordThreads"
-            :key="index"
+            :key="thread._key"
             class="list-row"
           >
             <div class="thread-fields">
@@ -324,7 +324,7 @@
             </div>
             <button type="button" class="btn-icon btn-delete" @click="addForm.discordThreads.splice(index, 1)">✕</button>
           </div>
-          <button type="button" class="btn btn-add" @click="addForm.discordThreads.push({ title: '', url: '' })">+ Add Thread</button>
+          <button type="button" class="btn btn-add" @click="addForm.discordThreads.push({ title: '', url: '', _key: nextKey() })">+ Add Thread</button>
         </div>
       </div>
       <div class="form-group">

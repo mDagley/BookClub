@@ -103,7 +103,8 @@ function formatDate(dateRead) {
 
 
 function primaryThreadUrl(book) {
-  return book.discordThreads?.find(t => t.url?.trim())?.url ?? book.discordThreadUrl ?? null
+  const found = book.discordThreads?.find(t => t.url?.trim())
+  return found ? found.url.trim() : (book.discordThreadUrl?.trim() ?? null)
 }
 
 function visibleGenres(book) {
