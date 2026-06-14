@@ -103,11 +103,12 @@
                       <div v-if="coverOptions.length" class="cover-picker">
                         <div class="cover-picker-grid">
                           <button
-                            v-for="(opt, i) in coverOptions"
-                            :key="i"
+                            v-for="opt in coverOptions"
+                            :key="opt.coverUrl"
                             type="button"
                             class="cover-option"
                             :class="{ selected: editForm.coverUrl === opt.coverUrl }"
+                            :aria-pressed="editForm.coverUrl === opt.coverUrl"
                             :title="opt.title"
                             @click="pickCover(opt.coverUrl)"
                           >
@@ -551,4 +552,5 @@ function promote(suggestion) {
 
 .cover-option:hover { border-color: var(--border-hover); }
 .cover-option.selected { border-color: var(--gold); }
+.cover-option:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 </style>
