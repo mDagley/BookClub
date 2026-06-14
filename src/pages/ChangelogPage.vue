@@ -49,6 +49,7 @@ const releases = [
       { type: 'feature', text: 'Quotes carousel now auto-advances every 20 seconds and has a pause/play button — hover also pauses the carousel.' },
       { type: 'feature', text: 'Admin can now refresh missing cover images in bulk, or fetch a cover for any individual suggestion.' },
       { type: 'fix',     text: 'Book cover images are now fetched at higher resolution — blurry thumbnails replaced with sharper versions.' },
+      { type: 'feature', text: 'Admin cover fetch now shows a grid of options to choose from instead of auto-filling the first result.' },
     ],
   },
   {
