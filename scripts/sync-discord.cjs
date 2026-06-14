@@ -70,6 +70,19 @@ async function getMessages(channelId, limit = 100) {
   return Array.isArray(msgs) ? msgs.reverse() : []
 }
 
+// Active-threads cache — fetched once per run, reused by findThread + getForumThreads
+let _activeThreads = null
+async function getActiveThreads() {
+  if (_activeThreads) return _activeThreads
+  try {
+    const res = await discord(`/guilds/${DISCORD_GUILD_ID}/threads/active`)
+    _activeThreads = res.threads || []
+  } catch {
+    _activeThreads = []
+  }
+  return _activeThreads
+}
+
 async function findThread(forumId, name) {
   const lname = name.toLowerCase()
   try {
@@ -77,12 +90,8 @@ async function findThread(forumId, name) {
     const found = archived.threads?.find(t => t.name.toLowerCase().includes(lname))
     if (found) return found.id
   } catch {}
-  try {
-    const active = await discord(`/guilds/${DISCORD_GUILD_ID}/threads/active`)
-    const found = active.threads?.find(t => t.parent_id === forumId && t.name.toLowerCase().includes(lname))
-    if (found) return found.id
-  } catch {}
-  return null
+  const active = await getActiveThreads()
+  return active.find(t => t.parent_id === forumId && t.name.toLowerCase().includes(lname))?.id ?? null
 }
 
 // ── Channel discovery ─────────────────────────────────────────────────────────
@@ -114,11 +123,16 @@ function resolveChannel(bookTitle, allChannels, categoryId) {
     const full = allChannels.find(c => c.id === mapped.id)
     return full ?? { id: mapped.id, type: mapped.type, name: bookTitle }
   }
-  // Auto-discover by slug match within the category
-  if (!categoryId) return null
+  // Auto-discover by slug match — restrict to text/forum channels only
   const slug = titleToSlug(bookTitle)
-  const inCategory = allChannels.filter(c => c.parent_id === categoryId)
-  return inCategory.find(c => {
+  const candidates = categoryId
+    ? allChannels.filter(c => c.parent_id === categoryId)
+    : allChannels // fallback: search all channels if category env var not set
+  if (!categoryId) {
+    console.warn(`  Warning: no category ID set for "${bookTitle}" — searching all channels`)
+  }
+  return candidates.find(c => {
+    if (c.type !== 0 && c.type !== 15) return false
     const cSlug = titleToSlug(c.name)
     return cSlug === slug || cSlug.startsWith(slug) || slug.startsWith(cSlug)
   }) ?? null
@@ -128,18 +142,26 @@ function resolveChannel(bookTitle, allChannels, categoryId) {
 
 async function getForumThreads(channelId) {
   const threads = []
-  // Archived (most discussions end up here)
-  try {
-    const archived = await discord(`/channels/${channelId}/threads/archived/public?limit=100`)
-    threads.push(...(archived.threads || []))
-  } catch {}
-  // Active threads
-  try {
-    const active = await discord(`/guilds/${DISCORD_GUILD_ID}/threads/active`)
-    const archivedIds = new Set(threads.map(t => t.id))
-    const here = (active.threads || []).filter(t => t.parent_id === channelId && !archivedIds.has(t.id))
-    threads.push(...here)
-  } catch {}
+  const seen = new Set()
+  // Paginate through all archived threads
+  let before = null
+  while (true) {
+    const qs = `limit=100${before ? `&before=${encodeURIComponent(before)}` : ''}`
+    let page
+    try { page = await discord(`/channels/${channelId}/threads/archived/public?${qs}`) } catch { break }
+    for (const t of page.threads || []) {
+      if (!seen.has(t.id)) { seen.add(t.id); threads.push(t) }
+    }
+    if (!page.has_more) break
+    const last = page.threads?.[page.threads.length - 1]
+    before = last?.thread_metadata?.archive_timestamp ?? null
+    if (!before) break
+  }
+  // Active threads (uses cached response)
+  const active = await getActiveThreads()
+  for (const t of active) {
+    if (t.parent_id === channelId && !seen.has(t.id)) { seen.add(t.id); threads.push(t) }
+  }
   return threads
 }
 
@@ -226,6 +248,13 @@ function extractMaterialsFromMessages(messages) {
     }
   }
   return materials
+}
+
+// ── Comparison helpers ────────────────────────────────────────────────────────
+
+function threadsEqual(a, b) {
+  if (!a || !b || a.length !== b.length) return false
+  return a.every((t, i) => t.url === b[i].url && t.title === b[i].title)
 }
 
 // ── Merge helpers ─────────────────────────────────────────────────────────────
@@ -317,14 +346,20 @@ async function main() {
       const threads = await buildDiscordThreads(channel)
       const { quotes, materials, newQuotes, newMaterials } = await syncContentFromChannel(channel, book)
 
-      const update = { discordThreads: threads }
+      const update = {}
+      if (!threadsEqual(threads, book.discordThreads)) update.discordThreads = threads
       if (newQuotes > 0) update.quotes = quotes
       if (newMaterials > 0) update.supplementalMaterials = materials
+      if (Object.keys(update).length === 0) {
+        console.log('no changes')
+        continue
+      }
       await db.collection('pastBooks').doc(book.id).update(update)
 
       totalQuotes += newQuotes
       totalMaterials += newMaterials
-      const parts = [`${threads.length} thread(s)`]
+      const parts = []
+      if (update.discordThreads) parts.push(`${threads.length} thread(s)`)
       if (newQuotes) parts.push(`+${newQuotes} quotes`)
       if (newMaterials) parts.push(`+${newMaterials} materials`)
       console.log(parts.join(', '))
@@ -349,17 +384,22 @@ async function main() {
         const threads = await buildDiscordThreads(channel)
         const { quotes, materials, newQuotes, newMaterials } = await syncContentFromChannel(channel, currentBook)
 
-        const update = { 'currentBook.discordThreads': threads }
+        const update = {}
+        if (!threadsEqual(threads, currentBook.discordThreads)) update['currentBook.discordThreads'] = threads
         if (newQuotes > 0) update['currentBook.quotes'] = quotes
         if (newMaterials > 0) update['currentBook.supplementalMaterials'] = materials
-        await db.collection('config').doc('main').update(update)
-
-        totalQuotes += newQuotes
-        totalMaterials += newMaterials
-        const parts = [`${threads.length} thread(s)`]
-        if (newQuotes) parts.push(`+${newQuotes} quotes`)
-        if (newMaterials) parts.push(`+${newMaterials} materials`)
-        console.log(parts.join(', '))
+        if (Object.keys(update).length === 0) {
+          console.log('no changes')
+        } else {
+          await db.collection('config').doc('main').update(update)
+          totalQuotes += newQuotes
+          totalMaterials += newMaterials
+          const parts = []
+          if (update['currentBook.discordThreads']) parts.push(`${threads.length} thread(s)`)
+          if (newQuotes) parts.push(`+${newQuotes} quotes`)
+          if (newMaterials) parts.push(`+${newMaterials} materials`)
+          console.log(parts.join(', '))
+        }
       }
     }
   } catch (err) {
