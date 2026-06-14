@@ -3,12 +3,14 @@
     <p class="section-title">Quotes</p>
 
     <div class="carousel" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
-      <Transition :name="direction" mode="out-in">
-        <div class="quote-slide" :key="current">
-          <blockquote class="quote-text">{{ quotes[current].text }}</blockquote>
-          <cite v-if="quotes[current].attribution" class="quote-attribution">— {{ quotes[current].attribution }}</cite>
-        </div>
-      </Transition>
+      <div class="quote-area">
+        <Transition :name="direction" mode="out-in">
+          <div class="quote-slide" :key="current">
+            <blockquote class="quote-text">{{ quotes[current].text }}</blockquote>
+            <cite v-if="quotes[current].attribution" class="quote-attribution">— {{ quotes[current].attribution }}</cite>
+          </div>
+        </Transition>
+      </div>
 
       <div v-if="quotes.length > 1" class="carousel-controls">
         <button class="nav-btn" @click="prev" aria-label="Previous quote">‹</button>
@@ -42,7 +44,7 @@ const props = defineProps({
   quotes: { type: Array, required: true },
 })
 
-const INTERVAL = 8000
+const INTERVAL = 20000
 
 const current = ref(0)
 const direction = ref('slide-next')
@@ -101,13 +103,22 @@ onUnmounted(stop)
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  min-height: 110px;
+}
+
+/* Fixed-height area so varying quote lengths don't shift the page layout */
+.quote-area {
+  position: relative;
+  width: 100%;
+  min-height: 10rem;
 }
 
 .quote-slide {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.6rem;
   padding: 0 1.5rem;
 }
