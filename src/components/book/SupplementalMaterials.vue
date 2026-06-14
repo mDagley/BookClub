@@ -2,11 +2,12 @@
   <section class="book-section card">
     <p class="section-title">Supplemental Materials</p>
     <ul class="materials-list">
-      <li v-for="m in materials" :key="`${m.type}-${m.url}`" class="material-row">
+      <li v-for="m in materials" :key="`${m.type}-${m.title}`" class="material-row">
         <span class="type-badge" :class="`type-${m.type}`">{{ m.type }}</span>
-        <a :href="m.url" target="_blank" rel="noopener" class="material-link">
+        <a v-if="m.url" :href="m.url" target="_blank" rel="noopener" class="material-link">
           {{ m.title }}
         </a>
+        <span v-else class="material-title">{{ m.title }}</span>
       </li>
     </ul>
   </section>
@@ -59,5 +60,10 @@ defineProps({
 .material-link:hover {
   color: var(--gold);
   text-decoration: underline;
+}
+
+.material-title {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 </style>
