@@ -166,11 +166,14 @@ One-off and automation scripts live in `scripts/`. All use the `.cjs` extension 
 |--------|-------|---------|
 | `post-changelog.cjs` | Run by `discord-changelog.yml` | Diffs `ChangelogPage.vue` across the push range and posts new entries to the Discord webhook |
 | `sync-discord.cjs` | Run by `discord-sync.yml` | Scans Discord book channels for Quotes and resource threads; upserts quotes and supplemental materials to Firestore |
-| `seed.cjs` | `node scripts/seed.cjs` | Seeds Firestore with initial suggestions data |
-| `seed-suggestions.cjs` | `node scripts/seed-suggestions.cjs` | Seeds additional suggestion entries |
+| `seed.cjs` | `node scripts/seed.cjs` | Seeds Firestore with the real club data (current book, past books, family members) |
+| `seed-legacy.cjs` | `node scripts/seed-legacy.cjs` | Generic placeholder seed — useful when setting up a fresh project |
+| `seed-suggestions.cjs` | `node scripts/seed-suggestions.cjs` | Seeds suggestion entries |
 | `migrate.cjs` | `node scripts/migrate.cjs` | One-off data migrations |
 
-Scripts that write to Firestore require `FIREBASE_SERVICE_ACCOUNT` in the environment. Scripts that read Discord require `DISCORD_BOT_TOKEN` and `DISCORD_GUILD_ID`.
+**GitHub Actions scripts** (`post-changelog.cjs`, `sync-discord.cjs`) run in CI and read `FIREBASE_SERVICE_ACCOUNT` (base64 env var) and `DISCORD_BOT_TOKEN` / `DISCORD_GUILD_ID`.
+
+**Manual scripts** (`seed.cjs`, `seed-legacy.cjs`, `seed-suggestions.cjs`, `migrate.cjs`) read a local `service-account.json` file in the project root (git-ignored), or fall back to `GOOGLE_APPLICATION_CREDENTIALS` if the file is absent.
 
 ---
 
