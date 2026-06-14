@@ -1,0 +1,24 @@
+name: Post Changelog to Discord
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - src/pages/ChangelogPage.vue
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Post new changelog entries to Discord
+        run: node scripts/post-changelog.js
+        env:
+          DISCORD_CHANGELOG_WEBHOOK_URL: ${{ secrets.DISCORD_CHANGELOG_WEBHOOK_URL }}
