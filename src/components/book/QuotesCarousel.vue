@@ -2,7 +2,7 @@
   <section class="book-section card quotes-carousel">
     <p class="section-title">Quotes</p>
 
-    <div class="carousel" @mouseenter="pause" @mouseleave="resume">
+    <div class="carousel" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
       <Transition :name="direction" mode="out-in">
         <div class="quote-slide" :key="current">
           <blockquote class="quote-text">{{ quotes[current].text }}</blockquote>
@@ -23,6 +23,13 @@
           />
         </div>
         <button class="nav-btn" @click="next" aria-label="Next quote">›</button>
+        <button
+          class="pause-btn"
+          :class="{ paused: userPaused }"
+          @click="togglePause"
+          :aria-label="userPaused ? 'Play' : 'Pause'"
+          :title="userPaused ? 'Play' : 'Pause'"
+        >{{ userPaused ? '▶' : '⏸' }}</button>
       </div>
     </div>
   </section>
@@ -35,8 +42,11 @@ const props = defineProps({
   quotes: { type: Array, required: true },
 })
 
+const INTERVAL = 8000
+
 const current = ref(0)
 const direction = ref('slide-next')
+const userPaused = ref(false)
 let timer = null
 
 function goTo(i) {
@@ -58,16 +68,27 @@ function prev() {
 }
 
 function start() {
-  if (props.quotes.length <= 1) return
-  timer = setInterval(next, 5000)
+  if (props.quotes.length <= 1 || userPaused.value) return
+  timer = setInterval(() => {
+    direction.value = 'slide-next'
+    current.value = (current.value + 1) % props.quotes.length
+  }, INTERVAL)
 }
 
-function pause() { clearInterval(timer); timer = null }
-function resume() { start() }
-function restart() { pause(); start() }
+function stop() { clearInterval(timer); timer = null }
+function restart() { stop(); start() }
+
+function togglePause() {
+  userPaused.value = !userPaused.value
+  userPaused.value ? stop() : start()
+}
+
+// Hover pause — only acts when the user hasn't manually paused
+function onMouseEnter() { if (!userPaused.value) stop() }
+function onMouseLeave() { if (!userPaused.value) start() }
 
 onMounted(start)
-onUnmounted(pause)
+onUnmounted(stop)
 </script>
 
 <style scoped>
@@ -146,6 +167,22 @@ onUnmounted(pause)
 }
 
 .dot.active { background: var(--gold); }
+
+.pause-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+  margin-left: 0.25rem;
+}
+
+.pause-btn:hover { color: var(--gold); }
+.pause-btn.paused { color: var(--gold); }
 
 /* Slide transitions */
 .slide-next-enter-active,
