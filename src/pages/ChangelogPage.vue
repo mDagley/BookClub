@@ -52,6 +52,8 @@ const releases = [
       { type: 'fix',     text: 'Book cover images are now fetched at higher resolution — blurry thumbnails replaced with sharper versions.' },
       { type: 'feature', text: 'Admin cover fetch now shows a grid of options to choose from instead of auto-filling the first result.' },
       { type: 'fix',     text: 'Cover thumbnails in the admin suggestions table are now larger and display at the correct 2:3 book cover ratio.' },
+      { type: 'fix',     text: 'Cover images now prefer Open Library (high-quality scans) over Google Books, with Google as fallback. Google Books URLs now request a larger image size and drop the page-curl artifact.' },
+      { type: 'fix',     text: 'Cover picker search now uses title and author field qualifiers so results more reliably show the right book.' },
       { type: 'feature', text: 'Discord sync now automatically links discussion threads for all past books and the current book — forum channels list every sub-thread individually.' },
       { type: 'feature', text: 'Discord sync now includes the current book: quotes and supplemental materials are pulled daily from its Discord channel, just like past books.' },
     ],
