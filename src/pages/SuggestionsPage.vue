@@ -119,7 +119,9 @@ const filteredSuggestions = computed(() => {
   if (filterMode.value === 'unread') {
     list = list.filter(s => !s.alreadyRead || s.alreadyRead.length === 0)
   } else if (filterMode.value === 'myNotRead' && selectedName.value) {
-    list = list.filter(s => !(s.alreadyRead || []).includes(selectedName.value))
+    const profile = memberProfiles.value.find(p => p.name === selectedName.value)
+    const ids = new Set([selectedName.value, ...(profile?.handle ? [profile.handle] : [])])
+    list = list.filter(s => !(s.alreadyRead || []).some(id => ids.has(id)))
   }
 
   if (sortMode.value === 'votes') {
