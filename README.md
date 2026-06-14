@@ -21,6 +21,7 @@ A family book club website. Track the current book, suggest and vote on future r
 2. Copy the **Application ID** (this is your client ID — it's numeric)
 3. OAuth2 → reset and copy the **Client Secret**
 4. OAuth2 → add redirect URI: `https://yourdomain.com/admin`
+5. Under **Bot**, enable the **Message Content Intent** (required to read thread message text)
 
 ### 3. Environment variables
 
@@ -29,6 +30,8 @@ Copy `.env.example` to `.env` and fill in the values:
 ```bash
 cp .env.example .env
 ```
+
+**Frontend (baked in at build time):**
 
 | Variable | Description |
 |----------|-------------|
@@ -40,13 +43,19 @@ cp .env.example .env
 | `VITE_FIREBASE_APP_ID` | From Firebase console |
 | `VITE_DISCORD_CLIENT_ID` | Discord Application ID (numeric) |
 | `VITE_DISCORD_REDIRECT_URI` | `https://yourdomain.com/admin` |
+| `VITE_GOOGLE_BOOKS_API_KEY` | Google Books API key (for cover/metadata lookup) |
 
-The Express server also needs these at runtime (not baked into the frontend):
+**Server (runtime only, never exposed to the browser):**
 
 | Variable | Description |
 |----------|-------------|
 | `DISCORD_CLIENT_ID` | Same Discord Application ID |
 | `DISCORD_CLIENT_SECRET` | Discord client secret |
+| `DISCORD_BOT_TOKEN` | Bot token for reading Discord channels/threads |
+| `DISCORD_GUILD_ID` | Your Discord server ID |
+| `DISCORD_FINISHED_CATEGORY_ID` | Category ID for finished-book channels |
+| `DISCORD_CURRENT_CATEGORY_ID` | Category ID for current/upcoming book channels |
+| `DISCORD_SUGGESTIONS_WEBHOOK_URL` | Webhook URL for new-suggestion notifications |
 | `FIREBASE_SERVICE_ACCOUNT` | Base64-encoded service account JSON (see below) |
 | `PORT` | Server port (default: 3000) |
 
@@ -56,20 +65,13 @@ Firebase console → Project Settings → Service accounts → Generate new priv
 [Convert]::ToBase64String([IO.File]::ReadAllBytes("service-account.json")) | clip
 ```
 
-### 4. Seed the database
-
-```bash
-npm install firebase-admin --no-save
-node scripts/seed.js
-```
-
-Requires `service-account.json` in the project root. Run once to populate `config/main`, sample suggestions, and past books.
-
-### 5. Deploy Firestore rules and indexes
+### 4. Deploy Firestore rules and indexes
 
 ```bash
 firebase deploy --only firestore
 ```
+
+The suggestions collection requires a composite index on `votes DESC, createdAt DESC` — Firebase will log a direct link to create it on first query if it's missing.
 
 ---
 
@@ -80,7 +82,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs at `http://localhost:5173`. The `/api/*` routes are only served in production by the Express server. For local API testing, run the server separately:
+The frontend runs at `http://localhost:5173`. The Vite dev server proxies `/api/*` and `/covers/*` to the Express server on port 3000, so you'll want to run the server too:
 
 ```bash
 cd server && npm install && node index.js
@@ -102,23 +104,29 @@ docker build \
   --build-arg VITE_FIREBASE_APP_ID=... \
   --build-arg VITE_DISCORD_CLIENT_ID=... \
   --build-arg VITE_DISCORD_REDIRECT_URI=https://yourdomain.com/admin \
+  --build-arg VITE_GOOGLE_BOOKS_API_KEY=... \
   -t family-book-club .
 
 docker run -p 3000:3000 \
   -e DISCORD_CLIENT_ID=... \
   -e DISCORD_CLIENT_SECRET=... \
+  -e DISCORD_BOT_TOKEN=... \
+  -e DISCORD_GUILD_ID=... \
+  -e DISCORD_FINISHED_CATEGORY_ID=... \
+  -e DISCORD_CURRENT_CATEGORY_ID=... \
+  -e DISCORD_SUGGESTIONS_WEBHOOK_URL=... \
   -e FIREBASE_SERVICE_ACCOUNT=... \
   family-book-club
 ```
 
 ### Easy Panel
 
-1. Connect this GitHub repo, branch `worktree-implement`
+1. Connect this GitHub repo, branch `master`
 2. Build method: **Dockerfile**, published port **3000**
 3. Set all `VITE_*` values as **build arguments**
-4. Set `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `FIREBASE_SERVICE_ACCOUNT`, `PORT=3000` as **environment variables**
-5. Add your domain and enable HTTPS
-6. Deploy
+4. Set `DISCORD_*`, `FIREBASE_SERVICE_ACCOUNT`, and `PORT=3000` as **environment variables**
+5. Add a persistent volume mounted at `/app/public/covers/` for uploaded cover images
+6. Add your domain, enable HTTPS, and deploy
 
 ---
 
@@ -126,32 +134,74 @@ docker run -p 3000:3000 \
 
 ```
 src/
-  pages/          # DashboardPage, BookPage, SuggestionsPage, PastBooksPage, AdminPage
+  pages/
+    DashboardPage.vue       Home — current book hero, meeting card, top suggestions, widgets
+    BookPage.vue            Current book detail — synopsis, characters, timeline, spoiler filter
+    SuggestionsPage.vue     Browse and vote on book suggestions
+    PastBooksPage.vue       Grid of all past books
+    PastBookDetailPage.vue  Past book detail — synopsis, characters, timeline, spoiler filter
+    AdminPage.vue           Admin panel (requires Discord login)
+    ChangelogPage.vue       Public changelog
   components/
-    layout/       # AppNav, AppFooter
-    dashboard/    # HeroSection, MeetingCard, TopSuggestions, PastBooksWidget, AudiobookWidget
-    book/         # SpoilerFilter, DiscordThreads, SupplementalMaterials, CharacterGrid, TimelineSection
-    suggestions/  # SuggestionsToolbar, CoverGrid, CoverCard, ListView, SuggestModal
-    admin/        # AdminCurrentBook, AdminPastBooks, AdminSuggestions, AdminAudiobook
-  composables/    # useConfig, useSuggestions, usePastBooks, useVoting, useSpoilerFilter, useAuth
-  stores/         # auth.js (Pinia)
-  utils/          # googleBooks.js, genres.js
-  styles/         # tokens.css, base.css, components.css
+    layout/
+      AppNav.vue            Sticky nav with Discord login button
+      AppFooter.vue         Footer links
+      ParticleLayer.vue     Animated background particles
+      WelcomeModal.vue      First-visit tutorial for logged-out users
+    book/
+      SpoilerFilter.vue     Chapter-based spoiler control
+      CharacterGrid.vue     Character cards filtered by spoiler chapter
+      TimelineSection.vue   Story timeline filtered by spoiler chapter
+      SupplementalMaterials.vue
+      DiscordThreads.vue
+    dashboard/
+      HeroSection.vue
+      MeetingCard.vue
+      TopSuggestions.vue
+      PastBooksWidget.vue
+      AudiobookWidget.vue   Audiobookshelf access request form
+    suggestions/
+      SuggestionsToolbar.vue  Filter, sort, view toggle, genre picker
+      CoverGrid.vue
+      CoverCard.vue
+      ListView.vue
+      SuggestModal.vue      Suggest a book with Google Books autocomplete
+      CommentPanel.vue      Slide-in comments panel
+    admin/
+      AdminCurrentBook.vue
+      AdminPastBooks.vue
+      AdminSuggestions.vue
+      AdminAudiobook.vue
+      AdminMembers.vue      Map Discord handles to display names
+    shared/
+      CoverUpload.vue       Cover image upload (used in suggest form and admin)
+  composables/
+    useConfig.js            Firestore config/main listener
+    useSuggestions.js       Suggestions CRUD, voting, mark-as-read
+    usePastBooks.js         Past books listener
+    useComments.js          Per-suggestion comments subcollection
+    useSpoilerFilter.js     Chapter spoiler state + localStorage persistence
+    useMemberProfiles.js    Discord handle → display name resolution
+  stores/
+    auth.js                 Pinia store — Discord OAuth + Firebase custom token auth
+  utils/
+    googleBooks.js          Google Books + Open Library metadata fetch with cover fallback
+    genres.js               Genre list and icon definitions
+    uploadCover.js          Cover upload helper (POST /api/upload)
 server/
-  index.js        # Express: /api/discord-auth, /api/send-webhook, serves dist/
-scripts/
-  seed.js         # One-time Firestore seed (requires service-account.json)
+  index.js                  Express: /api/discord-auth, /api/send-webhook, /api/upload, static SPA
 ```
 
 ---
 
 ## Admin panel
 
-Navigate to `/admin` and log in with Discord. You must be a member of the configured Discord server (set `discordGuildId` in Firestore `config/main` to enforce this, or leave blank to allow any Discord user).
+Navigate to `/admin` and log in with Discord. The server validates that you are a member of the configured Discord guild (`DISCORD_GUILD_ID`).
 
 From the admin panel you can:
-- Set the current book (title, author, cover, genres, synopsis, meeting details, Discord threads, supplemental materials, characters, timeline)
-- Archive the current book to past books
-- Manage past books (add, edit, delete)
-- Delete suggestions or promote a suggestion to the current book
-- Configure the audiobook server description and Discord webhook URL
+
+- **Current Book** — set title, author, cover, genres, synopsis, Goodreads link, meeting details, Discord thread links, supplemental materials, characters, and story timeline
+- **Past Books** — add, edit, and delete past books; same fields as current book plus date read
+- **Suggestions** — edit or delete any suggestion; promote a suggestion directly to the current book
+- **Members** — map Discord usernames to display names shown across the site
+- **Audiobook Server** — configure the Audiobookshelf description and Discord webhook URL for access requests
