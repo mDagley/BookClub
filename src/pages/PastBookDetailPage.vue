@@ -214,18 +214,6 @@ function scrollTo(id) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-function observeSections(sections) {
-  if (!observer) return
-  observer.disconnect()
-  activeSection.value = ''
-  nextTick(() => {
-    sections.forEach(s => {
-      const el = document.getElementById(s.id)
-      if (el) observer.observe(el)
-    })
-  })
-}
-
 let observer = null
 onMounted(() => {
   observer = new IntersectionObserver(entries => {
@@ -233,10 +221,26 @@ onMounted(() => {
       if (e.isIntersecting) activeSection.value = e.target.id
     }
   }, { rootMargin: '-30% 0px -60% 0px' })
-  observeSections(navSections.value)
+  navSections.value.forEach(s => {
+    const el = document.getElementById(s.id)
+    if (el) observer.observe(el)
+  })
 })
 
-watch(navSections, observeSections)
+watch(navSections, (sections, _, onCleanup) => {
+  let cancelled = false
+  onCleanup(() => { cancelled = true })
+  if (!observer) return
+  observer.disconnect()
+  activeSection.value = ''
+  nextTick(() => {
+    if (cancelled) return
+    sections.forEach(s => {
+      const el = document.getElementById(s.id)
+      if (el) observer.observe(el)
+    })
+  })
+})
 onUnmounted(() => observer?.disconnect())
 
 function formatDate(dateRead) {
