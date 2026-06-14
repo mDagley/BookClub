@@ -2,6 +2,12 @@
   <div class="admin-suggestions">
     <div class="section-header">
       <h2 class="section-heading">Suggestions</h2>
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        :disabled="refreshing"
+        @click="refreshMissingCovers"
+      >{{ refreshing ? `Fetching… (${refreshProgress})` : 'Refresh missing covers' }}</button>
     </div>
 
     <div v-if="loading" class="loading-state">Loading suggestions…</div>
@@ -82,6 +88,12 @@
                       <label class="edit-label">Cover <span style="font-weight:400;text-transform:none">(URL or upload)</span></label>
                       <div class="cover-url-row">
                         <input v-model="editForm.coverUrl" type="url" class="form-input" placeholder="https://…" />
+                        <button
+                          class="btn btn-secondary btn-sm"
+                          :disabled="fetchingCover"
+                          type="button"
+                          @click="fetchCoverForEdit"
+                        >{{ fetchingCover ? '…' : 'Fetch' }}</button>
                         <CoverUpload
                           :book-id="editingId"
                           label="Upload"
@@ -140,6 +152,7 @@ import { useSuggestions } from '../../composables/useSuggestions.js'
 import { useConfig } from '../../composables/useConfig.js'
 import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
 import { GENRE_LIST } from '../../utils/genres.js'
+import { fetchBookMetadata } from '../../utils/googleBooks.js'
 import CoverUpload from '../shared/CoverUpload.vue'
 
 const { suggestions, loading, deleteSuggestion, updateSuggestion } = useSuggestions()
@@ -151,6 +164,50 @@ const emit = defineEmits(['promote'])
 const editingId = ref(null)
 const saving = ref(false)
 const editForm = ref({})
+const fetchingCover = ref(false)
+const refreshing = ref(false)
+const refreshProgress = ref('')
+
+async function fetchCoverForEdit() {
+  if (!editForm.value.title) return
+  fetchingCover.value = true
+  try {
+    const meta = await fetchBookMetadata(editForm.value.title, editForm.value.author)
+    if (meta?.coverUrl) {
+      editForm.value.coverUrl = meta.coverUrl
+    } else {
+      alert('No cover found for this title.')
+    }
+  } catch (err) {
+    console.error('Cover fetch error:', err)
+    alert('Cover fetch failed: ' + (err.message || 'Unknown error'))
+  } finally {
+    fetchingCover.value = false
+  }
+}
+
+async function refreshMissingCovers() {
+  const missing = suggestions.value.filter(s => !s.coverUrl)
+  if (!missing.length) return
+  refreshing.value = true
+  let done = 0
+  refreshProgress.value = `0/${missing.length}`
+  try {
+    for (const s of missing) {
+      try {
+        const meta = await fetchBookMetadata(s.title, s.author)
+        if (meta?.coverUrl) await updateSuggestion(s.id, { coverUrl: meta.coverUrl })
+      } catch (err) {
+        console.error(`Cover fetch failed for "${s.title}":`, err)
+      }
+      done++
+      refreshProgress.value = `${done}/${missing.length}`
+    }
+  } finally {
+    refreshing.value = false
+    refreshProgress.value = ''
+  }
+}
 
 function startEdit(suggestion) {
   editingId.value = suggestion.id
