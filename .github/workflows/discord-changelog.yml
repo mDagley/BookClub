@@ -12,13 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0   # full history so any push range is available
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Post new changelog entries to Discord
-        run: node scripts/post-changelog.js
+        run: node scripts/post-changelog.cjs
         env:
           DISCORD_CHANGELOG_WEBHOOK_URL: ${{ secrets.DISCORD_CHANGELOG_WEBHOOK_URL }}
+          GITHUB_BEFORE: ${{ github.event.before }}
+          GITHUB_AFTER: ${{ github.event.after }}
