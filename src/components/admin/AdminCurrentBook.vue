@@ -192,6 +192,48 @@
       </div>
     </div>
 
+    <!-- Discord Channel Setup -->
+    <div class="form-section">
+      <h3 class="form-section-title">Discord Channel Setup</h3>
+      <p class="section-note">
+        Creates a forum channel for this book in Discord, adds starter threads (So Far, Characters, Discussion Questions, Themes, Resources), and optionally moves the previous book's channel to the Finished category.
+        Save the book first so character data is included.
+      </p>
+
+      <div v-if="discordSetupResult" class="discord-result">
+        <p class="result-title">Channel created!</p>
+        <a :href="discordSetupResult.channelUrl" target="_blank" rel="noopener" class="result-link">
+          Open channel in Discord →
+        </a>
+        <div v-if="discordSetupResult.threads.length" class="result-threads">
+          <p class="result-threads-label">Starter threads — paste these into the Discord Threads section above:</p>
+          <div v-for="thread in discordSetupResult.threads" :key="thread.id" class="result-thread-row">
+            <span class="result-thread-name">{{ thread.name }}</span>
+            <a :href="thread.url" target="_blank" rel="noopener" class="result-thread-url">{{ thread.url }}</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Previous book's channel ID <span class="label-note">(optional — moves it to Finished)</span></label>
+        <input
+          v-model="discordPrevChannelId"
+          type="text"
+          class="form-input"
+          placeholder="e.g. 1479843880814907442"
+        />
+      </div>
+
+      <button
+        class="btn btn-secondary"
+        @click="setupDiscordChannel"
+        :disabled="discordSetting || !form.title"
+      >
+        {{ discordSetting ? 'Creating channel…' : 'Create Discord Channel' }}
+      </button>
+      <p v-if="discordSetupError" class="save-message error">{{ discordSetupError }}</p>
+    </div>
+
     <!-- Supplemental Materials -->
     <div class="form-section">
       <h3 class="form-section-title">Supplemental Materials</h3>
@@ -365,6 +407,11 @@ const saveMessage = ref('')
 const saveMessageType = ref('success')
 const coverPreview = ref('')
 const coverFetching = ref(false)
+
+const discordSetting = ref(false)
+const discordSetupResult = ref(null)
+const discordSetupError = ref('')
+const discordPrevChannelId = ref('')
 
 const dragState = ref({ list: null, fromIndex: null, overIndex: null })
 
@@ -553,6 +600,36 @@ function showMessage(msg, type = 'success') {
   saveMessage.value = msg
   saveMessageType.value = type
   setTimeout(() => { saveMessage.value = '' }, 4000)
+}
+
+async function setupDiscordChannel() {
+  discordSetting.value = true
+  discordSetupError.value = ''
+  discordSetupResult.value = null
+  try {
+    const body = {
+      bookTitle: form.value.title,
+      bookAuthor: form.value.author,
+    }
+    if (discordPrevChannelId.value.trim()) {
+      body.previousChannelId = discordPrevChannelId.value.trim()
+    }
+    const res = await fetch('/api/discord-promote-book', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      discordSetupError.value = data.error || 'Failed to set up Discord channel'
+    } else {
+      discordSetupResult.value = data
+    }
+  } catch (err) {
+    discordSetupError.value = 'Network error: ' + err.message
+  } finally {
+    discordSetting.value = false
+  }
 }
 
 async function saveBook() {
@@ -1055,6 +1132,73 @@ async function archiveBook() {
     width: 100%;
     text-align: center;
   }
+}
+
+/* Discord setup result */
+.discord-result {
+  background: rgba(111, 207, 151, 0.07);
+  border: 1px solid rgba(111, 207, 151, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.result-title {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #6fcf97;
+  margin: 0;
+}
+
+.result-link {
+  font-size: 0.85rem;
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.result-link:hover {
+  text-decoration: underline;
+}
+
+.result-threads {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.result-threads-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0 0 0.2rem;
+}
+
+.result-thread-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+}
+
+.result-thread-name {
+  color: var(--text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 140px;
+}
+
+.result-thread-url {
+  color: var(--text-muted);
+  text-decoration: none;
+  word-break: break-all;
+  font-size: 0.78rem;
+}
+
+.result-thread-url:hover {
+  color: var(--gold);
 }
 
 /* Autocomplete */
