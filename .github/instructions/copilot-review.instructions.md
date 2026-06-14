@@ -1,5 +1,15 @@
 # Copilot Code Review Instructions
 
+## ⚠️ ALWAYS CHECK FIRST: Changelog and README
+
+**Before reviewing anything else, check whether `src/pages/ChangelogPage.vue` has been updated.**
+
+- If the PR modifies any file in `src/` (components, pages, composables, utils) or `server/` and does **not** update `ChangelogPage.vue` — **always flag it, no exceptions.**
+- This check must be performed on every PR regardless of what other comments you have. Do not skip it because the PR looks small or because you have other comments.
+- Pure refactors, dependency bumps, config-only changes, and infrastructure files (workflows, scripts) are the only exceptions.
+
+---
+
 ## Project overview
 
 Family book club web app. Vue 3 (Composition API, `<script setup>`) + Vite frontend, Express.js server, Firebase Firestore (realtime `onSnapshot` listeners), Discord OAuth via Firebase custom tokens. Deployed via Docker on Easy Panel.
