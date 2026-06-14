@@ -100,6 +100,23 @@
                           @uploaded="url => editForm.coverUrl = url"
                         />
                       </div>
+                      <div v-if="coverOptions.length" class="cover-picker">
+                        <div class="cover-picker-grid">
+                          <button
+                            v-for="opt in coverOptions"
+                            :key="opt.coverUrl"
+                            type="button"
+                            class="cover-option"
+                            :class="{ selected: editForm.coverUrl === opt.coverUrl }"
+                            :aria-pressed="editForm.coverUrl === opt.coverUrl"
+                            :title="opt.title"
+                            @click="pickCover(opt.coverUrl)"
+                          >
+                            <img :src="opt.coverUrl" :alt="opt.title" />
+                          </button>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" @click="coverOptions = []">Dismiss</button>
+                      </div>
                     </div>
 
                     <div class="edit-field">
@@ -152,7 +169,7 @@ import { useSuggestions } from '../../composables/useSuggestions.js'
 import { useConfig } from '../../composables/useConfig.js'
 import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
 import { GENRE_LIST } from '../../utils/genres.js'
-import { fetchBookMetadata } from '../../utils/googleBooks.js'
+import { fetchBookMetadata, searchBooks } from '../../utils/googleBooks.js'
 import CoverUpload from '../shared/CoverUpload.vue'
 
 const { suggestions, loading, deleteSuggestion, updateSuggestion } = useSuggestions()
@@ -165,18 +182,22 @@ const editingId = ref(null)
 const saving = ref(false)
 const editForm = ref({})
 const fetchingCover = ref(false)
+const coverOptions = ref([])
 const refreshing = ref(false)
 const refreshProgress = ref('')
 
 async function fetchCoverForEdit() {
   if (!editForm.value.title) return
   fetchingCover.value = true
+  coverOptions.value = []
   try {
-    const meta = await fetchBookMetadata(editForm.value.title, editForm.value.author)
-    if (meta?.coverUrl) {
-      editForm.value.coverUrl = meta.coverUrl
+    const query = [editForm.value.title, editForm.value.author].filter(Boolean).join(' ')
+    const results = await searchBooks(query)
+    const withCovers = results.filter(r => r.coverUrl)
+    if (withCovers.length) {
+      coverOptions.value = withCovers
     } else {
-      alert('No cover found for this title.')
+      alert('No covers found for this title.')
     }
   } catch (err) {
     console.error('Cover fetch error:', err)
@@ -184,6 +205,11 @@ async function fetchCoverForEdit() {
   } finally {
     fetchingCover.value = false
   }
+}
+
+function pickCover(url) {
+  editForm.value.coverUrl = url
+  coverOptions.value = []
 }
 
 async function refreshMissingCovers() {
@@ -210,6 +236,7 @@ async function refreshMissingCovers() {
 }
 
 function startEdit(suggestion) {
+  coverOptions.value = []
   editingId.value = suggestion.id
   editForm.value = {
     title: suggestion.title || '',
@@ -226,6 +253,7 @@ function startEdit(suggestion) {
 function cancelEdit() {
   editingId.value = null
   editForm.value = {}
+  coverOptions.value = []
 }
 
 async function saveEdit() {
@@ -370,9 +398,16 @@ function promote(suggestion) {
 }
 
 .edit-cover-preview { flex-shrink: 0; }
-.edit-thumb { width: 60px; border-radius: var(--radius-sm); border: 1px solid var(--border); display: block; }
+.edit-thumb {
+  width: 90px;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  display: block;
+}
 .edit-thumb-placeholder {
-  width: 60px;
+  width: 90px;
   aspect-ratio: 2/3;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -482,4 +517,40 @@ function promote(suggestion) {
 .btn-danger:hover { background: rgba(242, 139, 130, 0.1); }
 
 .col-actions .btn + .btn { margin-left: 0.35rem; }
+
+/* ── Cover picker ── */
+.cover-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.cover-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cover-option {
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  overflow: hidden;
+  width: 60px;
+}
+
+.cover-option img {
+  display: block;
+  width: 60px;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+}
+
+.cover-option:hover { border-color: var(--border-hover); }
+.cover-option.selected { border-color: var(--gold); }
+.cover-option:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 </style>
