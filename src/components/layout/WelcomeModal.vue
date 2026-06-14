@@ -1,8 +1,8 @@
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div v-if="visible" class="welcome-backdrop" @click.self="dismiss">
-        <div class="welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+      <div v-if="visible" class="welcome-backdrop" @click.self="dismiss" @keydown.esc="dismiss">
+        <div ref="modalRef" class="welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-title" tabindex="-1">
           <button class="close-btn" aria-label="Close" @click="dismiss">✕</button>
 
           <!-- Steps -->
@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { useAuthStore } from '../../stores/auth.js'
 
 const SEEN_KEY = 'bookclub_welcome_seen'
@@ -54,6 +54,7 @@ const SEEN_KEY = 'bookclub_welcome_seen'
 const authStore = useAuthStore()
 const visible = ref(false)
 const current = ref(0)
+const modalRef = ref(null)
 
 const steps = [
   {
@@ -73,12 +74,20 @@ const steps = [
   },
 ]
 
-// Only show once, only when not logged in, only after auth resolves
+// Watch both loading and user so we handle the OAuth callback race:
+// handleCallback() sets loading=false before onAuthStateChanged fires,
+// so we must also close if user becomes truthy after the modal is shown.
 watch(
-  () => authStore.loading,
-  (loading) => {
-    if (!loading && !authStore.user && !localStorage.getItem(SEEN_KEY)) {
+  () => [authStore.loading, authStore.user],
+  async ([loading, user]) => {
+    if (user) {
+      visible.value = false
+      return
+    }
+    if (!loading && !localStorage.getItem(SEEN_KEY)) {
       visible.value = true
+      await nextTick()
+      modalRef.value?.focus()
     }
   },
   { immediate: true }
