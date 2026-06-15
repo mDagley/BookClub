@@ -169,7 +169,7 @@ import { useSuggestions } from '../../composables/useSuggestions.js'
 import { useConfig } from '../../composables/useConfig.js'
 import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
 import { GENRE_LIST } from '../../utils/genres.js'
-import { fetchBookMetadata, searchBooks } from '../../utils/googleBooks.js'
+import { fetchBookMetadata, fetchCoverOptions } from '../../utils/googleBooks.js'
 import CoverUpload from '../shared/CoverUpload.vue'
 
 const { suggestions, loading, deleteSuggestion, updateSuggestion } = useSuggestions()
@@ -187,18 +187,15 @@ const refreshing = ref(false)
 const refreshProgress = ref('')
 
 async function fetchCoverForEdit() {
-  if (!editForm.value.title) return
+  const title = editForm.value.title?.trim()
+  const author = editForm.value.author?.trim()
+  if (!title) return
   fetchingCover.value = true
   coverOptions.value = []
   try {
-    const parts = []
-    if (editForm.value.title) parts.push(`intitle:${editForm.value.title}`)
-    if (editForm.value.author) parts.push(`inauthor:${editForm.value.author}`)
-    const query = parts.join(' ')
-    const results = await searchBooks(query)
-    const withCovers = results.filter(r => r.coverUrl)
-    if (withCovers.length) {
-      coverOptions.value = withCovers
+    const options = await fetchCoverOptions(title, author)
+    if (options.length) {
+      coverOptions.value = options
     } else {
       alert('No covers found for this title.')
     }
@@ -357,7 +354,7 @@ function promote(suggestion) {
 
 .suggestion-row:hover td { background: rgba(46, 112, 160, 0.12); }
 
-.col-cover { width: 64px; }
+.col-cover { width: 90px; }
 .col-title { min-width: 130px; }
 .col-author { min-width: 100px; color: var(--text-secondary); }
 .col-published { width: 80px; color: var(--text-muted); font-size: 0.78rem; }
@@ -366,8 +363,8 @@ function promote(suggestion) {
 .col-readby { min-width: 100px; }
 .col-actions { width: 170px; white-space: nowrap; }
 
-.cover-thumb { width: 54px; aspect-ratio: 2/3; object-fit: cover; border-radius: var(--radius-sm); display: block; }
-.cover-placeholder { width: 54px; aspect-ratio: 2/3; background: var(--surface-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.cover-thumb { width: 80px; aspect-ratio: 2/3; object-fit: cover; border-radius: var(--radius-sm); display: block; }
+.cover-placeholder { width: 80px; aspect-ratio: 2/3; background: var(--surface-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border); }
 
 .book-title { display: block; font-weight: 600; }
 .genre-list { display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
@@ -543,12 +540,12 @@ function promote(suggestion) {
   cursor: pointer;
   transition: border-color 0.15s;
   overflow: hidden;
-  width: 60px;
+  width: 80px;
 }
 
 .cover-option img {
   display: block;
-  width: 60px;
+  width: 80px;
   aspect-ratio: 2/3;
   object-fit: cover;
 }

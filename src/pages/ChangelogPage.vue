@@ -25,6 +25,13 @@
 <script setup>
 const releases = [
   {
+    date: 'June 15, 2026',
+    entries: [
+      { type: 'fix',     text: 'Admin cover picker now filters out unavailable and placeholder images and checks Open Library for additional options.' },
+      { type: 'fix',     text: 'Cover thumbnails in the admin suggestions table are now larger and easier to see.' },
+    ],
+  },
+  {
     date: 'June 2026',
     label: 'Discord & Past Books',
     entries: [
