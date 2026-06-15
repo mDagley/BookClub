@@ -1,24 +1,44 @@
-name: Post Changelog to Discord
+name: Deploy and Post Changelog to Discord
 
 on:
   push:
     branches: [master]
-    paths:
-      - src/pages/ChangelogPage.vue
 
 jobs:
-  notify:
+  deploy-and-notify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # full history so any push range is available
 
+      - name: Trigger Easy Panel deploy
+        run: curl -s -X POST "${{ secrets.EASYPANEL_DEPLOY_HOOK }}"
+
+      - name: Check if ChangelogPage.vue changed
+        id: changelog
+        run: |
+          before="${{ github.event.before }}"
+          after="${{ github.event.after }}"
+          if [[ "$before" == "0000000000000000000000000000000000000000" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$before" "$after" | grep -q 'src/pages/ChangelogPage.vue'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Wait for deploy to finish
+        if: steps.changelog.outputs.changed == 'true'
+        run: sleep 180
+
       - uses: actions/setup-node@v4
+        if: steps.changelog.outputs.changed == 'true'
         with:
           node-version: '20'
 
       - name: Post new changelog entries to Discord
+        if: steps.changelog.outputs.changed == 'true'
         run: node scripts/post-changelog.cjs
         env:
           DISCORD_CHANGELOG_WEBHOOK_URL: ${{ secrets.DISCORD_CHANGELOG_WEBHOOK_URL }}
