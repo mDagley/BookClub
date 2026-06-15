@@ -17,18 +17,30 @@ const GENRE_KEYWORD_MAP = [
   { keywords: ['fantasy'], genre: 'Fantasy' },
 ]
 
-// Scan categories AND description text — API categories are often too sparse
+// Checks categories first (more reliable); only scans description text if
+// categories produce no matches (description keywords produce too many false positives).
 export function mapCategoriesToGenres(categories = [], description = '') {
+  const catHaystack = categories.map(c => c.toLowerCase()).join(' ')
   const seen = new Set()
   const genres = []
-  const haystack = (categories.map(c => c.toLowerCase()).join(' ') + ' ' + description.toLowerCase()).trim()
+
   for (const { keywords, genre } of GENRE_KEYWORD_MAP) {
-    if (seen.has(genre)) continue
-    if (keywords.some(k => haystack.includes(k))) {
+    if (!seen.has(genre) && keywords.some(k => catHaystack.includes(k))) {
       seen.add(genre)
       genres.push(genre)
     }
   }
+
+  if (!genres.length && description) {
+    const descHaystack = description.toLowerCase()
+    for (const { keywords, genre } of GENRE_KEYWORD_MAP) {
+      if (!seen.has(genre) && keywords.some(k => descHaystack.includes(k))) {
+        seen.add(genre)
+        genres.push(genre)
+      }
+    }
+  }
+
   return genres
 }
 
@@ -149,14 +161,14 @@ async function fetchFromOpenLibrary(title, author) {
 
 // ── Search (for autocomplete) ─────────────────────────────────────────────────
 
-export async function searchBooks(query) {
+export async function searchBooks(query, maxResults = 6) {
   if (!query || query.length < 2) return []
   try {
     const q = encodeURIComponent(query)
     const key = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY
     const keyParam = key ? `&key=${key}` : ''
     const res = await fetch(
-      `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=6${keyParam}`
+      `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=${maxResults}${keyParam}`
     )
     if (!res.ok) return []
     const data = await res.json()
@@ -183,6 +195,35 @@ export async function searchBooks(query) {
   } catch {
     return []
   }
+}
+
+// ── Cover picker ──────────────────────────────────────────────────────────────
+
+// Returns a curated list of cover options for the admin cover picker.
+// Fetches more Google Books results than autocomplete needs, filters out
+// generic "no image" placeholders, then prepends the Open Library cover.
+export async function fetchCoverOptions(title, author) {
+  if (!title) return []
+  const query = `intitle:${title}${author ? ` inauthor:${author}` : ''}`
+  const [gbResults, ol] = await Promise.all([
+    searchBooks(query, 12),
+    fetchFromOpenLibrary(title, author),
+  ])
+
+  const withCovers = gbResults.filter(r => r.coverUrl)
+  const genericFlags = await Promise.all(withCovers.map(r => isGenericCover(r.coverUrl)))
+  const goodGb = withCovers.filter((_, i) => !genericFlags[i])
+
+  const options = []
+  if (ol?.coverUrl) options.push({ title, author, coverUrl: ol.coverUrl })
+  options.push(...goodGb)
+
+  const seen = new Set()
+  return options.filter(o => {
+    if (seen.has(o.coverUrl)) return false
+    seen.add(o.coverUrl)
+    return true
+  })
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────

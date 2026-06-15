@@ -4,7 +4,7 @@
     <p class="page-subtitle">What's new in the family book club.</p>
 
     <div class="releases">
-      <section v-for="release in releases" :key="release.date + release.label" class="release card">
+      <section v-for="release in releases" :key="release.date" class="release card">
         <div class="release-header">
           <span class="release-date">{{ release.date }}</span>
           <span v-if="release.label" class="release-label">{{ release.label }}</span>
@@ -25,8 +25,18 @@
 <script setup>
 const releases = [
   {
-    date: 'June 2026',
-    label: 'Discord & Past Books',
+    date: 'June 15, 2026',
+    entries: [
+      { type: 'fix',     text: 'Admin cover picker now filters out unavailable and placeholder images and checks Open Library for additional options.' },
+      { type: 'fix',     text: 'Cover thumbnails in the admin suggestions table enlarged to 80px for easier scanning.' },
+      { type: 'feature', text: 'Suggest a book modal now has a cover picker — search returns multiple options from Google Books and Open Library to choose from.' },
+      { type: 'feature', text: 'Genre auto-fill in the suggest modal improved — genres now use book category data rather than description text for more accurate suggestions.' },
+      { type: 'feature', text: 'Upcoming badge on suggestions with a future publication date.' },
+      { type: 'fix',     text: 'Published dates now auto-fill in bulk for suggestions that were missing them.' },
+    ],
+  },
+  {
+    date: 'June 14, 2026',
     entries: [
       { type: 'feature', text: 'Changelog updates are automatically posted to #website-updates in Discord whenever new features ship.' },
       { type: 'feature', text: 'Past book pages now show a quotes carousel with memorable lines from each book, synced from Discord.' },
