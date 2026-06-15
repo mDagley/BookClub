@@ -27,6 +27,8 @@ const releases = [
   {
     date: 'June 15, 2026',
     entries: [
+      { type: 'fix',     text: 'Admin cover picker now filters out unavailable and placeholder images and checks Open Library for additional options.' },
+      { type: 'fix',     text: 'Cover thumbnails in the admin suggestions table are now larger and easier to see.' },
       { type: 'fix',     text: 'Suggest a book modal now closes correctly after submitting from the dashboard.' },
     ],
   },
