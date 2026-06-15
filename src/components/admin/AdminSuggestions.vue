@@ -7,7 +7,7 @@
         class="btn btn-secondary btn-sm"
         :disabled="refreshing"
         @click="refreshMissingCovers"
-      >{{ refreshing ? `Fetching… (${refreshProgress})` : 'Refresh missing covers' }}</button>
+      >{{ refreshing ? `Fetching… (${refreshProgress})` : 'Fill missing covers & dates' }}</button>
     </div>
 
     <div v-if="loading" class="loading-state">Loading suggestions…</div>
@@ -213,7 +213,7 @@ function pickCover(url) {
 }
 
 async function refreshMissingCovers() {
-  const missing = suggestions.value.filter(s => !s.coverUrl)
+  const missing = suggestions.value.filter(s => !s.coverUrl || !s.publishedDate)
   if (!missing.length) return
   refreshing.value = true
   let done = 0
@@ -222,9 +222,14 @@ async function refreshMissingCovers() {
     for (const s of missing) {
       try {
         const meta = await fetchBookMetadata(s.title, s.author)
-        if (meta?.coverUrl) await updateSuggestion(s.id, { coverUrl: meta.coverUrl })
+        if (meta) {
+          const updates = {}
+          if (!s.coverUrl && meta.coverUrl) updates.coverUrl = meta.coverUrl
+          if (!s.publishedDate && meta.publishedDate) updates.publishedDate = meta.publishedDate
+          if (Object.keys(updates).length) await updateSuggestion(s.id, updates)
+        }
       } catch (err) {
-        console.error(`Cover fetch failed for "${s.title}":`, err)
+        console.error(`Metadata fetch failed for "${s.title}":`, err)
       }
       done++
       refreshProgress.value = `${done}/${missing.length}`

@@ -65,10 +65,10 @@ describe('mapCategoriesToGenres', () => {
     expect(mapCategoriesToGenres([], 'a thrilling mystery')).toContain('Mystery')
   })
 
-  it('combines genres from both categories and description', () => {
+  it('uses categories when available and skips description to avoid false positives', () => {
     const result = mapCategoriesToGenres(['Horror'], 'with dark academia overtones')
     expect(result).toContain('Horror')
-    expect(result).toContain('Dark Academia')
+    expect(result).not.toContain('Dark Academia')
   })
 
   it('deduplicates genres when multiple keywords match the same genre', () => {

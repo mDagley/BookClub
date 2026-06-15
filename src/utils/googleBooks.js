@@ -17,18 +17,30 @@ const GENRE_KEYWORD_MAP = [
   { keywords: ['fantasy'], genre: 'Fantasy' },
 ]
 
-// Scan categories AND description text — API categories are often too sparse
+// Checks categories first (more reliable); only scans description text if
+// categories produce no matches (description keywords produce too many false positives).
 export function mapCategoriesToGenres(categories = [], description = '') {
+  const catHaystack = categories.map(c => c.toLowerCase()).join(' ')
   const seen = new Set()
   const genres = []
-  const haystack = (categories.map(c => c.toLowerCase()).join(' ') + ' ' + description.toLowerCase()).trim()
+
   for (const { keywords, genre } of GENRE_KEYWORD_MAP) {
-    if (seen.has(genre)) continue
-    if (keywords.some(k => haystack.includes(k))) {
+    if (!seen.has(genre) && keywords.some(k => catHaystack.includes(k))) {
       seen.add(genre)
       genres.push(genre)
     }
   }
+
+  if (!genres.length && description) {
+    const descHaystack = description.toLowerCase()
+    for (const { keywords, genre } of GENRE_KEYWORD_MAP) {
+      if (!seen.has(genre) && keywords.some(k => descHaystack.includes(k))) {
+        seen.add(genre)
+        genres.push(genre)
+      }
+    }
+  }
+
   return genres
 }
 

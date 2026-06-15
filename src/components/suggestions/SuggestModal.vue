@@ -72,7 +72,7 @@
           <span v-if="fetchingMeta" class="fetch-hint">Fetching book info…</span>
         </div>
 
-        <!-- Optional cover upload -->
+        <!-- Optional cover upload / picker -->
         <div class="field cover-field">
           <span class="field-label">Cover <span class="field-optional">(optional — auto-fetched if blank)</span></span>
           <div class="cover-row">
@@ -81,13 +81,36 @@
               <img src="/book-icon.svg" class="placeholder-book" alt="" />
             </div>
             <div class="cover-actions">
+              <button
+                v-if="form.title"
+                type="button"
+                class="cover-fetch-btn"
+                :disabled="fetchingCovers || submitting"
+                @click="fetchCoverPicker"
+              >{{ fetchingCovers ? 'Fetching…' : 'Pick cover' }}</button>
               <CoverUpload
                 :book-id="'suggest-' + Date.now()"
                 label="Upload cover"
-                @uploaded="url => form.coverUrl = url"
+                @uploaded="url => { form.coverUrl = url; coverPickerOptions = [] }"
               />
               <button v-if="form.coverUrl" type="button" class="cover-clear-btn" @click="form.coverUrl = ''">✕ Clear</button>
             </div>
+          </div>
+          <div v-if="coverPickerOptions.length" class="cover-picker">
+            <div class="cover-picker-grid">
+              <button
+                v-for="opt in coverPickerOptions"
+                :key="opt.coverUrl"
+                type="button"
+                class="cover-option"
+                :class="{ selected: form.coverUrl === opt.coverUrl }"
+                :title="opt.title"
+                @click="form.coverUrl = opt.coverUrl; coverPickerOptions = []"
+              >
+                <img :src="opt.coverUrl" :alt="opt.title" />
+              </button>
+            </div>
+            <button type="button" class="cover-clear-btn" @click="coverPickerOptions = []">Dismiss</button>
           </div>
         </div>
 
@@ -179,7 +202,7 @@ import { reactive, ref, onMounted, onUnmounted } from 'vue'
 import { db } from '../../firebase.js'
 import { doc, updateDoc } from 'firebase/firestore'
 import { GENRE_ICONS, GENRE_LIST } from '../../utils/genres.js'
-import { fetchBookMetadata, fetchCoverUrl } from '../../utils/googleBooks.js'
+import { fetchBookMetadata, fetchCoverUrl, fetchCoverOptions } from '../../utils/googleBooks.js'
 import { useBookSearch } from '../../composables/useBookSearch.js'
 import CoverUpload from '../shared/CoverUpload.vue'
 import { useAuthStore } from '../../stores/auth.js'
@@ -216,6 +239,8 @@ const form = reactive({
 const submitting = ref(false)
 const errorMsg = ref('')
 const fetchingMeta = ref(false)
+const fetchingCovers = ref(false)
+const coverPickerOptions = ref([])
 
 const { searchResults, showDropdown, searching, highlightedIndex, onTitleInput, closeDropdown, onSearchKeydown } = useBookSearch()
 
@@ -225,6 +250,7 @@ function selectResult(result) {
   if (result.coverUrl) form.coverUrl = result.coverUrl
   if (result.fullDescription) form.description = result.fullDescription
   if (result.publishedDate) form.publishedDate = result.publishedDate
+  if (result.genres?.length && !form.genres.length) form.genres = [...result.genres]
   closeDropdown()
 }
 
@@ -236,6 +262,24 @@ async function autofillFromApi() {
   if (!meta) return
   if (meta.fullDescription && !form.description) form.description = meta.fullDescription
   if (meta.publishedDate && !form.publishedDate) form.publishedDate = meta.publishedDate
+  if (meta.genres?.length && !form.genres.length) form.genres = [...meta.genres]
+}
+
+async function fetchCoverPicker() {
+  const title = form.title.trim()
+  const author = form.author.trim()
+  if (!title) return
+  fetchingCovers.value = true
+  coverPickerOptions.value = []
+  try {
+    const options = await fetchCoverOptions(title, author)
+    if (options.length) coverPickerOptions.value = options
+    else alert('No covers found for this title.')
+  } catch {
+    alert('Cover fetch failed.')
+  } finally {
+    fetchingCovers.value = false
+  }
 }
 
 function fireWebhook(title, author, description, coverUrl, genres, suggestedBy) {
@@ -576,6 +620,38 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 }
 
 .cover-clear-btn:hover { border-color: #f28b82; color: #f28b82; }
+
+.cover-fetch-btn {
+  background: transparent;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.cover-fetch-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+.cover-fetch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cover-picker { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+
+.cover-picker-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.cover-option {
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  overflow: hidden;
+  width: 72px;
+}
+.cover-option img { display: block; width: 72px; aspect-ratio: 2/3; object-fit: cover; }
+.cover-option:hover { border-color: var(--border-hover); }
+.cover-option.selected { border-color: var(--gold); }
 
 .fetch-hint {
   font-family: var(--font-sans);
