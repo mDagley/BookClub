@@ -18,7 +18,7 @@ const GENRE_KEYWORD_MAP = [
 ]
 
 // Scan categories AND description text — API categories are often too sparse
-function mapCategoriesToGenres(categories = [], description = '') {
+export function mapCategoriesToGenres(categories = [], description = '') {
   const seen = new Set()
   const genres = []
   const haystack = (categories.map(c => c.toLowerCase()).join(' ') + ' ' + description.toLowerCase()).trim()
@@ -48,7 +48,7 @@ function isGenericCover(url) {
 
 // Produces the highest-quality cover URL Google Books can serve for a thumbnail link.
 // fife=w480 forces a 480px-wide image from Google's CDN; edge=curl is a decorative artifact.
-function betterCoverUrl(thumbnail) {
+export function betterCoverUrl(thumbnail) {
   if (!thumbnail) return null
   try {
     const u = new URL(thumbnail.replace('http://', 'https://'))

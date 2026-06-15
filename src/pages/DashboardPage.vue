@@ -29,7 +29,7 @@
     </div>
 
     <!-- Suggest modal (opens from TopSuggestions) -->
-    <SuggestModal v-if="showSuggestModal" :add-suggestion="addSuggestion" @close="showSuggestModal = false" />
+    <SuggestModal v-if="showSuggestModal" :add-suggestion="addSuggestion" @close="showSuggestModal = false" @submitted="showSuggestModal = false" />
   </div>
 </template>
 
