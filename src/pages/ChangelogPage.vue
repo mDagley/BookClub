@@ -4,7 +4,7 @@
     <p class="page-subtitle">What's new in the family book club.</p>
 
     <div class="releases">
-      <section v-for="release in releases" :key="release.date + release.label" class="release card">
+      <section v-for="release in releases" :key="release.date" class="release card">
         <div class="release-header">
           <span class="release-date">{{ release.date }}</span>
           <span v-if="release.label" class="release-label">{{ release.label }}</span>
@@ -28,7 +28,7 @@ const releases = [
     date: 'June 15, 2026',
     entries: [
       { type: 'fix',     text: 'Admin cover picker now filters out unavailable and placeholder images and checks Open Library for additional options.' },
-      { type: 'fix',     text: 'Cover thumbnails in the admin suggestions table are now larger and easier to see.' },
+      { type: 'fix',     text: 'Cover thumbnails in the admin suggestions table enlarged to 80px for easier scanning.' },
       { type: 'fix',     text: 'Suggest a book modal now closes correctly after submitting from the dashboard.' },
     ],
   },

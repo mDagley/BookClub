@@ -1,4 +1,4 @@
-import { betterCoverUrl, mapCategoriesToGenres } from '../../utils/googleBooks.js'
+import { betterCoverUrl, mapCategoriesToGenres, fetchCoverOptions } from '../../utils/googleBooks.js'
 
 // Sample URL as returned by the Google Books API
 const SAMPLE_URL = 'http://books.google.com/books/content?id=XYZ123&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api'
@@ -87,5 +87,84 @@ describe('mapCategoriesToGenres', () => {
   it('is case-insensitive', () => {
     expect(mapCategoriesToGenres(['SCIENCE FICTION'])).toContain('SciFi')
     expect(mapCategoriesToGenres([], 'A FANTASY WORLD')).toContain('Fantasy')
+  })
+})
+
+describe('fetchCoverOptions', () => {
+  const GB_THUMB = 'http://books.google.com/books/content?id=ABC&zoom=1'
+  const GB_THUMB_2 = 'http://books.google.com/books/content?id=XYZ&zoom=1'
+  const OL_COVER = 'https://covers.openlibrary.org/b/id/99999-L.jpg'
+
+  let OriginalImage
+
+  beforeEach(() => {
+    OriginalImage = global.Image
+    // Simulate real (non-placeholder) cover: large naturalWidth so isGenericCover → false
+    global.Image = class {
+      constructor() { this.onload = null; this.onerror = null }
+      set src(_) {
+        setTimeout(() => { this.naturalWidth = 400; this.naturalHeight = 600; this.onload?.() }, 0)
+      }
+    }
+  })
+
+  afterEach(() => {
+    global.Image = OriginalImage
+    vi.mocked(fetch).mockReset()
+  })
+
+  it('returns empty array when title is empty', async () => {
+    expect(await fetchCoverOptions('')).toEqual([])
+    expect(await fetchCoverOptions(null)).toEqual([])
+  })
+
+  it('prepends the Open Library cover as the first result', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [{ volumeInfo: { title: 'Dune', authors: ['Frank Herbert'], imageLinks: { thumbnail: GB_THUMB } } }] }) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ docs: [{ cover_i: 99999, key: '/works/OL1W' }] }) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) }) // OL work (no description)
+
+    const results = await fetchCoverOptions('Dune', 'Frank Herbert')
+    expect(results[0].coverUrl).toBe(OL_COVER)
+  })
+
+  it('excludes results with no coverUrl', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ items: [{ volumeInfo: { title: 'Dune', authors: [] } }] }) }) // no imageLinks
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ docs: [] }) }) // OL no result
+
+    const results = await fetchCoverOptions('Dune')
+    expect(results).toHaveLength(0)
+  })
+
+  it('deduplicates results that share the same cover URL', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({
+        items: [
+          { volumeInfo: { title: 'Dune', authors: [], imageLinks: { thumbnail: GB_THUMB } } },
+          { volumeInfo: { title: 'Dune', authors: [], imageLinks: { thumbnail: GB_THUMB } } },
+        ]
+      }) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ docs: [] }) })
+
+    const results = await fetchCoverOptions('Dune')
+    const urls = results.map(r => r.coverUrl)
+    expect(new Set(urls).size).toBe(urls.length)
+  })
+
+  it('returns multiple distinct covers when available', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({
+        items: [
+          { volumeInfo: { title: 'Dune', authors: [], imageLinks: { thumbnail: GB_THUMB } } },
+          { volumeInfo: { title: 'Dune', authors: [], imageLinks: { thumbnail: GB_THUMB_2 } } },
+        ]
+      }) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ docs: [{ cover_i: 99999, key: '/works/OL1W' }] }) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
+
+    const results = await fetchCoverOptions('Dune')
+    expect(results.length).toBeGreaterThanOrEqual(3) // OL + 2 GB
+    expect(results[0].coverUrl).toBe(OL_COVER) // OL still first
   })
 })
