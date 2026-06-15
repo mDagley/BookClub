@@ -104,6 +104,7 @@
                 type="button"
                 class="cover-option"
                 :class="{ selected: form.coverUrl === opt.coverUrl }"
+                :aria-pressed="form.coverUrl === opt.coverUrl ? 'true' : 'false'"
                 :title="opt.title"
                 @click="form.coverUrl = opt.coverUrl; coverPickerOptions = []"
               >
@@ -647,9 +648,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   cursor: pointer;
   transition: border-color 0.15s;
   overflow: hidden;
-  width: 72px;
+  width: 80px;
 }
-.cover-option img { display: block; width: 72px; aspect-ratio: 2/3; object-fit: cover; }
+.cover-option img { display: block; width: 80px; aspect-ratio: 2/3; object-fit: cover; }
 .cover-option:hover { border-color: var(--border-hover); }
 .cover-option.selected { border-color: var(--gold); }
 

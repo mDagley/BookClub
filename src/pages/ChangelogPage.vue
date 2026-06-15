@@ -29,7 +29,10 @@ const releases = [
     entries: [
       { type: 'fix',     text: 'Admin cover picker now filters out unavailable and placeholder images and checks Open Library for additional options.' },
       { type: 'fix',     text: 'Cover thumbnails in the admin suggestions table enlarged to 80px for easier scanning.' },
-      { type: 'fix',     text: 'Suggest a book modal now closes correctly after submitting from the dashboard.' },
+      { type: 'feature', text: 'Suggest a book modal now has a cover picker — search returns multiple options from Google Books and Open Library to choose from.' },
+      { type: 'feature', text: 'Genre auto-fill in the suggest modal improved — genres now use book category data rather than description text for more accurate suggestions.' },
+      { type: 'feature', text: 'Upcoming badge on suggestions with a future publication date.' },
+      { type: 'fix',     text: 'Published dates now auto-fill in bulk for suggestions that were missing them.' },
     ],
   },
   {

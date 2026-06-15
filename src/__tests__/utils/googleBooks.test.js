@@ -110,7 +110,7 @@ describe('fetchCoverOptions', () => {
 
   afterEach(() => {
     global.Image = OriginalImage
-    vi.mocked(fetch).mockReset()
+    vi.mocked(fetch).mockClear()
   })
 
   it('returns empty array when title is empty', async () => {
