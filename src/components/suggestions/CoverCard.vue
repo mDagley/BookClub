@@ -72,7 +72,10 @@
     <div class="cover-meta">
       <p class="cover-title">{{ suggestion.title }}</p>
       <p class="cover-author">{{ suggestion.author }}</p>
-      <p v-if="formattedDate" class="cover-date">{{ formattedDate }}</p>
+      <p v-if="formattedDate" class="cover-date">
+        {{ formattedDate }}
+        <span v-if="isUnreleased" class="upcoming-badge">Upcoming</span>
+      </p>
       <p class="cover-suggester">by {{ resolveName(suggestion.suggestedBy) }}</p>
       <button
         class="read-toggle"
@@ -124,6 +127,22 @@ function formatPublishedDate(dateStr) {
 }
 
 const formattedDate = computed(() => formatPublishedDate(props.suggestion.publishedDate))
+
+const isUnreleased = computed(() => {
+  const d = props.suggestion.publishedDate
+  if (!d) return false
+  const parts = d.split('-')
+  const year  = parseInt(parts[0], 10)
+  const month = parts.length > 1 ? parseInt(parts[1], 10) : null
+  const day   = parts.length > 2 ? parseInt(parts[2], 10) : null
+  const now   = new Date()
+  if (year  > now.getFullYear()) return true
+  if (year  < now.getFullYear()) return false
+  if (month === null)            return false
+  if (month > now.getMonth() + 1) return true
+  if (month < now.getMonth() + 1) return false
+  return day !== null && day > now.getDate()
+})
 
 const visibleGenres = computed(() =>
   (props.suggestion.genres || []).slice(0, 3)
@@ -404,6 +423,23 @@ const visibleGenres = computed(() =>
   font-family: var(--font-sans);
   font-size: 0.68rem;
   color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.upcoming-badge {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  border: 1px solid rgba(200, 150, 60, 0.5);
+  border-radius: 10px;
+  padding: 0.05rem 0.4rem;
+  white-space: nowrap;
 }
 
 .cover-suggester {
