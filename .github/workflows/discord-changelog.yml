@@ -13,7 +13,14 @@ jobs:
           fetch-depth: 0   # full history so any push range is available
 
       - name: Trigger Easy Panel deploy
-        run: curl -s -X POST "${{ secrets.EASYPANEL_DEPLOY_HOOK }}"
+        env:
+          DEPLOY_HOOK: ${{ secrets.EASYPANEL_DEPLOY_HOOK }}
+        run: |
+          if [[ -z "$DEPLOY_HOOK" ]]; then
+            echo "::error::EASYPANEL_DEPLOY_HOOK secret is not set"
+            exit 1
+          fi
+          curl -sf -X POST "$DEPLOY_HOOK"
 
       - name: Check if ChangelogPage.vue changed
         id: changelog
