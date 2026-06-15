@@ -187,13 +187,15 @@ const refreshing = ref(false)
 const refreshProgress = ref('')
 
 async function fetchCoverForEdit() {
-  if (!editForm.value.title) return
+  const title = editForm.value.title?.trim()
+  const author = editForm.value.author?.trim()
+  if (!title) return
   fetchingCover.value = true
   coverOptions.value = []
   try {
     const parts = []
-    if (editForm.value.title) parts.push(`intitle:${editForm.value.title}`)
-    if (editForm.value.author) parts.push(`inauthor:${editForm.value.author}`)
+    if (title) parts.push(`intitle:${title}`)
+    if (author) parts.push(`inauthor:${author}`)
     const query = parts.join(' ')
     const results = await searchBooks(query)
     const withCovers = results.filter(r => r.coverUrl)

@@ -187,8 +187,9 @@ export async function searchBooks(query) {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-// Tries Google Books first, then Open Library as fallback.
-// Merges the best available data from both sources.
+// Fetches from both Google Books and Open Library in parallel and merges the best data.
+// Open Library is preferred for cover images (higher quality scans); Google Books is preferred
+// for synopsis, description, genres, and publishedDate.
 export async function fetchBookMetadata(title, author) {
   if (!title) return null
 
