@@ -44,13 +44,40 @@ export function mapCategoriesToGenres(categories = [], description = '') {
   return genres
 }
 
-// Returns true if the URL resolves to Google's generic "no cover" placeholder.
-// Google's placeholder is ≤128px wide regardless of the zoom level requested;
-// real covers at zoom=2 are typically 200px+ wide.
+// Returns true if the URL resolves to Google's narrow "no cover" placeholder.
+// Google's narrow placeholder stays ≤128px wide regardless of zoom or fife;
+// real covers at fife=w480 are ~480px wide.
 function isGenericCover(url) {
   return new Promise((resolve) => {
     const img = new Image()
-    img.onload = () => resolve(img.naturalWidth <= 128 && img.naturalHeight <= 200)
+    img.onload = () => {
+      const { naturalWidth: w, naturalHeight: h } = img
+      resolve(w === 0 || h === 0 || (w <= 128 && h <= 200))
+    }
+    img.onerror = () => resolve(true)
+    img.src = url
+  })
+}
+
+// Google also serves a full-size "image not available" image at the requested
+// fife width, bypassing the narrow-placeholder check above. At zoom=1 (without
+// fife) those same images are very small (<100px), while real covers are ~128px.
+// Checking the zoom=1 URL in parallel with isGenericCover catches both types.
+function thumbnailCheckUrl(url) {
+  try {
+    const u = new URL(url)
+    u.searchParams.set('zoom', '1')
+    u.searchParams.delete('fife')
+    return u.toString()
+  } catch {
+    return url
+  }
+}
+
+function isMissingThumbnail(url) {
+  return new Promise(resolve => {
+    const img = new Image()
+    img.onload = () => resolve(img.naturalWidth < 100)
     img.onerror = () => resolve(true)
     img.src = url
   })
@@ -211,7 +238,14 @@ export async function fetchCoverOptions(title, author) {
   ])
 
   const withCovers = gbResults.filter(r => r.coverUrl)
-  const genericFlags = await Promise.all(withCovers.map(r => isGenericCover(r.coverUrl)))
+  const genericFlags = await Promise.all(
+    withCovers.map(r =>
+      Promise.all([
+        isGenericCover(r.coverUrl),
+        isMissingThumbnail(thumbnailCheckUrl(r.coverUrl)),
+      ]).then(([generic, missing]) => generic || missing)
+    )
+  )
   const goodGb = withCovers.filter((_, i) => !genericFlags[i])
 
   const options = []
