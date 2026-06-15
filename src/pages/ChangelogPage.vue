@@ -25,8 +25,13 @@
 <script setup>
 const releases = [
   {
-    date: 'June 2026',
-    label: 'Discord & Past Books',
+    date: 'June 15, 2026',
+    entries: [
+      { type: 'fix',     text: 'Suggest a book modal now closes correctly after submitting from the dashboard.' },
+    ],
+  },
+  {
+    date: 'June 14, 2026',
     entries: [
       { type: 'feature', text: 'Changelog updates are automatically posted to #website-updates in Discord whenever new features ship.' },
       { type: 'feature', text: 'Past book pages now show a quotes carousel with memorable lines from each book, synced from Discord.' },
