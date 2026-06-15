@@ -132,9 +132,12 @@ const isUnreleased = computed(() => {
   const d = props.suggestion.publishedDate
   if (!d) return false
   const parts = d.split('-')
-  const year  = parseInt(parts[0], 10)
-  const month = parts.length > 1 ? parseInt(parts[1], 10) : null
-  const day   = parts.length > 2 ? parseInt(parts[2], 10) : null
+  const year = parseInt(parts[0], 10)
+  if (!isFinite(year)) return false
+  const rawMonth = parts.length > 1 ? parseInt(parts[1], 10) : NaN
+  const rawDay   = parts.length > 2 ? parseInt(parts[2], 10) : NaN
+  const month = isFinite(rawMonth) && rawMonth >= 1 && rawMonth <= 12 ? rawMonth : null
+  const day   = isFinite(rawDay)   && rawDay   >= 1 && rawDay   <= 31  ? rawDay   : null
   const now   = new Date()
   if (year  > now.getFullYear()) return true
   if (year  < now.getFullYear()) return false
