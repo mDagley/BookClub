@@ -44,16 +44,45 @@ export function mapCategoriesToGenres(categories = [], description = '') {
   return genres
 }
 
-// Returns true if the URL resolves to Google's generic "no cover" placeholder.
-// Google's placeholder is ≤128px wide regardless of the zoom level requested;
-// real covers at zoom=2 are typically 200px+ wide.
-function isGenericCover(url) {
-  return new Promise((resolve) => {
+function loadImage(url) {
+  return new Promise(resolve => {
     const img = new Image()
-    img.onload = () => resolve(img.naturalWidth <= 128 && img.naturalHeight <= 200)
-    img.onerror = () => resolve(true)
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight })
+    img.onerror = () => resolve({ w: 0, h: 0 })
     img.src = url
   })
+}
+
+// Derives a zoom=1/no-fife URL for placeholder pre-screening.
+// Only applies to Google Books URLs; returns null for everything else.
+function thumbnailCheckUrl(url) {
+  if (!url.includes('books.google.com') && !url.includes('books.googleusercontent.com')) {
+    return null
+  }
+  try {
+    const u = new URL(url)
+    u.searchParams.set('zoom', '1')
+    u.searchParams.delete('fife')
+    return u.toString()
+  } catch {
+    return null
+  }
+}
+
+// Returns true if the URL resolves to any Google Books "no cover" placeholder.
+// Two checks run in parallel:
+//   1. High-res URL: Google's narrow placeholder stays ≤128px regardless of fife.
+//   2. zoom=1 URL: Google's full-size "image not available" shrinks below 100px
+//      at zoom=1 even though fife=w480 makes it appear at full requested width.
+function isGenericCover(url) {
+  const thumbUrl = thumbnailCheckUrl(url)
+  const highResCheck = loadImage(url).then(({ w, h }) =>
+    w === 0 || h === 0 || (w <= 128 && h <= 200)
+  )
+  const thumbCheck = thumbUrl
+    ? loadImage(thumbUrl).then(({ w }) => w < 100)
+    : Promise.resolve(false)
+  return Promise.all([highResCheck, thumbCheck]).then(([a, b]) => a || b)
 }
 
 // ── Google Books ──────────────────────────────────────────────────────────────
@@ -211,7 +240,12 @@ export async function fetchCoverOptions(title, author) {
   ])
 
   const withCovers = gbResults.filter(r => r.coverUrl)
-  const genericFlags = await Promise.all(withCovers.map(r => isGenericCover(r.coverUrl)))
+  const coverCache = new Map()
+  const checkCover = url => {
+    if (!coverCache.has(url)) coverCache.set(url, isGenericCover(url))
+    return coverCache.get(url)
+  }
+  const genericFlags = await Promise.all(withCovers.map(r => checkCover(r.coverUrl)))
   const goodGb = withCovers.filter((_, i) => !genericFlags[i])
 
   const options = []

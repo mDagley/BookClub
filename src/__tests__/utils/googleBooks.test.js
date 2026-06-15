@@ -167,4 +167,29 @@ describe('fetchCoverOptions', () => {
     expect(results.length).toBeGreaterThanOrEqual(3) // OL + 2 GB
     expect(results[0].coverUrl).toBe(OL_COVER) // OL still first
   })
+
+  it('filters out full-size "image not available" placeholders via zoom=1 check', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({
+        items: [{ volumeInfo: { title: 'Dune', authors: ['Frank Herbert'], imageLinks: { thumbnail: GB_THUMB } } }]
+      }) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ docs: [] }) })
+
+    // High-res (zoom=3 + fife) looks normal-sized, but zoom=1 is tiny —
+    // simulates Google serving a full-size "image not available" via fife.
+    global.Image = class {
+      constructor() { this.onload = null; this.onerror = null }
+      set src(url) {
+        setTimeout(() => {
+          const isZoom1Thumb = url.includes('zoom=1') && !url.includes('fife=')
+          this.naturalWidth = isZoom1Thumb ? 70 : 480
+          this.naturalHeight = isZoom1Thumb ? 105 : 720
+          this.onload?.()
+        }, 0)
+      }
+    }
+
+    const results = await fetchCoverOptions('Dune', 'Frank Herbert')
+    expect(results).toHaveLength(0)
+  })
 })
