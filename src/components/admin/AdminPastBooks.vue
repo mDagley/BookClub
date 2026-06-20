@@ -30,8 +30,9 @@
                   :src="book.coverUrl"
                   :alt="book.title"
                   class="cover-thumb"
+                  @error="e => { e.target.style.display = 'none'; e.target.parentElement.querySelector('.cover-placeholder').style.removeProperty('display') }"
                 />
-                <div v-else class="cover-placeholder"></div>
+                <div class="cover-placeholder" :style="book.coverUrl ? 'display: none' : undefined"></div>
               </td>
               <td class="col-title" data-label="Title" :data-author="book.author"><span class="sr-only">Title: </span>{{ book.title }}</td>
               <td class="col-author" data-label="Author">{{ book.author }}</td>

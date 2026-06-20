@@ -37,8 +37,9 @@
             :src="book.coverUrl"
             :alt="book.title"
             class="cover-img"
+            @error="e => e.target.style.display = 'none'"
           />
-          <div v-else class="cover-placeholder">
+          <div class="cover-placeholder">
             <img src="/book-icon.svg" class="placeholder-book" alt="" />
           </div>
         </div>
@@ -136,8 +137,10 @@
           :to="`/past-books/${newerBook.id}`"
           class="book-nav-card book-nav-prev"
         >
-          <img v-if="newerBook.coverUrl" :src="newerBook.coverUrl" :alt="newerBook.title" class="nav-cover" />
-          <div v-else class="nav-cover nav-cover-placeholder"><img src="/book-icon.svg" class="nav-placeholder-icon" alt="" /></div>
+          <div class="nav-cover-wrap">
+            <img v-if="newerBook.coverUrl" :src="newerBook.coverUrl" :alt="newerBook.title" class="nav-cover" @error="e => e.target.style.display = 'none'" />
+            <div class="nav-cover-placeholder"><img src="/book-icon.svg" class="nav-placeholder-icon" alt="" /></div>
+          </div>
           <div class="nav-book-info">
             <span class="nav-direction">← More recent</span>
             <span class="nav-title">{{ newerBook.title }}</span>
@@ -155,8 +158,10 @@
             <span class="nav-title">{{ olderBook.title }}</span>
             <span class="nav-date">{{ formatDate(olderBook.dateRead) }}</span>
           </div>
-          <img v-if="olderBook.coverUrl" :src="olderBook.coverUrl" :alt="olderBook.title" class="nav-cover" />
-          <div v-else class="nav-cover nav-cover-placeholder"><img src="/book-icon.svg" class="nav-placeholder-icon" alt="" /></div>
+          <div class="nav-cover-wrap">
+            <img v-if="olderBook.coverUrl" :src="olderBook.coverUrl" :alt="olderBook.title" class="nav-cover" @error="e => e.target.style.display = 'none'" />
+            <div class="nav-cover-placeholder"><img src="/book-icon.svg" class="nav-placeholder-icon" alt="" /></div>
+          </div>
         </RouterLink>
       </nav>
     </template>
@@ -350,21 +355,30 @@ function formatDate(dateRead) {
   align-items: flex-start;
 }
 
-.cover-area { flex-shrink: 0; }
-
-.cover-img {
+.cover-area {
+  flex-shrink: 0;
+  position: relative;
   width: 160px;
+  aspect-ratio: 2/3;
+  overflow: hidden;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
+}
+
+.cover-img {
+  position: relative;
+  z-index: 1;
   display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
 }
 
 .cover-placeholder {
-  width: 160px;
-  aspect-ratio: 2/3;
+  position: absolute;
+  inset: 0;
   background: var(--surface-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -504,16 +518,28 @@ function formatDate(dateRead) {
   justify-content: flex-end;
 }
 
-.nav-cover {
+.nav-cover-wrap {
+  position: relative;
   flex-shrink: 0;
   width: 44px;
   height: 62px;
-  object-fit: cover;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.nav-cover {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .nav-cover-placeholder {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -561,7 +587,7 @@ function formatDate(dateRead) {
 
 @media (max-width: 640px) {
   .book-header { flex-direction: column; }
-  .cover-img { width: 120px; }
+  .cover-area { width: 120px; }
   .book-title { font-size: 1.4rem; }
 
   .top-nav { display: none; }

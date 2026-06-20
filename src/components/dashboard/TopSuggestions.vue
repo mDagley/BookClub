@@ -13,14 +13,17 @@
         class="suggestion-row"
       >
         <span class="rank">#{{ i + 1 }}</span>
-        <img
-          v-if="s.coverUrl"
-          :src="s.coverUrl"
-          :alt="s.title"
-          class="suggestion-thumb"
-        />
-        <div v-else class="suggestion-thumb-placeholder">
-          <img src="/book-icon.svg" class="placeholder-book" alt="" />
+        <div class="thumb-wrap">
+          <img
+            v-if="s.coverUrl"
+            :src="s.coverUrl"
+            :alt="s.title"
+            class="suggestion-thumb"
+            @error="e => e.target.style.display = 'none'"
+          />
+          <div class="suggestion-thumb-placeholder">
+            <img src="/book-icon.svg" class="placeholder-book" alt="" />
+          </div>
         </div>
 
         <div class="suggestion-info">
@@ -110,25 +113,33 @@ const { resolveNames } = useMemberProfiles()
   flex-shrink: 0;
 }
 
-.suggestion-thumb {
+.thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
   width: 36px;
   height: 54px;
-  object-fit: cover;
   border-radius: 3px;
   border: 1px solid var(--border);
-  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--surface-subtle);
+}
+
+.suggestion-thumb {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .suggestion-thumb-placeholder {
-  width: 36px;
-  height: 54px;
-  background: var(--surface-subtle);
-  border: 1px solid var(--border);
-  border-radius: 3px;
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  background: var(--surface-subtle);
 }
 
 .placeholder-book {

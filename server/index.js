@@ -494,6 +494,17 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' })
 })
 
+// --- Local cover libraries (dev only, via env vars) ---
+if (process.env.LOCAL_BOOKS_DIR) {
+  app.use('/local-covers/books', express.static(process.env.LOCAL_BOOKS_DIR))
+}
+if (process.env.LOCAL_AUDIO_DIR) {
+  app.use('/local-covers/audio', express.static(process.env.LOCAL_AUDIO_DIR))
+}
+if (process.env.LOCAL_ABS_DIR) {
+  app.use('/local-covers/abs', express.static(process.env.LOCAL_ABS_DIR, { index: false, dotfiles: 'ignore' }))
+}
+
 // --- Serve Vue SPA ---
 const distPath = path.join(__dirname, '../dist')
 app.use('/covers', express.static(COVERS_DIR))

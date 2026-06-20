@@ -35,8 +35,9 @@
             :alt="book.title || 'Book cover'"
             class="cover-img"
             loading="lazy"
+            @error="e => e.target.style.display = 'none'"
           />
-          <div v-else class="cover-placeholder">
+          <div class="cover-placeholder">
             <img src="/book-icon.svg" class="placeholder-book" alt="" />
           </div>
 
