@@ -14,24 +14,29 @@ export function useConfig() {
   const discordWebhookUrl = ref('')
   const loading = ref(true)
 
-  const unsubscribe = onSnapshot(doc(db, 'config', 'main'), (snap) => {
-    if (snap.exists()) {
-      const data = snap.data()
-      currentBook.value = data.currentBook || null
-      audiobookServer.value = data.audiobookServer || null
-      familyMembers.value = data.familyMembers || []
-      memberProfiles.value = data.memberProfiles || []
-      discordGuildUrl.value = data.discordGuildUrl || ''
-      discordInviteUrl.value = data.discordInviteUrl || ''
-      goodreadsGroupUrl.value = data.goodreadsGroupUrl || ''
-      audiobookServerUrl.value = data.audiobookServerUrl || ''
-      discordWebhookUrl.value = data.discordWebhookUrl || ''
-    }
+  let unsubscribe = () => {}
+  if (db) {
+    unsubscribe = onSnapshot(doc(db, 'config', 'main'), (snap) => {
+      if (snap.exists()) {
+        const data = snap.data()
+        currentBook.value = data.currentBook || null
+        audiobookServer.value = data.audiobookServer || null
+        familyMembers.value = data.familyMembers || []
+        memberProfiles.value = data.memberProfiles || []
+        discordGuildUrl.value = data.discordGuildUrl || ''
+        discordInviteUrl.value = data.discordInviteUrl || ''
+        goodreadsGroupUrl.value = data.goodreadsGroupUrl || ''
+        audiobookServerUrl.value = data.audiobookServerUrl || ''
+        discordWebhookUrl.value = data.discordWebhookUrl || ''
+      }
+      loading.value = false
+    }, (error) => {
+      console.error('useConfig snapshot error:', error)
+      loading.value = false
+    })
+  } else {
     loading.value = false
-  }, (error) => {
-    console.error('useConfig snapshot error:', error)
-    loading.value = false
-  })
+  }
 
   onUnmounted(unsubscribe)
 

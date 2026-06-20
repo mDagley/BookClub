@@ -9,15 +9,19 @@ export function usePastBooks() {
   const pastBooks = ref([])
   const loading = ref(true)
 
-  const q = query(collection(db, 'pastBooks'), orderBy('dateRead', 'desc'))
-
-  const unsubscribe = onSnapshot(q, (snap) => {
-    pastBooks.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  let unsubscribe = () => {}
+  if (db) {
+    const q = query(collection(db, 'pastBooks'), orderBy('dateRead', 'desc'))
+    unsubscribe = onSnapshot(q, (snap) => {
+      pastBooks.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      loading.value = false
+    }, (error) => {
+      console.error('usePastBooks snapshot error:', error)
+      loading.value = false
+    })
+  } else {
     loading.value = false
-  }, (error) => {
-    console.error('usePastBooks snapshot error:', error)
-    loading.value = false
-  })
+  }
 
   onUnmounted(unsubscribe)
 

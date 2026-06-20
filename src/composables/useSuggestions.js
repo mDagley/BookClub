@@ -13,15 +13,19 @@ export function useSuggestions() {
   const suggestions = ref([])
   const loading = ref(true)
 
-  const q = query(collection(db, 'suggestions'), orderBy('votes', 'desc'), orderBy('createdAt', 'desc'))
-
-  const unsubscribe = onSnapshot(q, (snap) => {
-    suggestions.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  let unsubscribe = () => {}
+  if (db) {
+    const q = query(collection(db, 'suggestions'), orderBy('votes', 'desc'), orderBy('createdAt', 'desc'))
+    unsubscribe = onSnapshot(q, (snap) => {
+      suggestions.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      loading.value = false
+    }, (error) => {
+      console.error('useSuggestions snapshot error:', error)
+      loading.value = false
+    })
+  } else {
     loading.value = false
-  }, (error) => {
-    console.error('useSuggestions snapshot error:', error)
-    loading.value = false
-  })
+  }
 
   onUnmounted(unsubscribe)
 

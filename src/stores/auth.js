@@ -10,19 +10,24 @@ export const useAuthStore = defineStore('auth', () => {
   // Populate user from Firebase Auth on startup.
   // displayName is not set on custom-token users, so we read discordUsername
   // from the ID token claims that the server embedded when creating the token.
-  onAuthStateChanged(auth, async (firebaseUser) => {
-    if (firebaseUser) {
-      const idTokenResult = await firebaseUser.getIdTokenResult()
-      user.value = {
-        uid: firebaseUser.uid,
-        discordUsername: idTokenResult.claims.discordUsername || firebaseUser.displayName,
-        photoURL: idTokenResult.claims.discordAvatar || firebaseUser.photoURL,
+  if (auth) {
+    onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const idTokenResult = await firebaseUser.getIdTokenResult()
+        user.value = {
+          uid: firebaseUser.uid,
+          discordUsername: idTokenResult.claims.discordUsername || firebaseUser.displayName,
+          photoURL: idTokenResult.claims.discordAvatar || firebaseUser.photoURL,
+        }
+      } else {
+        user.value = null
       }
-    } else {
-      user.value = null
-    }
+      loading.value = false
+    })
+  } else {
+    // No Firebase credentials — skip auth listener, stay logged out until devLogin()
     loading.value = false
-  })
+  }
 
   function loginWithDiscord() {
     sessionStorage.setItem('loginReturnTo', window.location.pathname)
@@ -56,7 +61,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout() {
-    await signOut(auth)
+    if (auth) await signOut(auth)
     user.value = null
   }
 
