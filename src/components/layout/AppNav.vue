@@ -28,7 +28,7 @@
     </button>
 
     <!-- Mobile dropdown -->
-    <div v-if="menuOpen" id="nav-mobile-menu" class="nav-mobile-menu">
+    <div v-show="menuOpen" id="nav-mobile-menu" class="nav-mobile-menu">
       <RouterLink to="/" @click="menuOpen = false">Home</RouterLink>
       <RouterLink to="/book" @click="menuOpen = false">Current Book</RouterLink>
       <RouterLink to="/suggestions" @click="menuOpen = false">Suggestions</RouterLink>
