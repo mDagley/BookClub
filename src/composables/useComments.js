@@ -32,6 +32,7 @@ export function useComments(suggestionId) {
   onUnmounted(() => { if (unsubscribe) unsubscribe() })
 
   async function addComment(suggestionId, { uid, displayName, avatarUrl, content }) {
+    if (!db) throw new Error('Firestore is not configured')
     return addDoc(collection(db, 'suggestions', suggestionId, 'comments'), {
       userId: uid,
       displayName,
@@ -42,6 +43,7 @@ export function useComments(suggestionId) {
   }
 
   async function deleteComment(suggestionId, commentId) {
+    if (!db) throw new Error('Firestore is not configured')
     return deleteDoc(doc(db, 'suggestions', suggestionId, 'comments', commentId))
   }
 

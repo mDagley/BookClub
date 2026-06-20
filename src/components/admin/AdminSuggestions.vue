@@ -817,12 +817,14 @@ function promote(suggestion) {
     line-height: inherit;
     font-size: 0.8rem;
     font-weight: 700;
+    color: var(--gold);
     background: rgba(200, 150, 60, 0.12);
     border: 1px solid rgba(200, 150, 60, 0.3);
     border-radius: var(--radius-sm);
     padding: 0.1rem 0.45rem;
     text-align: unset;
     gap: unset;
+    text-shadow: none;
     backdrop-filter: none;
   }
 

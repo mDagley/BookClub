@@ -10,7 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Populate user from Firebase Auth on startup.
   // displayName is not set on custom-token users, so we read discordUsername
   // from the ID token claims that the server embedded when creating the token.
-  if (auth && import.meta.env.VITE_DEV_AUTH !== 'true') {
+  if (auth && !(import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true')) {
     onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
@@ -73,7 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Dev-only bypass — set VITE_DEV_AUTH=true in .env to enable
   function devLogin() {
-    if (import.meta.env.VITE_DEV_AUTH !== 'true') return
+    if (!(import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true')) return
     user.value = { uid: 'dev-user', discordUsername: 'dev', photoURL: null }
     loading.value = false
   }

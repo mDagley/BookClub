@@ -176,14 +176,14 @@
             <button type="button" class="btn-reorder" @click="moveItem('threads', index, 1)" :disabled="index === form.threads.length - 1" title="Move down" aria-label="Move down">▼</button>
           </div>
           <div class="thread-fields">
-            <label class="field-label">Title</label>
+            <span class="field-label">Title</span>
             <input
               v-model="thread.title"
               type="text"
               class="form-input"
               :placeholder="index === 0 ? 'Thread title (Primary)' : 'Thread title'"
             />
-            <label class="field-label">URL</label>
+            <span class="field-label">URL</span>
             <input
               v-model="thread.url"
               type="url"

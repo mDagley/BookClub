@@ -41,7 +41,7 @@
           {{ tab.label }}
         </button>
       </nav>
-      <select class="admin-tab-select" :value="activeTab" @change="activeTab = $event.target.value">
+      <select class="admin-tab-select" aria-label="Admin section" :value="activeTab" @change="activeTab = $event.target.value">
         <option v-for="tab in tabs" :key="tab.id" :value="tab.id">{{ tab.label }}</option>
       </select>
 
