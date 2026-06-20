@@ -107,6 +107,7 @@ function showMessage(msg, type = 'success') {
 async function save() {
   saving.value = true
   try {
+    if (!db) throw new Error('Firestore is not configured')
     await updateDoc(doc(db, 'config', 'main'), {
       audiobookServer: {
         description: form.value.description,

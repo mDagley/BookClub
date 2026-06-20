@@ -34,15 +34,22 @@
                 <img v-if="suggestion.coverUrl" :src="suggestion.coverUrl" :alt="suggestion.title" class="cover-thumb" />
                 <div v-else class="cover-placeholder"></div>
               </td>
-              <td class="col-title">
-                <span class="book-title">{{ suggestion.title }}</span>
-                <span v-if="suggestion.genres?.length" class="genre-list">{{ suggestion.genres.join(', ') }}</span>
+              <td class="col-title" data-label="Title" :data-author="suggestion.author">
+                <span class="sr-only">Title: </span><span class="book-title">{{ suggestion.title }}</span>
               </td>
-              <td class="col-author">{{ suggestion.author }}</td>
-              <td class="col-published">{{ suggestion.publishedDate || '—' }}</td>
-              <td class="col-votes"><span class="vote-badge">{{ suggestion.votes ?? 0 }}</span></td>
-              <td class="col-suggested">{{ resolveName(suggestion.suggestedBy) || '—' }}</td>
-              <td class="col-readby">
+              <td class="col-author" data-label="Author">
+                <span class="author-name">{{ suggestion.author }}</span>
+                <span v-if="suggestion.genres?.length" class="genre-list">
+                  <span v-for="g in suggestion.genres" :key="g" class="genre-icon" :title="g" :aria-label="g">
+                    <img v-if="GENRE_ICONS[g]?.img" :src="GENRE_ICONS[g].img" :alt="g" class="genre-icon-img" />
+                    <template v-else>{{ g }}</template>
+                  </span>
+                </span>
+              </td>
+              <td class="col-published" data-label="Published">{{ suggestion.publishedDate || '—' }}</td>
+              <td class="col-votes" data-label="Votes"><span class="sr-only">Votes: </span><span class="vote-badge">{{ suggestion.votes ?? 0 }}</span></td>
+              <td class="col-suggested" data-label="Suggested by">{{ resolveName(suggestion.suggestedBy) || '—' }}</td>
+              <td class="col-readby" data-label="Read by">
                 <span v-if="suggestion.alreadyRead?.length" class="readby-text">{{ resolveNames(suggestion.alreadyRead).join(', ') }}</span>
                 <span v-else class="empty-cell">—</span>
               </td>
@@ -168,7 +175,7 @@ import { ref } from 'vue'
 import { useSuggestions } from '../../composables/useSuggestions.js'
 import { useConfig } from '../../composables/useConfig.js'
 import { useMemberProfiles } from '../../composables/useMemberProfiles.js'
-import { GENRE_LIST } from '../../utils/genres.js'
+import { GENRE_LIST, GENRE_ICONS } from '../../utils/genres.js'
 import { fetchBookMetadata, fetchCoverOptions } from '../../utils/googleBooks.js'
 import CoverUpload from '../shared/CoverUpload.vue'
 
@@ -306,6 +313,18 @@ function promote(suggestion) {
 </script>
 
 <style scoped>
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .admin-suggestions { display: flex; flex-direction: column; gap: 1rem; }
 
 .section-header { display: flex; align-items: center; justify-content: space-between; }
@@ -319,18 +338,25 @@ function promote(suggestion) {
 
 .loading-state, .empty-state { color: var(--text-muted); font-style: italic; }
 
-.table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-}
+/* Table / Mobile card (mobile-first base — no media query) */
+.table-wrap { }
 
 .suggestions-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
-  min-width: 700px;
+}
+
+.suggestions-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .suggestions-table th {
@@ -346,44 +372,187 @@ function promote(suggestion) {
   white-space: nowrap;
 }
 
-.suggestion-row td {
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-  color: var(--text-primary);
-  background: var(--surface);
+.suggestion-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr auto auto;
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.45);
+  border-top: 3px solid rgba(200, 150, 60, 0.75);
+  margin-bottom: 1.25rem;
 }
 
-.suggestion-row:last-child td,
-.edit-row:last-child .edit-cell { border-bottom: none; }
+.suggestion-row:hover > * { background: transparent; }
 
-.suggestion-row:hover td { background: rgba(46, 112, 160, 0.12); }
+/* Using > * (specificity 0,1,0) so individual cell classes can override without !important */
+.suggestion-row > * {
+  display: block;
+  padding: 0;
+  border-bottom: none;
+  background: transparent;
+  vertical-align: unset;
+}
 
-.col-cover { width: 90px; }
-.col-title { min-width: 130px; }
-.col-author { min-width: 100px; color: var(--text-secondary); }
-.col-published { width: 80px; color: var(--text-muted); font-size: 0.78rem; }
-.col-votes { width: 55px; text-align: center; }
-.col-suggested { min-width: 90px; color: var(--text-secondary); }
-.col-readby { min-width: 100px; }
-.col-actions { width: 170px; white-space: nowrap; }
+/* Cover — absolute fill */
+.col-cover {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  z-index: 0;
+  overflow: hidden;
+}
 
-.cover-thumb { width: 80px; aspect-ratio: 2/3; object-fit: cover; border-radius: var(--radius-sm); display: block; }
-.cover-placeholder { width: 80px; aspect-ratio: 2/3; background: var(--surface-subtle); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.col-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.1) 100%);
+  pointer-events: none;
+}
 
-.book-title { display: block; font-weight: 600; }
-.genre-list { display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
+.col-cover .cover-thumb {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: unset;
+  object-fit: cover;
+  display: block;
+}
+
+.col-cover .cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--surface-subtle);
+}
+
+/* Votes — absolute top-right badge */
+.col-votes {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.6rem;
+  z-index: 3;
+  pointer-events: none;
+}
 
 .vote-badge {
-  display: inline-block;
-  background: rgba(200, 150, 60, 0.12);
-  color: var(--gold);
-  border: 1px solid rgba(200, 150, 60, 0.3);
-  border-radius: var(--radius-sm);
-  padding: 0.1rem 0.45rem;
-  font-size: 0.8rem;
-  font-weight: 700;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: rgba(15, 7, 0, 0.9);
+  background: linear-gradient(105deg,
+    rgba(130, 88, 8, 1) 0%,
+    rgba(210, 162, 30, 1) 30%,
+    rgba(255, 218, 70, 0.98) 52%,
+    rgba(218, 168, 32, 1) 72%,
+    rgba(145, 98, 10, 1) 100%
+  );
+  border-radius: 8px;
+  padding: 0.25rem 0.55rem 0.2rem;
+  text-align: center;
+  gap: 0.1rem;
+  text-shadow: 0 1px 1px rgba(255, 240, 150, 0.3);
 }
+
+.vote-badge::before {
+  content: "▲";
+  font-size: 0.45rem;
+  opacity: 0.7;
+  letter-spacing: 0;
+}
+
+/* Author cell — row 1 spacer with genre icons at bottom */
+.col-author {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.6rem 0.7rem;
+  z-index: 2;
+  pointer-events: none;
+  font-style: normal;
+}
+
+.author-name { display: none; }
+
+.genre-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0;
+  font-style: normal;
+}
+
+/* Title — row 2 glass panel */
+.col-title {
+  grid-column: 1;
+  grid-row: 2;
+  display: block;
+  padding: 0.75rem 1.1rem 0.85rem;
+  z-index: 2;
+  background: rgba(13, 30, 51, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.book-title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.col-title::after {
+  content: attr(data-author);
+  display: block;
+  font-style: italic;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-top: 0.3rem;
+}
+
+.col-published { display: none; }
+.col-suggested { display: none; }
+.col-readby { display: none; }
+
+/* Actions — row 3 icon bar */
+.col-actions {
+  grid-column: 1;
+  grid-row: 3;
+  z-index: 2;
+  display: flex;
+  gap: 0;
+  width: auto;
+  border-top: 1px solid rgba(200, 150, 60, 0.3);
+  background: rgba(13, 30, 51, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.col-actions .btn {
+  flex: 1;
+  padding: 0.9rem 0.5rem;
+  font-size: 0;
+  border-radius: 0;
+  border: none;
+  border-right: 1px solid rgba(200, 150, 60, 0.15);
+  text-align: center;
+  justify-content: center;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.col-actions .btn::before { font-size: 1.2rem; line-height: 1; }
+.col-actions .btn-secondary::before { content: "✎"; }
+.col-actions .btn-promote::before  { content: "↥"; }
+.col-actions .btn-danger::before   { content: "✕"; }
+
+.col-actions .btn:last-child { border-right: none; }
+.col-actions .btn + .btn { margin-left: 0; }
 
 .readby-text { font-size: 0.82rem; color: var(--text-muted); }
 .empty-cell { color: var(--text-muted); }
@@ -491,8 +660,8 @@ function promote(suggestion) {
 
 .edit-actions { display: flex; gap: 0.5rem; padding-top: 0.25rem; }
 
-.cover-url-row { display: flex; gap: 0.5rem; align-items: center; }
-.cover-url-row .form-input { flex: 1; }
+.cover-url-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.cover-url-row .form-input { flex: 1 0 100%; }
 
 /* Buttons */
 .btn {
@@ -520,8 +689,6 @@ function promote(suggestion) {
 
 .btn-danger { background: transparent; border-color: rgba(242, 139, 130, 0.4); color: #f28b82; }
 .btn-danger:hover { background: rgba(242, 139, 130, 0.1); }
-
-.col-actions .btn + .btn { margin-left: 0.35rem; }
 
 /* ── Cover picker ── */
 .cover-picker {
@@ -558,4 +725,192 @@ function promote(suggestion) {
 .cover-option:hover { border-color: var(--border-hover); }
 .cover-option.selected { border-color: var(--gold); }
 .cover-option:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Desktop table layout — overrides mobile card base above */
+@media (min-width: 601px) {
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+
+  .suggestions-table { min-width: 700px; }
+  .suggestions-table thead {
+    display: table-header-group;
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  .suggestion-row {
+    display: table-row;
+    aspect-ratio: unset;
+    position: static;
+    border-radius: 0;
+    overflow: visible;
+    box-shadow: none;
+    border-top: none;
+    margin-bottom: 0;
+  }
+
+  .suggestion-row:hover > * { background: rgba(46, 112, 160, 0.12); }
+
+  .suggestion-row > * {
+    display: table-cell;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    vertical-align: middle;
+    color: var(--text-primary);
+  }
+
+  .suggestion-row:last-child > *,
+  .edit-row:last-child .edit-cell { border-bottom: none; }
+
+  .col-cover {
+    position: static;
+    inset: unset;
+    width: 90px;
+    overflow: visible;
+    z-index: auto;
+  }
+
+  .col-cover::after { display: none; }
+
+  .col-cover .cover-thumb {
+    width: 80px;
+    height: auto;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    display: block;
+  }
+
+  .col-cover .cover-placeholder {
+    width: 80px;
+    height: auto;
+    aspect-ratio: 2/3;
+    background: var(--surface-subtle);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
+  .col-votes {
+    position: static;
+    top: unset;
+    right: unset;
+    z-index: auto;
+    pointer-events: auto;
+    width: 55px;
+    text-align: center;
+  }
+
+  .vote-badge {
+    display: inline-block;
+    flex-direction: unset;
+    align-items: unset;
+    line-height: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(200, 150, 60, 0.12);
+    border: 1px solid rgba(200, 150, 60, 0.3);
+    border-radius: var(--radius-sm);
+    padding: 0.1rem 0.45rem;
+    text-align: unset;
+    gap: unset;
+    text-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .vote-badge::before { content: none; display: none; }
+
+  .col-author {
+    display: table-cell;
+    min-width: 100px;
+    color: var(--text-secondary);
+    align-items: unset;
+    pointer-events: auto;
+    z-index: auto;
+    grid-row: unset;
+    grid-column: unset;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .author-name { display: inline; }
+
+  .genre-list {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+  }
+
+  .col-title {
+    min-width: 130px;
+    z-index: auto;
+    background: var(--surface);
+    backdrop-filter: none;
+    padding: 0.6rem 0.75rem;
+    grid-row: unset;
+    grid-column: unset;
+  }
+
+  .col-title::after { content: none; display: none; }
+
+  .book-title {
+    font-size: inherit;
+    font-weight: 600;
+    line-height: inherit;
+    color: inherit;
+  }
+
+  .col-published { display: table-cell; width: 80px; color: var(--text-muted); font-size: 0.78rem; }
+  .col-suggested { display: table-cell; min-width: 90px; color: var(--text-secondary); }
+  .col-readby { display: table-cell; min-width: 100px; }
+
+  .col-actions {
+    display: table-cell;
+    width: 170px;
+    white-space: nowrap;
+    background: var(--surface);
+    backdrop-filter: none;
+    border-top: none;
+    z-index: auto;
+    grid-row: unset;
+    grid-column: unset;
+  }
+
+  .col-actions .btn {
+    flex: none;
+    font-size: 0.78rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    border-right: none;
+    text-align: initial;
+    justify-content: initial;
+  }
+
+  .col-actions .btn::before { content: none; display: none; font-size: inherit; }
+  .col-actions .btn + .btn { margin-left: 0.35rem; }
+}
+
+@media (max-width: 600px) {
+  .section-header .btn-sm { font-size: 0.72rem; padding: 0.25rem 0.5rem; }
+
+  .col-actions .btn:hover { background: rgba(255,255,255,0.05); }
+
+  /* Edit row */
+  .edit-row { display: block; }
+  .edit-cell { display: block; }
+  .edit-form { flex-direction: column; }
+  .edit-cover-preview { display: none; }
+  .edit-row-fields { grid-template-columns: 1fr; }
+}
 </style>

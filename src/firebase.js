@@ -11,6 +11,17 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-const app = initializeApp(firebaseConfig)
-export const db = getFirestore(app)
-export const auth = getAuth(app)
+// Don't initialize Firebase if credentials are missing (e.g. local dev without .env)
+const hasCredentials = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId)
+
+let app = null, db = null, auth = null
+if (hasCredentials) {
+  try {
+    app = initializeApp(firebaseConfig)
+    db = getFirestore(app)
+    auth = getAuth(app)
+  } catch (e) {
+    console.warn('Firebase initialization failed:', e instanceof Error ? e.message : String(e))
+  }
+}
+export { db, auth }

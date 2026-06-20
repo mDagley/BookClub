@@ -79,8 +79,11 @@
             target="_blank"
             rel="noopener noreferrer"
             class="btn btn-discord discord-btn"
+            title="View Discord Discussion"
+            aria-label="View Discord Discussion"
           >
-            💬 View Discord Discussion →
+            <img src="/discord-icon.svg" class="discord-btn-icon" alt="" />
+            <span class="discord-btn-text">View Discord Discussion →</span>
           </a>
         </div>
       </RouterLink>
@@ -231,19 +234,57 @@ function visibleGenres(book) {
 }
 
 .book-date {
+  display: inline-block;
+  align-self: flex-start;
   font-family: var(--font-sans);
-  font-size: 0.72rem;
-  color: var(--text-secondary);
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(15, 7, 0, 0.9);
+  background: linear-gradient(105deg,
+    rgba(130, 88, 8, 1) 0%,
+    rgba(210, 162, 30, 1) 30%,
+    rgba(255, 218, 70, 0.98) 52%,
+    rgba(218, 168, 32, 1) 72%,
+    rgba(145, 98, 10, 1) 100%
+  );
+  border-radius: 100px;
+  padding: 0.18rem 0.55rem;
   margin: 0;
-  font-style: italic;
+  text-shadow: 0 1px 1px rgba(255, 240, 150, 0.3);
 }
 
 .discord-btn {
   font-size: 0.75rem;
   padding: 0.35rem 0.75rem;
   text-decoration: none;
-  white-space: nowrap;
   align-self: flex-start;
+  gap: 0.4rem;
+}
+
+.discord-btn-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  filter: brightness(0) invert(1);
+}
+
+@media (max-width: 480px) {
+  .discord-btn {
+    align-self: stretch;
+    justify-content: center;
+    padding: 0.5rem;
+  }
+
+  .discord-btn-text {
+    display: none;
+  }
+
+  .discord-btn-icon {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* ── Skeleton loading ── */

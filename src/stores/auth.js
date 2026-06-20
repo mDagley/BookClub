@@ -10,19 +10,29 @@ export const useAuthStore = defineStore('auth', () => {
   // Populate user from Firebase Auth on startup.
   // displayName is not set on custom-token users, so we read discordUsername
   // from the ID token claims that the server embedded when creating the token.
-  onAuthStateChanged(auth, async (firebaseUser) => {
-    if (firebaseUser) {
-      const idTokenResult = await firebaseUser.getIdTokenResult()
-      user.value = {
-        uid: firebaseUser.uid,
-        discordUsername: idTokenResult.claims.discordUsername || firebaseUser.displayName,
-        photoURL: idTokenResult.claims.discordAvatar || firebaseUser.photoURL,
+  if (auth) {
+    onAuthStateChanged(auth, async (firebaseUser) => {
+      try {
+        if (firebaseUser) {
+          const idTokenResult = await firebaseUser.getIdTokenResult()
+          user.value = {
+            uid: firebaseUser.uid,
+            discordUsername: idTokenResult.claims.discordUsername || firebaseUser.displayName,
+            photoURL: idTokenResult.claims.discordAvatar || firebaseUser.photoURL,
+          }
+        } else {
+          user.value = null
+        }
+      } catch {
+        user.value = null
+      } finally {
+        loading.value = false
       }
-    } else {
-      user.value = null
-    }
+    })
+  } else {
+    // No Firebase credentials — skip auth listener
     loading.value = false
-  })
+  }
 
   function loginWithDiscord() {
     sessionStorage.setItem('loginReturnTo', window.location.pathname)
@@ -34,6 +44,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function handleCallback(code) {
+    if (!auth) throw new Error('Firebase Auth is not configured')
     loading.value = true
     try {
       const redirectUri = import.meta.env.VITE_DISCORD_REDIRECT_URI || `${window.location.origin}/admin`
@@ -56,9 +67,16 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout() {
-    await signOut(auth)
+    if (auth) await signOut(auth)
     user.value = null
   }
 
-  return { user, loading, loginWithDiscord, handleCallback, logout }
+  // Dev-only bypass — set VITE_DEV_AUTH=true in .env to enable
+  function devLogin() {
+    if (!(import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true')) return
+    user.value = { uid: 'dev-user', discordUsername: 'dev', photoURL: null }
+    loading.value = false
+  }
+
+  return { user, loading, loginWithDiscord, handleCallback, logout, devLogin }
 })

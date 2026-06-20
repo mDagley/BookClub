@@ -168,16 +168,22 @@
           @dragover.prevent="onDragOver($event, 'threads', index)"
           @drop.prevent="onDrop($event, 'threads', index)"
           @dragend="onDragEnd"
-          :class="{ 'drag-over': dragState.list === 'threads' && dragState.overIndex === index }"
+          :class="{ 'drag-over': dragState.list === 'threads' && dragState.overIndex === index, 'is-primary': index === 0 }"
         >
           <span class="drag-handle" title="Drag to reorder">⠿</span>
+          <div class="reorder-btns">
+            <button type="button" class="btn-reorder" @click="moveItem('threads', index, -1)" :disabled="index === 0" title="Move up" aria-label="Move up">▲</button>
+            <button type="button" class="btn-reorder" @click="moveItem('threads', index, 1)" :disabled="index === form.threads.length - 1" title="Move down" aria-label="Move down">▼</button>
+          </div>
           <div class="thread-fields">
+            <span class="field-label">Title</span>
             <input
               v-model="thread.title"
               type="text"
               class="form-input"
               :placeholder="index === 0 ? 'Thread title (Primary)' : 'Thread title'"
             />
+            <span class="field-label">URL</span>
             <input
               v-model="thread.url"
               type="url"
@@ -338,6 +344,10 @@
           :class="{ 'drag-over': dragState.list === 'timeline' && dragState.overIndex === index }"
         >
           <span class="drag-handle" title="Drag to reorder">⠿</span>
+          <div class="reorder-btns">
+            <button type="button" class="btn-reorder" @click="moveItem('timeline', index, -1)" :disabled="index === 0" title="Move up" aria-label="Move up">▲</button>
+            <button type="button" class="btn-reorder" @click="moveItem('timeline', index, 1)" :disabled="index === form.timeline.length - 1" title="Move down" aria-label="Move down">▼</button>
+          </div>
           <div class="timeline-fields">
             <input
               v-model.number="event.chapter"
@@ -566,6 +576,14 @@ function addTimelineEvent() {
 
 function removeItem(list, index) {
   form.value[list].splice(index, 1)
+}
+
+function moveItem(list, index, direction) {
+  const arr = form.value[list]
+  const to = index + direction
+  if (to < 0 || to >= arr.length) return
+  const [item] = arr.splice(index, 1)
+  arr.splice(to, 0, item)
 }
 
 // Serialize form to Firestore-safe object using the public data shape
@@ -900,6 +918,35 @@ async function archiveBook() {
   cursor: grabbing;
 }
 
+.reorder-btns {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.btn-reorder {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.55rem;
+  line-height: 1;
+  padding: 0.25rem 0.35rem;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.btn-reorder:not(:disabled):hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.btn-reorder:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 .thread-fields,
 .material-fields,
 .timeline-fields {
@@ -908,6 +955,8 @@ async function archiveBook() {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
+.field-label { display: none; }
 
 .thread-fields .form-input,
 .timeline-fields .form-input {
@@ -1133,10 +1182,51 @@ async function archiveBook() {
     grid-template-columns: 1fr;
   }
 
+  .list-row {
+    align-items: flex-start;
+  }
+
   .thread-fields,
   .material-fields,
   .timeline-fields {
     flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.4rem;
+  }
+
+  .field-label:first-child {
+    margin-top: 0;
+  }
+
+  .primary-badge {
+    display: none;
+  }
+
+  .is-primary {
+    border-color: var(--gold);
+    margin-top: 1.25rem;
+    position: relative;
+  }
+
+  .is-primary::before {
+    content: "Primary";
+    position: absolute;
+    top: -1.1rem;
+    left: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 
   .material-fields .form-select {
@@ -1152,6 +1242,18 @@ async function archiveBook() {
   .btn {
     width: 100%;
     text-align: center;
+  }
+
+  .drag-handle {
+    display: none;
+  }
+
+  .reorder-btns {
+    display: flex;
+  }
+
+  .form-input--narrow {
+    width: 100%;
   }
 }
 
