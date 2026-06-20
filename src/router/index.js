@@ -21,6 +21,14 @@ const router = createRouter({
 
 router.beforeEach(async (to, _from, next) => {
   if (to.meta.requiresAuth) {
+    // In dev mode (no Firebase credentials), auto-login and proceed.
+    if (import.meta.env.VITE_DEV_AUTH === 'true') {
+      const { useAuthStore } = await import('../stores/auth.js')
+      useAuthStore().devLogin()
+      next()
+      return
+    }
+
     const { useAuthStore } = await import('../stores/auth.js')
     const authStore = useAuthStore()
     // Wait for Firebase Auth to resolve (handles hard refresh to /admin).

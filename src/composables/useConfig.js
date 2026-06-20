@@ -35,6 +35,29 @@ export function useConfig() {
       loading.value = false
     })
   } else {
+    currentBook.value = {
+      title: 'The Way of Kings', author: 'Brandon Sanderson',
+      coverUrl: 'https://covers.openlibrary.org/b/id/8391136-L.jpg',
+      synopsis: 'A sweeping epic of war, magic, and ancient secrets.',
+      genres: ['Fantasy', 'Epic'],
+      goodreadsUrl: '',
+      meeting: { date: '2026-07-15', time: '19:00', location: "Mom & Dad's", discordVoiceUrl: '' },
+      discordThreads: [{ title: 'General Discussion', url: '' }, { title: 'Chapters 1–10', url: '' }],
+      supplementalMaterials: [{ title: 'Brandon Sanderson Interview', url: '', type: 'video' }],
+      characters: [
+        { name: 'Kaladin', description: 'A soldier turned slave with mysterious powers.', firstAppearanceChapter: 1, isMajor: true },
+        { name: 'Shallan', description: 'A scholar seeking to save her family.', firstAppearanceChapter: 3, isMajor: true },
+      ],
+      timeline: [
+        { label: 'Battle of the Shattered Plains', note: '', chapter: 1 },
+        { label: 'Kaladin joins Bridge Four', note: '', chapter: 4 },
+      ],
+    }
+    familyMembers.value = ['Melissa', 'Dad', 'Mom', 'Jake']
+    memberProfiles.value = [
+      { name: 'Melissa', handle: 'melly2024' },
+      { name: 'Dad', handle: 'dadreads' },
+    ]
     loading.value = false
   }
 

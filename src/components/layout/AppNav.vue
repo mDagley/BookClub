@@ -6,11 +6,11 @@
     </RouterLink>
 
     <div class="nav-links">
-      <RouterLink to="/">Home</RouterLink>
-      <RouterLink to="/book">Current Book</RouterLink>
-      <RouterLink to="/suggestions">Suggestions</RouterLink>
-      <RouterLink to="/past-books">Past Books</RouterLink>
-      <RouterLink v-if="authStore.user" to="/admin" class="nav-admin">Admin</RouterLink>
+      <RouterLink to="/" @click="menuOpen = false">Home</RouterLink>
+      <RouterLink to="/book" @click="menuOpen = false">Current Book</RouterLink>
+      <RouterLink to="/suggestions" @click="menuOpen = false">Suggestions</RouterLink>
+      <RouterLink to="/past-books" @click="menuOpen = false">Past Books</RouterLink>
+      <RouterLink v-if="authStore.user" to="/admin" class="nav-admin" @click="menuOpen = false">Admin</RouterLink>
     </div>
 
     <div class="nav-auth">
@@ -22,12 +22,27 @@
         Login with Discord
       </button>
     </div>
+
+    <button class="nav-hamburger" :aria-expanded="menuOpen" aria-label="Toggle menu" @click="menuOpen = !menuOpen">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Mobile dropdown -->
+    <div v-if="menuOpen" class="nav-mobile-menu">
+      <RouterLink to="/" @click="menuOpen = false">Home</RouterLink>
+      <RouterLink to="/book" @click="menuOpen = false">Current Book</RouterLink>
+      <RouterLink to="/suggestions" @click="menuOpen = false">Suggestions</RouterLink>
+      <RouterLink to="/past-books" @click="menuOpen = false">Past Books</RouterLink>
+      <RouterLink v-if="authStore.user" to="/admin" @click="menuOpen = false">Admin</RouterLink>
+    </div>
   </nav>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useAuthStore } from '../../stores/auth.js'
 const authStore = useAuthStore()
+const menuOpen = ref(false)
 </script>
 
 <style scoped>
@@ -143,24 +158,100 @@ const authStore = useAuthStore()
   background: transparent;
 }
 
+.nav-hamburger {
+  display: none;
+}
+
+.nav-mobile-menu {
+  display: none;
+}
+
 @media (max-width: 700px) {
   .app-nav {
     padding: 0.75rem 1rem;
-    gap: 0.75rem;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 0;
   }
+
+  .nav-brand {
+    flex: 1;
+  }
+
   .nav-brand-text {
-    font-size: 0.75rem;
+    display: none;
   }
+
+  /* Hide the desktop link row on mobile */
   .nav-links {
-    gap: 0.85rem;
-    font-size: 0.78rem;
-    width: 100%;
-    order: 3;
+    display: none;
   }
+
   .nav-auth {
     margin-left: 0;
-    order: 2;
+    gap: 0.5rem;
   }
-  .nav-brand { order: 1; }
+
+  .nav-username {
+    display: none;
+  }
+
+  /* Hamburger button */
+  .nav-hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.4rem;
+    margin-left: 0.5rem;
+  }
+
+  .nav-hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text-secondary);
+    border-radius: 2px;
+    transition: background 0.2s;
+  }
+
+  .nav-hamburger:hover span,
+  .nav-hamburger[aria-expanded="true"] span {
+    background: var(--gold);
+  }
+
+  /* Mobile dropdown menu */
+  .nav-mobile-menu {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-top: 1px solid var(--border);
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.25rem;
+    gap: 0;
+  }
+
+  .nav-mobile-menu a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    padding: 0.65rem 0.25rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: color 0.15s;
+  }
+
+  .nav-mobile-menu a:last-child {
+    border-bottom: none;
+  }
+
+  .nav-mobile-menu a:hover,
+  .nav-mobile-menu a.router-link-active {
+    color: var(--gold);
+  }
 }
 </style>
