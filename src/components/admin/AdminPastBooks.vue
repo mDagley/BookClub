@@ -33,7 +33,7 @@
                 />
                 <div v-else class="cover-placeholder"></div>
               </td>
-              <td class="col-title" data-label="Title">{{ book.title }}</td>
+              <td class="col-title" data-label="Title" :data-author="book.author">{{ book.title }}</td>
               <td class="col-author" data-label="Author">{{ book.author }}</td>
               <td class="col-date" data-label="Date Read">{{ formatDate(book.dateRead) }}</td>
               <td class="col-thread" data-label="Discord">
@@ -58,6 +58,14 @@
               </td>
               <td class="col-actions">
                 <button class="btn btn-secondary btn-sm" @click="startEdit(book)">Edit</button>
+                <a
+                  v-if="book.discordThreads?.find(t => t.url?.trim()) || book.discordThreadUrl"
+                  :href="book.discordThreads?.find(t => t.url?.trim())?.url || book.discordThreadUrl"
+                  target="_blank"
+                  rel="noopener"
+                  class="btn btn-thread btn-sm"
+                  title="Discord Thread"
+                ><img src="/discord-icon.svg" alt="Discord Thread" class="discord-btn-icon" /></a>
                 <button class="btn btn-danger btn-sm" @click="deleteBook(book)">Delete</button>
               </td>
             </tr>
@@ -622,20 +630,16 @@ async function submitAdd() {
   font-style: italic;
 }
 
-/* Table */
-.books-table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-}
+/* Table / Mobile card (mobile-first base — no media query) */
+.books-table-wrap { }
 
 .books-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
-  min-width: 560px;
 }
+
+.books-table thead { display: none; }
 
 .books-table th {
   background: var(--surface-subtle);
@@ -650,46 +654,159 @@ async function submitAdd() {
   white-space: nowrap;
 }
 
-.book-row td,
-.edit-row td {
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-  color: var(--text-primary);
-  background: var(--surface);
+.book-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr auto auto;
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.45);
+  margin-bottom: 1.25rem;
 }
 
-.book-row:last-child td,
-.edit-row:last-child td {
+/* Using > * (specificity 0,1,0) so individual cell classes can override without !important */
+.book-row > * {
+  display: block;
+  padding: 0;
   border-bottom: none;
+  background: transparent;
+  vertical-align: unset;
 }
 
-.book-row:hover td {
-  background: rgba(46, 112, 160, 0.12);
+.book-row > *[data-label]::before { content: none; display: none; }
+
+/* Cover — absolute fill behind all content */
+.col-cover {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  z-index: 0;
+  overflow: hidden;
+  padding: 0;
 }
 
-.col-cover { width: 52px; }
-.col-title { min-width: 140px; }
-.col-author { min-width: 120px; color: var(--text-secondary); }
-.col-date { min-width: 100px; color: var(--text-muted); white-space: nowrap; }
-.col-thread { min-width: 80px; }
-.col-actions { width: 130px; white-space: nowrap; }
+.col-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.1) 100%);
+  pointer-events: none;
+}
 
-.cover-thumb {
-  width: 40px;
-  height: 56px;
+.col-cover .cover-thumb {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: unset;
   object-fit: cover;
-  border-radius: var(--radius-sm);
   display: block;
 }
 
-.cover-placeholder {
-  width: 40px;
-  height: 56px;
+.col-cover .cover-placeholder {
+  width: 100%;
+  height: 100%;
   background: var(--surface-subtle);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
 }
+
+/* Date — gold banner (row 1, pinned to top of cover area) */
+.col-date {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  z-index: 2;
+  pointer-events: none;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(15, 7, 0, 0.9);
+  background: linear-gradient(105deg,
+    rgba(130, 88, 8, 1) 0%,
+    rgba(210, 162, 30, 1) 30%,
+    rgba(255, 218, 70, 0.98) 52%,
+    rgba(218, 168, 32, 1) 72%,
+    rgba(145, 98, 10, 1) 100%
+  );
+  border-bottom: 1px solid rgba(100, 65, 5, 0.35);
+  text-shadow: 0 1px 1px rgba(255,240,150,0.3);
+}
+
+.col-date::before {
+  content: "Read";
+  opacity: 0.6;
+  font-weight: 700;
+}
+
+/* Title — row 2 glass panel */
+.col-title {
+  grid-column: 1;
+  grid-row: 2;
+  display: block;
+  padding: 0.75rem 1.1rem 0.85rem;
+  z-index: 2;
+  background: rgba(13, 30, 51, 0.65);
+  backdrop-filter: blur(4px);
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.col-title::before { content: none; display: none; }
+
+.col-title::after {
+  content: attr(data-author);
+  display: block;
+  font-style: italic;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-top: 0.3rem;
+}
+
+.col-author { display: none; }
+.col-thread { display: none; }
+
+/* Actions — row 3 icon bar */
+.col-actions {
+  grid-column: 1;
+  grid-row: 3;
+  z-index: 2;
+  display: flex;
+  gap: 0;
+  width: auto;
+  border-top: 1px solid rgba(200, 150, 60, 0.3);
+  background: rgba(13, 30, 51, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.col-actions .btn {
+  flex: 1;
+  padding: 0.9rem 0.5rem;
+  font-size: 0;
+  border-radius: 0;
+  border: none;
+  border-right: 1px solid rgba(200, 150, 60, 0.15);
+  text-align: center;
+  justify-content: center;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.col-actions .btn::before { font-size: 1.2rem; line-height: 1; }
+.col-actions .btn-secondary::before { content: "✎"; }
+.btn-thread { display: flex; }
+.discord-btn-icon { width: 1.25rem; height: 1.25rem; display: block; }
+.col-actions .btn-danger::before { content: "✕"; }
+
+.col-actions .btn:last-child { border-right: none; }
+.col-actions .btn + .btn { margin-left: 0; }
 
 .thread-link {
   color: var(--discord-blue);
@@ -836,9 +953,10 @@ async function submitAdd() {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
-.cover-url-row .form-input { flex: 1; }
+.cover-url-row .form-input { flex: 1 0 100%; }
 
 .label-note {
   font-weight: 400;
@@ -904,10 +1022,6 @@ async function submitAdd() {
   font-size: 0.78rem;
 }
 
-.col-actions .btn + .btn {
-  margin-left: 0.35rem;
-}
-
 /* Messages */
 .save-message {
   font-size: 0.85rem;
@@ -958,90 +1072,150 @@ async function submitAdd() {
   cursor: not-allowed;
 }
 
+/* Desktop table layout — overrides mobile card base above */
+@media (min-width: 601px) {
+  .books-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+
+  .books-table { min-width: 560px; }
+
+  .books-table thead { display: table-header-group; }
+
+  .book-row {
+    display: table-row;
+    aspect-ratio: unset;
+    position: static;
+    border-radius: 0;
+    overflow: visible;
+    box-shadow: none;
+    border-top: none;
+    margin-bottom: 0;
+  }
+
+  .book-row:hover > * { background: rgba(46, 112, 160, 0.12); }
+
+  .book-row > *,
+  .edit-row > * {
+    display: table-cell;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    vertical-align: middle;
+    color: var(--text-primary);
+  }
+
+  .book-row:last-child > *,
+  .edit-row:last-child > * {
+    border-bottom: none;
+  }
+
+  .col-cover {
+    position: static;
+    inset: unset;
+    width: 52px;
+    overflow: visible;
+    z-index: auto;
+  }
+
+  .col-cover::after { display: none; }
+
+  .col-cover .cover-thumb {
+    width: 40px;
+    height: 56px;
+    aspect-ratio: unset;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    display: block;
+  }
+
+  .col-cover .cover-placeholder {
+    width: 40px;
+    height: 56px;
+    background: var(--surface-subtle);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
+  .col-title {
+    min-width: 140px;
+    font-weight: normal;
+    font-size: 0.88rem;
+    background: var(--surface);
+    backdrop-filter: none;
+    z-index: auto;
+    line-height: inherit;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .col-title::before,
+  .col-title::after { content: none; display: none; }
+
+  .col-author { display: table-cell; min-width: 120px; color: var(--text-secondary); }
+
+  .col-date {
+    display: table-cell;
+    min-width: 100px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    background: var(--surface);
+    font-size: 0.88rem;
+    font-weight: normal;
+    text-transform: none;
+    letter-spacing: normal;
+    align-self: unset;
+    justify-content: unset;
+    pointer-events: auto;
+    z-index: auto;
+    border-top: none;
+  }
+
+  .col-date::before { content: none; display: none; }
+
+  .col-thread { display: table-cell; min-width: 80px; }
+
+  .col-actions {
+    display: table-cell;
+    width: 130px;
+    white-space: nowrap;
+    background: var(--surface);
+    backdrop-filter: none;
+    border-top: none;
+    z-index: auto;
+    grid-row: unset;
+    grid-column: unset;
+  }
+
+  .col-actions .btn {
+    flex: none;
+    font-size: 0.78rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    border-right: none;
+    text-align: initial;
+    justify-content: initial;
+  }
+
+  .col-actions .btn::before { content: none; display: none; font-size: inherit; }
+  .col-actions .btn + .btn { margin-left: 0.35rem; }
+  .btn-thread { display: none; }
+  .discord-btn-icon { display: none; }
+}
+
 @media (max-width: 600px) {
   .form-row {
     grid-template-columns: 1fr;
   }
 
-  /* Table → card stack */
-  .books-table-wrap {
-    overflow-x: unset;
-    border: none;
-    background: transparent;
-  }
-
-  .books-table {
-    min-width: unset;
-    width: 100%;
-  }
-
-  .books-table thead {
-    display: none;
-  }
-
-  .book-row {
-    display: block;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--surface);
-    margin-bottom: 0.75rem;
-    overflow: hidden;
-  }
-
-  .book-row td {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-  }
-
-  .book-row td:last-child {
-    border-bottom: none;
-  }
-
-  .book-row td[data-label]::before {
-    content: attr(data-label);
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    white-space: nowrap;
-    min-width: 72px;
-    flex-shrink: 0;
-  }
-
-  .col-cover {
-    padding: 0.75rem;
-  }
-
-  .col-cover .cover-thumb {
-    width: 44px;
-    height: unset;
-    aspect-ratio: 2/3;
-  }
-
-  .col-cover .cover-placeholder {
-    width: 44px;
-    height: unset;
-    aspect-ratio: 2/3;
-  }
-
-  .col-actions {
-    display: flex !important;
-    gap: 0.5rem;
-    background: var(--surface-subtle);
-  }
-
-  .col-actions .btn {
-    flex: 1;
-  }
+  .col-actions .btn:hover { background: rgba(255,255,255,0.05); }
 
   /* Edit row */
   .edit-row { display: block; }
-  .edit-row td { display: block; padding: 0; }
+  .edit-row > * { display: block; padding: 0; }
 
   /* Drag → reorder buttons in edit form */
   .drag-handle { display: none; }
@@ -1053,7 +1227,7 @@ async function submitAdd() {
   }
 
   .form-input--narrow {
-    flex: unset !important;
+    flex: unset;
     width: 100%;
   }
 }
@@ -1103,8 +1277,8 @@ async function submitAdd() {
   min-width: 0;
 }
 
-.form-input--narrow {
-  flex: 0 0 70px !important;
+.form-input.form-input--narrow {
+  flex: 0 0 70px;
 }
 
 .form-select {

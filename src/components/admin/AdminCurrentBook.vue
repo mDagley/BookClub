@@ -168,7 +168,7 @@
           @dragover.prevent="onDragOver($event, 'threads', index)"
           @drop.prevent="onDrop($event, 'threads', index)"
           @dragend="onDragEnd"
-          :class="{ 'drag-over': dragState.list === 'threads' && dragState.overIndex === index }"
+          :class="{ 'drag-over': dragState.list === 'threads' && dragState.overIndex === index, 'is-primary': index === 0 }"
         >
           <span class="drag-handle" title="Drag to reorder">⠿</span>
           <div class="reorder-btns">
@@ -176,12 +176,14 @@
             <button type="button" class="btn-reorder" @click="moveItem('threads', index, 1)" :disabled="index === form.threads.length - 1" title="Move down">▼</button>
           </div>
           <div class="thread-fields">
+            <label class="field-label">Title</label>
             <input
               v-model="thread.title"
               type="text"
               class="form-input"
               :placeholder="index === 0 ? 'Thread title (Primary)' : 'Thread title'"
             />
+            <label class="field-label">URL</label>
             <input
               v-model="thread.url"
               type="url"
@@ -954,6 +956,8 @@ async function archiveBook() {
   flex-wrap: wrap;
 }
 
+.field-label { display: none; }
+
 .thread-fields .form-input,
 .timeline-fields .form-input {
   flex: 1;
@@ -1178,10 +1182,51 @@ async function archiveBook() {
     grid-template-columns: 1fr;
   }
 
+  .list-row {
+    align-items: flex-start;
+  }
+
   .thread-fields,
   .material-fields,
   .timeline-fields {
     flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.4rem;
+  }
+
+  .field-label:first-child {
+    margin-top: 0;
+  }
+
+  .primary-badge {
+    display: none;
+  }
+
+  .is-primary {
+    border-color: var(--gold);
+    margin-top: 1.25rem;
+    position: relative;
+  }
+
+  .is-primary::before {
+    content: "Primary";
+    position: absolute;
+    top: -1.1rem;
+    left: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 
   .material-fields .form-select {

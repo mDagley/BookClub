@@ -403,10 +403,23 @@ function formatDate(dateRead) {
 }
 
 .book-date {
+  display: inline-block;
   font-family: var(--font-sans);
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-style: italic;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(15, 7, 0, 0.9);
+  background: linear-gradient(105deg,
+    rgba(130, 88, 8, 1) 0%,
+    rgba(210, 162, 30, 1) 30%,
+    rgba(255, 218, 70, 0.98) 52%,
+    rgba(218, 168, 32, 1) 72%,
+    rgba(145, 98, 10, 1) 100%
+  );
+  border-radius: 100px;
+  padding: 0.2rem 0.7rem;
+  text-shadow: 0 1px 1px rgba(255, 240, 150, 0.3);
 }
 
 .book-actions {
