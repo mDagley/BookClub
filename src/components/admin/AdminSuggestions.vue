@@ -34,15 +34,15 @@
                 <img v-if="suggestion.coverUrl" :src="suggestion.coverUrl" :alt="suggestion.title" class="cover-thumb" />
                 <div v-else class="cover-placeholder"></div>
               </td>
-              <td class="col-title">
+              <td class="col-title" data-label="Title">
                 <span class="book-title">{{ suggestion.title }}</span>
                 <span v-if="suggestion.genres?.length" class="genre-list">{{ suggestion.genres.join(', ') }}</span>
               </td>
-              <td class="col-author">{{ suggestion.author }}</td>
-              <td class="col-published">{{ suggestion.publishedDate || '—' }}</td>
-              <td class="col-votes"><span class="vote-badge">{{ suggestion.votes ?? 0 }}</span></td>
-              <td class="col-suggested">{{ resolveName(suggestion.suggestedBy) || '—' }}</td>
-              <td class="col-readby">
+              <td class="col-author" data-label="Author">{{ suggestion.author }}</td>
+              <td class="col-published" data-label="Published">{{ suggestion.publishedDate || '—' }}</td>
+              <td class="col-votes" data-label="Votes"><span class="vote-badge">{{ suggestion.votes ?? 0 }}</span></td>
+              <td class="col-suggested" data-label="Suggested by">{{ resolveName(suggestion.suggestedBy) || '—' }}</td>
+              <td class="col-readby" data-label="Read by">
                 <span v-if="suggestion.alreadyRead?.length" class="readby-text">{{ resolveNames(suggestion.alreadyRead).join(', ') }}</span>
                 <span v-else class="empty-cell">—</span>
               </td>
@@ -558,4 +558,99 @@ function promote(suggestion) {
 .cover-option:hover { border-color: var(--border-hover); }
 .cover-option.selected { border-color: var(--gold); }
 .cover-option:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+@media (max-width: 600px) {
+  /* Transform the table into a card stack */
+  .table-wrap {
+    overflow-x: unset;
+    border: none;
+    background: transparent;
+  }
+
+  .suggestions-table {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .suggestions-table thead {
+    display: none;
+  }
+
+  .suggestion-row {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+
+  .suggestion-row td {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .suggestion-row td:last-child {
+    border-bottom: none;
+  }
+
+  /* Label prefix from data-label */
+  .suggestion-row td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    white-space: nowrap;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  /* Cover spans full width as a banner */
+  .col-cover {
+    justify-content: flex-start;
+    padding: 0.75rem;
+  }
+
+  .col-cover .cover-thumb {
+    width: 56px;
+    height: unset;
+    aspect-ratio: 2/3;
+  }
+
+  .col-cover .cover-placeholder {
+    width: 56px;
+    height: unset;
+    aspect-ratio: 2/3;
+  }
+
+  /* Votes inline with label */
+  .col-votes { text-align: left; }
+
+  /* Actions row — full-width button row */
+  .col-actions {
+    display: flex !important;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    padding: 0.6rem 0.75rem;
+    background: var(--surface-subtle);
+  }
+
+  .col-actions .btn {
+    flex: 1;
+    min-width: 70px;
+  }
+
+  /* Edit row fix */
+  .edit-row { display: block; }
+  .edit-cell { display: block; }
+  .edit-form { flex-direction: column; }
+  .edit-cover-preview { display: none; }
+  .edit-row-fields { grid-template-columns: 1fr; }
+}
 </style>

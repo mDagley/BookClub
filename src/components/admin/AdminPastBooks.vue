@@ -33,10 +33,10 @@
                 />
                 <div v-else class="cover-placeholder"></div>
               </td>
-              <td class="col-title">{{ book.title }}</td>
-              <td class="col-author">{{ book.author }}</td>
-              <td class="col-date">{{ formatDate(book.dateRead) }}</td>
-              <td class="col-thread">
+              <td class="col-title" data-label="Title">{{ book.title }}</td>
+              <td class="col-author" data-label="Author">{{ book.author }}</td>
+              <td class="col-date" data-label="Date Read">{{ formatDate(book.dateRead) }}</td>
+              <td class="col-thread" data-label="Discord">
                 <template v-if="book.discordThreads?.some(t => t.url?.trim())">
                   <a
                     v-for="t in book.discordThreads.filter(t => t.url?.trim())"
@@ -158,6 +158,10 @@
                         :class="{ 'drag-over': editDragState.list === 'materials' && editDragState.overIndex === index }"
                       >
                         <span class="drag-handle">⠿</span>
+                        <div class="reorder-btns">
+                          <button type="button" class="btn-reorder" @click="moveEditItem('materials', index, -1)" :disabled="index === 0" title="Move up">▲</button>
+                          <button type="button" class="btn-reorder" @click="moveEditItem('materials', index, 1)" :disabled="index === editForm.materials.length - 1" title="Move down">▼</button>
+                        </div>
                         <div class="material-fields">
                           <input v-model="material.title" type="text" class="form-input" placeholder="Title" />
                           <input v-model="material.url" type="url" class="form-input" placeholder="https://…" />
@@ -232,6 +236,10 @@
                         :class="{ 'drag-over': editDragState.list === 'timeline' && editDragState.overIndex === index }"
                       >
                         <span class="drag-handle">⠿</span>
+                        <div class="reorder-btns">
+                          <button type="button" class="btn-reorder" @click="moveEditItem('timeline', index, -1)" :disabled="index === 0" title="Move up">▲</button>
+                          <button type="button" class="btn-reorder" @click="moveEditItem('timeline', index, 1)" :disabled="index === editForm.timeline.length - 1" title="Move down">▼</button>
+                        </div>
                         <div class="timeline-fields">
                           <input v-model.number="event.chapter" type="number" class="form-input form-input--narrow" placeholder="Ch." min="1" />
                           <input v-model="event.label" type="text" class="form-input" placeholder="Event label" />
@@ -519,6 +527,14 @@ function addEditThread() {
 }
 function removeEditItem(list, index) {
   editForm.value[list].splice(index, 1)
+}
+
+function moveEditItem(list, index, direction) {
+  const arr = editForm.value[list]
+  const to = index + direction
+  if (to < 0 || to >= arr.length) return
+  const [item] = arr.splice(index, 1)
+  arr.splice(to, 0, item)
 }
 
 function onEditDragStart(event, list, index) {
@@ -912,9 +928,133 @@ async function submitAdd() {
   border: 1px solid rgba(242, 139, 130, 0.3);
 }
 
+/* Reorder buttons (shown on mobile instead of drag handles) */
+.reorder-btns {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.btn-reorder {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.55rem;
+  line-height: 1;
+  padding: 0.25rem 0.35rem;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.btn-reorder:not(:disabled):hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.btn-reorder:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 @media (max-width: 600px) {
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  /* Table → card stack */
+  .books-table-wrap {
+    overflow-x: unset;
+    border: none;
+    background: transparent;
+  }
+
+  .books-table {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .books-table thead {
+    display: none;
+  }
+
+  .book-row {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+
+  .book-row td {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .book-row td:last-child {
+    border-bottom: none;
+  }
+
+  .book-row td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    white-space: nowrap;
+    min-width: 72px;
+    flex-shrink: 0;
+  }
+
+  .col-cover {
+    padding: 0.75rem;
+  }
+
+  .col-cover .cover-thumb {
+    width: 44px;
+    height: unset;
+    aspect-ratio: 2/3;
+  }
+
+  .col-cover .cover-placeholder {
+    width: 44px;
+    height: unset;
+    aspect-ratio: 2/3;
+  }
+
+  .col-actions {
+    display: flex !important;
+    gap: 0.5rem;
+    background: var(--surface-subtle);
+  }
+
+  .col-actions .btn {
+    flex: 1;
+  }
+
+  /* Edit row */
+  .edit-row { display: block; }
+  .edit-row td { display: block; padding: 0; }
+
+  /* Drag → reorder buttons in edit form */
+  .drag-handle { display: none; }
+  .reorder-btns { display: flex; }
+
+  .material-fields,
+  .timeline-fields {
+    flex-direction: column;
+  }
+
+  .form-input--narrow {
+    flex: unset !important;
+    width: 100%;
   }
 }
 

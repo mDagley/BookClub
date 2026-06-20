@@ -171,6 +171,10 @@
           :class="{ 'drag-over': dragState.list === 'threads' && dragState.overIndex === index }"
         >
           <span class="drag-handle" title="Drag to reorder">⠿</span>
+          <div class="reorder-btns">
+            <button type="button" class="btn-reorder" @click="moveItem('threads', index, -1)" :disabled="index === 0" title="Move up">▲</button>
+            <button type="button" class="btn-reorder" @click="moveItem('threads', index, 1)" :disabled="index === form.threads.length - 1" title="Move down">▼</button>
+          </div>
           <div class="thread-fields">
             <input
               v-model="thread.title"
@@ -338,6 +342,10 @@
           :class="{ 'drag-over': dragState.list === 'timeline' && dragState.overIndex === index }"
         >
           <span class="drag-handle" title="Drag to reorder">⠿</span>
+          <div class="reorder-btns">
+            <button type="button" class="btn-reorder" @click="moveItem('timeline', index, -1)" :disabled="index === 0" title="Move up">▲</button>
+            <button type="button" class="btn-reorder" @click="moveItem('timeline', index, 1)" :disabled="index === form.timeline.length - 1" title="Move down">▼</button>
+          </div>
           <div class="timeline-fields">
             <input
               v-model.number="event.chapter"
@@ -566,6 +574,14 @@ function addTimelineEvent() {
 
 function removeItem(list, index) {
   form.value[list].splice(index, 1)
+}
+
+function moveItem(list, index, direction) {
+  const arr = form.value[list]
+  const to = index + direction
+  if (to < 0 || to >= arr.length) return
+  const [item] = arr.splice(index, 1)
+  arr.splice(to, 0, item)
 }
 
 // Serialize form to Firestore-safe object using the public data shape
@@ -900,6 +916,35 @@ async function archiveBook() {
   cursor: grabbing;
 }
 
+.reorder-btns {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.btn-reorder {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.55rem;
+  line-height: 1;
+  padding: 0.25rem 0.35rem;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.btn-reorder:not(:disabled):hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.btn-reorder:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 .thread-fields,
 .material-fields,
 .timeline-fields {
@@ -1152,6 +1197,18 @@ async function archiveBook() {
   .btn {
     width: 100%;
     text-align: center;
+  }
+
+  .drag-handle {
+    display: none;
+  }
+
+  .reorder-btns {
+    display: flex;
+  }
+
+  .form-input--narrow {
+    width: 100%;
   }
 }
 
