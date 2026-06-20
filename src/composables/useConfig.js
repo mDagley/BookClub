@@ -35,6 +35,7 @@ export function useConfig() {
       loading.value = false
     })
   } else if (import.meta.env.DEV) {
+    console.warn('[useConfig] Firestore not configured — using mock data')
     currentBook.value = {
       title: 'The Way of Kings', author: 'Brandon Sanderson',
       coverUrl: 'https://covers.openlibrary.org/b/id/8391136-L.jpg',

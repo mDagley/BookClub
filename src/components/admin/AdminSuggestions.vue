@@ -31,7 +31,7 @@
             <!-- Normal row -->
             <tr v-if="editingId !== suggestion.id" class="suggestion-row">
               <td class="col-cover">
-                <img v-if="suggestion.coverUrl" :src="suggestion.coverUrl" :alt="suggestion.title" class="cover-thumb" @error="e => { e.target.style.display = 'none'; e.target.parentElement.querySelector('.cover-placeholder').style.removeProperty('display') }" />
+                <img v-if="suggestion.coverUrl" :src="suggestion.coverUrl" :alt="suggestion.title" class="cover-thumb" @error="e => { e.target.style.display = 'none'; e.target.parentElement?.querySelector('.cover-placeholder')?.style.removeProperty('display') }" />
                 <div class="cover-placeholder" :style="suggestion.coverUrl ? 'display: none' : undefined"></div>
               </td>
               <td class="col-title" data-label="Title" :data-author="suggestion.author">

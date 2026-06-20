@@ -30,7 +30,7 @@
                   :src="book.coverUrl"
                   :alt="book.title"
                   class="cover-thumb"
-                  @error="e => { e.target.style.display = 'none'; e.target.parentElement.querySelector('.cover-placeholder').style.removeProperty('display') }"
+                  @error="e => { e.target.style.display = 'none'; e.target.parentElement?.querySelector('.cover-placeholder')?.style.removeProperty('display') }"
                 />
                 <div class="cover-placeholder" :style="book.coverUrl ? 'display: none' : undefined"></div>
               </td>

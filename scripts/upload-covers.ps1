@@ -42,7 +42,7 @@ foreach ($file in $files) {
         $form = [System.Net.Http.MultipartFormDataContent]::new()
         $bytes = [System.IO.File]::ReadAllBytes($file.FullName)
         $fileContent = [System.Net.Http.ByteArrayContent]::new($bytes)
-        $mimeType = if ($file.Extension -eq '.png') { 'image/png' } else { 'image/jpeg' }
+        $mimeType = switch ($file.Extension.ToLower()) { '.png' { 'image/png' } '.webp' { 'image/webp' } default { 'image/jpeg' } }
         $fileContent.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::new($mimeType)
         $form.Add($fileContent, 'file', $file.Name)
 
