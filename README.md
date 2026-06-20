@@ -44,6 +44,7 @@ cp .env.example .env
 | `VITE_DISCORD_CLIENT_ID` | Discord Application ID (numeric) |
 | `VITE_DISCORD_REDIRECT_URI` | `https://yourdomain.com/admin` |
 | `VITE_GOOGLE_BOOKS_API_KEY` | Google Books API key (for cover/metadata lookup) |
+| `VITE_DEV_AUTH` | Set to `true` to enable the dev login bypass (local dev only — never set in production) |
 
 **Server (runtime only, never exposed to the browser):**
 
@@ -103,7 +104,7 @@ cd server && npm install && node index.js
 npm test
 ```
 
-Vitest is configured but there are no test files yet. Running `npm test` will exit immediately with no failures.
+Tests live in `src/__tests__/`. Run them with `npm test`.
 
 ---
 
