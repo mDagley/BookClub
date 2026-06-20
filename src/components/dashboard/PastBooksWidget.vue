@@ -8,14 +8,17 @@
 
     <div v-else class="past-list">
       <RouterLink v-for="book in pastBooks" :key="book.id" :to="`/past-books/${book.id}`" class="past-row">
-        <img
-          v-if="book.coverUrl"
-          :src="book.coverUrl"
-          :alt="book.title"
-          class="past-thumb"
-        />
-        <div v-else class="past-thumb-placeholder">
-          <img src="/book-icon.svg" class="placeholder-book" alt="" />
+        <div class="thumb-wrap">
+          <img
+            v-if="book.coverUrl"
+            :src="book.coverUrl"
+            :alt="book.title"
+            class="past-thumb"
+            @error="e => e.target.style.display = 'none'"
+          />
+          <div class="past-thumb-placeholder">
+            <img src="/book-icon.svg" class="placeholder-book" alt="" />
+          </div>
         </div>
         <div class="past-info">
           <span class="past-title">{{ book.title }}</span>
@@ -81,25 +84,33 @@ function formatDate(ts) {
   color: var(--gold);
 }
 
-.past-thumb {
+.thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
   width: 36px;
   height: 54px;
-  object-fit: cover;
   border-radius: 3px;
   border: 1px solid var(--border);
-  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--surface-subtle);
+}
+
+.past-thumb {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .past-thumb-placeholder {
-  width: 36px;
-  height: 54px;
-  background: var(--surface-subtle);
-  border: 1px solid var(--border);
-  border-radius: 3px;
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  background: var(--surface-subtle);
 }
 
 .placeholder-book {

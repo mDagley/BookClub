@@ -6,8 +6,9 @@
         :src="book.coverUrl"
         :alt="book.title"
         class="cover-img"
+        @error="e => e.target.style.display = 'none'"
       />
-      <div v-else class="cover-placeholder">
+      <div class="cover-placeholder">
         <img src="/book-icon.svg" class="placeholder-book" alt="" />
       </div>
     </RouterLink>
@@ -73,12 +74,21 @@ const primaryThread = computed(() => props.book.discordThreads?.[0] ?? null)
 .hero-cover {
   flex-shrink: 0;
   width: 160px;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2/3;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
 }
 
 .cover-img {
+  position: relative;
+  z-index: 1;
+  display: block;
   width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
   box-shadow: 6px 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(200, 150, 60, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -89,11 +99,9 @@ const primaryThread = computed(() => props.book.discordThreads?.[0] ?? null)
 }
 
 .cover-placeholder {
-  width: 160px;
-  aspect-ratio: 2/3;
+  position: absolute;
+  inset: 0;
   background: var(--surface-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;

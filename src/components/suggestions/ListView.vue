@@ -13,8 +13,9 @@
           :alt="s.title"
           class="thumb-img"
           loading="lazy"
+          @error="e => e.target.style.display = 'none'"
         />
-        <div v-else class="thumb-placeholder">
+        <div class="thumb-placeholder">
           <img src="/book-icon.svg" class="placeholder-book" alt="" />
         </div>
       </div>
@@ -120,24 +121,27 @@ function genreIcon(genre) {
 /* Thumbnail */
 .thumb-wrap {
   flex-shrink: 0;
+  position: relative;
   width: 44px;
   aspect-ratio: 2 / 3;
   border-radius: 4px;
   overflow: hidden;
   background: var(--surface-subtle);
   border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .thumb-img {
+  position: relative;
+  z-index: 1;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
 .thumb-placeholder {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;

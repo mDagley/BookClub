@@ -14,6 +14,7 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:3000',
       '/covers': 'http://localhost:3000',
+      '/local-covers': 'http://localhost:3000',
     },
   },
   test: {

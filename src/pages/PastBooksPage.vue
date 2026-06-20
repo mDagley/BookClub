@@ -9,7 +9,6 @@
         <div class="skeleton-meta">
           <div class="skeleton text-skeleton title-skeleton" />
           <div class="skeleton text-skeleton author-skeleton" />
-          <div class="skeleton text-skeleton date-skeleton" />
         </div>
       </div>
     </div>
@@ -36,10 +35,14 @@
             :alt="book.title || 'Book cover'"
             class="cover-img"
             loading="lazy"
+            @error="e => e.target.style.display = 'none'"
           />
-          <div v-else class="cover-placeholder">
+          <div class="cover-placeholder">
             <img src="/book-icon.svg" class="placeholder-book" alt="" />
           </div>
+
+          <!-- Read date badge -->
+          <p v-if="book.dateRead" class="book-date">Read {{ formatDate(book.dateRead) }}</p>
 
           <!-- Genre icon strip -->
           <div v-if="(book.genres || []).length > 0" class="genre-strip">
@@ -69,8 +72,6 @@
               class="chip"
             >{{ genre }}</span>
           </div>
-
-          <p v-if="book.dateRead" class="book-date">Read in {{ formatDate(book.dateRead) }}</p>
 
           <!-- Discord discussion link -->
           <a
@@ -102,7 +103,7 @@ function formatDate(dateRead) {
   if (!dateRead) return ''
   const d = typeof dateRead.toDate === 'function' ? dateRead.toDate() : new Date(dateRead)
   if (isNaN(d.getTime())) return ''
-  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
 function visibleGenres(book) {
@@ -234,13 +235,15 @@ function visibleGenres(book) {
 }
 
 .book-date {
-  display: inline-block;
-  align-self: flex-start;
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  z-index: 3;
   font-family: var(--font-sans);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: rgba(15, 7, 0, 0.9);
   background: linear-gradient(105deg,
     rgba(130, 88, 8, 1) 0%,
@@ -250,9 +253,10 @@ function visibleGenres(book) {
     rgba(145, 98, 10, 1) 100%
   );
   border-radius: 100px;
-  padding: 0.18rem 0.55rem;
+  padding: 0.18rem 0.5rem;
   margin: 0;
   text-shadow: 0 1px 1px rgba(255, 240, 150, 0.3);
+  white-space: nowrap;
 }
 
 .discord-btn {
@@ -317,10 +321,6 @@ function visibleGenres(book) {
 
 .author-skeleton {
   width: 60%;
-}
-
-.date-skeleton {
-  width: 70%;
 }
 
 /* ── Empty state ── */

@@ -18,8 +18,9 @@
             :src="currentBook.coverUrl"
             :alt="currentBook.title"
             class="book-cover-img"
+            @error="e => e.target.style.display = 'none'"
           />
-          <div v-else class="book-cover-placeholder">
+          <div class="book-cover-placeholder">
             <img src="/book-icon.svg" class="placeholder-book" alt="" />
           </div>
         </div>
@@ -209,20 +210,28 @@ onUnmounted(() => observer?.disconnect())
 
 .book-header-cover {
   flex-shrink: 0;
+  position: relative;
+  width: 160px;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
 }
 
 .book-cover-img {
-  width: 160px;
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
 }
 
 .book-cover-placeholder {
-  width: 160px;
-  aspect-ratio: 2/3;
+  position: absolute;
+  inset: 0;
   background: var(--surface-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -285,7 +294,7 @@ onUnmounted(() => observer?.disconnect())
 
 @media (max-width: 640px) {
   .book-header { flex-direction: column; }
-  .book-cover-img { width: 120px; }
+  .book-header-cover { width: 120px; }
   .book-title { font-size: 1.4rem; }
 }
 </style>

@@ -21,6 +21,14 @@ const router = createRouter({
 
 router.beforeEach(async (to, _from, next) => {
   if (to.meta.requiresAuth) {
+    // Skip auth in local dev when VITE_DEV_AUTH=true is set (never set in production).
+    if (import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true') {
+      const { useAuthStore } = await import('../stores/auth.js')
+      useAuthStore().devLogin()
+      next()
+      return
+    }
+
     const { useAuthStore } = await import('../stores/auth.js')
     const authStore = useAuthStore()
     // Wait for Firebase Auth to resolve (handles hard refresh to /admin).
