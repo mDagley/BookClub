@@ -12,6 +12,13 @@
       <button class="btn btn-discord" @click="authStore.loginWithDiscord()">
         Login with Discord
       </button>
+      <button
+        v-if="isDev"
+        class="btn btn-dev"
+        @click="authStore.devLogin()"
+      >
+        Dev Login (local only)
+      </button>
     </div>
 
     <div v-else class="admin-content">
@@ -67,6 +74,7 @@ import AdminMembers from '../components/admin/AdminMembers.vue'
 const authStore = useAuthStore()
 const route = useRoute()
 const authError = ref(null)
+const isDev = import.meta.env.VITE_DEV_AUTH === 'true'
 
 const tabs = [
   { id: 'current', label: 'Current Book' },
@@ -126,6 +134,14 @@ onMounted(async () => {
 .login-note {
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.btn-dev {
+  background: transparent;
+  border: 1px dashed var(--border-hover);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 0.4rem 1rem;
 }
 
 .login-error {

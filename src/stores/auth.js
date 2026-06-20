@@ -60,5 +60,11 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
   }
 
-  return { user, loading, loginWithDiscord, handleCallback, logout }
+  // Dev-only bypass — set VITE_DEV_AUTH=true in .env to enable
+  function devLogin() {
+    user.value = { uid: 'dev-user', discordUsername: 'dev', photoURL: null }
+    loading.value = false
+  }
+
+  return { user, loading, loginWithDiscord, handleCallback, logout, devLogin }
 })
