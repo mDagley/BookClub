@@ -28,7 +28,8 @@ const releases = [
     date: 'June 20, 2026',
     entries: [
       { type: 'feature', text: 'Admin panel is now fully mobile-friendly — manage suggestions, past books, and current book settings from your phone.' },
-      { type: 'feature', text: '"Read in [month year]" on past book pages and the past books grid now displays as a gold badge.' },
+      { type: 'feature', text: 'Navigation collapses to a hamburger menu on mobile.' },
+      { type: 'feature', text: '"Read [month year]" badge on the past books grid now overlays the top-left corner of each cover image.' },
       { type: 'feature', text: 'Discord discussion button on the past books grid collapses to an icon on mobile to save space.' },
     ],
   },
