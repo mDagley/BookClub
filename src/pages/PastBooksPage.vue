@@ -80,6 +80,7 @@
             rel="noopener noreferrer"
             class="btn btn-discord discord-btn"
             title="View Discord Discussion"
+            aria-label="View Discord Discussion"
           >
             <img src="/discord-icon.svg" class="discord-btn-icon" alt="" />
             <span class="discord-btn-text">View Discord Discussion →</span>

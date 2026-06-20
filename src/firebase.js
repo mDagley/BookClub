@@ -14,6 +14,14 @@ const firebaseConfig = {
 // Don't initialize Firebase if credentials are missing (e.g. local dev without .env)
 const hasCredentials = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId)
 
-const app = hasCredentials ? initializeApp(firebaseConfig) : null
-export const db = hasCredentials ? getFirestore(app) : null
-export const auth = hasCredentials ? getAuth(app) : null
+let app = null, db = null, auth = null
+if (hasCredentials) {
+  try {
+    app = initializeApp(firebaseConfig)
+    db = getFirestore(app)
+    auth = getAuth(app)
+  } catch (e) {
+    console.warn('Firebase initialization failed:', e.message)
+  }
+}
+export { db, auth }
