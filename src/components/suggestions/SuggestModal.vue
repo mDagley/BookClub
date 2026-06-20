@@ -333,10 +333,10 @@ async function handleSubmit() {
     if (knownCoverUrl) {
       // Cover already known from autocomplete/upload — fire webhook immediately
       fireWebhook(title, author, description, knownCoverUrl, genres, suggestedBy)
-      if (docRef?.id) {
+      if (db && docRef?.id) {
         updateDoc(doc(db, 'suggestions', docRef.id), { coverUrl: knownCoverUrl }).catch(() => {})
       }
-    } else if (docRef?.id) {
+    } else if (db && docRef?.id) {
       // No cover yet — fetch in background, update Firestore, then notify Discord
       fetchCoverUrl(title, author).then((coverUrl) => {
         if (coverUrl) {

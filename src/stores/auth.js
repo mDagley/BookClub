@@ -10,7 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Populate user from Firebase Auth on startup.
   // displayName is not set on custom-token users, so we read discordUsername
   // from the ID token claims that the server embedded when creating the token.
-  if (auth && !(import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true')) {
+  if (auth) {
     onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
     })
   } else {
-    // No Firebase credentials, or dev mode — skip auth listener until devLogin()
+    // No Firebase credentials — skip auth listener
     loading.value = false
   }
 

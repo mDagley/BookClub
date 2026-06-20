@@ -21,7 +21,7 @@ if (hasCredentials) {
     db = getFirestore(app)
     auth = getAuth(app)
   } catch (e) {
-    console.warn('Firebase initialization failed:', e.message)
+    console.warn('Firebase initialization failed:', e instanceof Error ? e.message : String(e))
   }
 }
 export { db, auth }

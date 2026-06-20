@@ -19,11 +19,14 @@ export function usePastBooks() {
       console.error('usePastBooks snapshot error:', error)
       loading.value = false
     })
-  } else {
+  } else if (import.meta.env.DEV) {
     pastBooks.value = [
       { id: 'dev-p1', title: 'The Hobbit', author: 'J.R.R. Tolkien', genres: ['Fantasy'], dateRead: { toDate: () => new Date('2024-03-01') }, coverUrl: 'https://covers.openlibrary.org/b/id/8406786-L.jpg', discordThreads: [{ title: 'Discussion', url: '' }] },
       { id: 'dev-p2', title: 'Dune', author: 'Frank Herbert', genres: ['Sci-Fi'], dateRead: { toDate: () => new Date('2024-06-15') }, coverUrl: 'https://covers.openlibrary.org/b/id/8475472-L.jpg', discordThreads: [] },
     ]
+    loading.value = false
+  } else {
+    console.error('Firestore is not configured')
     loading.value = false
   }
 

@@ -12,7 +12,7 @@ export function useComments(suggestionId) {
 
   function startListening(id) {
     if (unsubscribe) unsubscribe()
-    if (!id || !db) { comments.value = []; return }
+    if (!id || !db) { comments.value = []; loading.value = false; return }
 
     loading.value = true
     const q = query(

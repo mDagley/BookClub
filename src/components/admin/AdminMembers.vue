@@ -70,6 +70,7 @@ function remove(i) {
 
 async function save() {
   try {
+    if (!db) throw new Error('Firestore is not configured')
     const clean = profiles.value
       .filter(p => p.name.trim() || p.handle.trim())
       .map(p => ({ name: p.name.trim(), handle: p.handle.trim().replace(/^@/, '') }))
