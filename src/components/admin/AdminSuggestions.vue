@@ -35,7 +35,7 @@
                 <div v-else class="cover-placeholder"></div>
               </td>
               <td class="col-title" data-label="Title" :data-author="suggestion.author">
-                <span class="book-title">{{ suggestion.title }}</span>
+                <span class="sr-only">Title: </span><span class="book-title">{{ suggestion.title }}</span>
               </td>
               <td class="col-author" data-label="Author">
                 <span class="author-name">{{ suggestion.author }}</span>
@@ -47,7 +47,7 @@
                 </span>
               </td>
               <td class="col-published" data-label="Published">{{ suggestion.publishedDate || '—' }}</td>
-              <td class="col-votes" data-label="Votes"><span class="vote-badge">{{ suggestion.votes ?? 0 }}</span></td>
+              <td class="col-votes" data-label="Votes"><span class="sr-only">Votes: </span><span class="vote-badge">{{ suggestion.votes ?? 0 }}</span></td>
               <td class="col-suggested" data-label="Suggested by">{{ resolveName(suggestion.suggestedBy) || '—' }}</td>
               <td class="col-readby" data-label="Read by">
                 <span v-if="suggestion.alreadyRead?.length" class="readby-text">{{ resolveNames(suggestion.alreadyRead).join(', ') }}</span>
@@ -313,6 +313,18 @@ function promote(suggestion) {
 </script>
 
 <style scoped>
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .admin-suggestions { display: flex; flex-direction: column; gap: 1rem; }
 
 .section-header { display: flex; align-items: center; justify-content: space-between; }
@@ -335,7 +347,17 @@ function promote(suggestion) {
   font-size: 0.88rem;
 }
 
-.suggestions-table thead { display: none; }
+.suggestions-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .suggestions-table th {
   background: var(--surface-subtle);
@@ -714,7 +736,16 @@ function promote(suggestion) {
   }
 
   .suggestions-table { min-width: 700px; }
-  .suggestions-table thead { display: table-header-group; }
+  .suggestions-table thead {
+    display: table-header-group;
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
 
   .suggestion-row {
     display: table-row;

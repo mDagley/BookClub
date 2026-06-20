@@ -33,7 +33,7 @@
                 />
                 <div v-else class="cover-placeholder"></div>
               </td>
-              <td class="col-title" data-label="Title" :data-author="book.author">{{ book.title }}</td>
+              <td class="col-title" data-label="Title" :data-author="book.author"><span class="sr-only">Title: </span>{{ book.title }}</td>
               <td class="col-author" data-label="Author">{{ book.author }}</td>
               <td class="col-date" data-label="Date Read">{{ formatDate(book.dateRead) }}</td>
               <td class="col-thread" data-label="Discord">
@@ -167,8 +167,8 @@
                       >
                         <span class="drag-handle">⠿</span>
                         <div class="reorder-btns">
-                          <button type="button" class="btn-reorder" @click="moveEditItem('materials', index, -1)" :disabled="index === 0" title="Move up">▲</button>
-                          <button type="button" class="btn-reorder" @click="moveEditItem('materials', index, 1)" :disabled="index === editForm.materials.length - 1" title="Move down">▼</button>
+                          <button type="button" class="btn-reorder" @click="moveEditItem('materials', index, -1)" :disabled="index === 0" title="Move up" aria-label="Move up">▲</button>
+                          <button type="button" class="btn-reorder" @click="moveEditItem('materials', index, 1)" :disabled="index === editForm.materials.length - 1" title="Move down" aria-label="Move down">▼</button>
                         </div>
                         <div class="material-fields">
                           <input v-model="material.title" type="text" class="form-input" placeholder="Title" />
@@ -245,8 +245,8 @@
                       >
                         <span class="drag-handle">⠿</span>
                         <div class="reorder-btns">
-                          <button type="button" class="btn-reorder" @click="moveEditItem('timeline', index, -1)" :disabled="index === 0" title="Move up">▲</button>
-                          <button type="button" class="btn-reorder" @click="moveEditItem('timeline', index, 1)" :disabled="index === editForm.timeline.length - 1" title="Move down">▼</button>
+                          <button type="button" class="btn-reorder" @click="moveEditItem('timeline', index, -1)" :disabled="index === 0" title="Move up" aria-label="Move up">▲</button>
+                          <button type="button" class="btn-reorder" @click="moveEditItem('timeline', index, 1)" :disabled="index === editForm.timeline.length - 1" title="Move down" aria-label="Move down">▼</button>
                         </div>
                         <div class="timeline-fields">
                           <input v-model.number="event.chapter" type="number" class="form-input form-input--narrow" placeholder="Ch." min="1" />
@@ -600,6 +600,18 @@ async function submitAdd() {
 </script>
 
 <style scoped>
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .admin-past-books {
   display: flex;
   flex-direction: column;
@@ -639,7 +651,17 @@ async function submitAdd() {
   font-size: 0.88rem;
 }
 
-.books-table thead { display: none; }
+.books-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .books-table th {
   background: var(--surface-subtle);
@@ -1083,7 +1105,16 @@ async function submitAdd() {
 
   .books-table { min-width: 560px; }
 
-  .books-table thead { display: table-header-group; }
+  .books-table thead {
+    display: table-header-group;
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
 
   .book-row {
     display: table-row;

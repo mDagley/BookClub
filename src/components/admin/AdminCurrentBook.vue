@@ -172,8 +172,8 @@
         >
           <span class="drag-handle" title="Drag to reorder">⠿</span>
           <div class="reorder-btns">
-            <button type="button" class="btn-reorder" @click="moveItem('threads', index, -1)" :disabled="index === 0" title="Move up">▲</button>
-            <button type="button" class="btn-reorder" @click="moveItem('threads', index, 1)" :disabled="index === form.threads.length - 1" title="Move down">▼</button>
+            <button type="button" class="btn-reorder" @click="moveItem('threads', index, -1)" :disabled="index === 0" title="Move up" aria-label="Move up">▲</button>
+            <button type="button" class="btn-reorder" @click="moveItem('threads', index, 1)" :disabled="index === form.threads.length - 1" title="Move down" aria-label="Move down">▼</button>
           </div>
           <div class="thread-fields">
             <label class="field-label">Title</label>
@@ -345,8 +345,8 @@
         >
           <span class="drag-handle" title="Drag to reorder">⠿</span>
           <div class="reorder-btns">
-            <button type="button" class="btn-reorder" @click="moveItem('timeline', index, -1)" :disabled="index === 0" title="Move up">▲</button>
-            <button type="button" class="btn-reorder" @click="moveItem('timeline', index, 1)" :disabled="index === form.timeline.length - 1" title="Move down">▼</button>
+            <button type="button" class="btn-reorder" @click="moveItem('timeline', index, -1)" :disabled="index === 0" title="Move up" aria-label="Move up">▲</button>
+            <button type="button" class="btn-reorder" @click="moveItem('timeline', index, 1)" :disabled="index === form.timeline.length - 1" title="Move down" aria-label="Move down">▼</button>
           </div>
           <div class="timeline-fields">
             <input

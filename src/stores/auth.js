@@ -10,22 +10,27 @@ export const useAuthStore = defineStore('auth', () => {
   // Populate user from Firebase Auth on startup.
   // displayName is not set on custom-token users, so we read discordUsername
   // from the ID token claims that the server embedded when creating the token.
-  if (auth) {
+  if (auth && import.meta.env.VITE_DEV_AUTH !== 'true') {
     onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const idTokenResult = await firebaseUser.getIdTokenResult()
-        user.value = {
-          uid: firebaseUser.uid,
-          discordUsername: idTokenResult.claims.discordUsername || firebaseUser.displayName,
-          photoURL: idTokenResult.claims.discordAvatar || firebaseUser.photoURL,
+      try {
+        if (firebaseUser) {
+          const idTokenResult = await firebaseUser.getIdTokenResult()
+          user.value = {
+            uid: firebaseUser.uid,
+            discordUsername: idTokenResult.claims.discordUsername || firebaseUser.displayName,
+            photoURL: idTokenResult.claims.discordAvatar || firebaseUser.photoURL,
+          }
+        } else {
+          user.value = null
         }
-      } else {
+      } catch {
         user.value = null
+      } finally {
+        loading.value = false
       }
-      loading.value = false
     })
   } else {
-    // No Firebase credentials — skip auth listener, stay logged out until devLogin()
+    // No Firebase credentials, or dev mode — skip auth listener until devLogin()
     loading.value = false
   }
 
@@ -39,6 +44,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function handleCallback(code) {
+    if (!auth) throw new Error('Firebase Auth is not configured')
     loading.value = true
     try {
       const redirectUri = import.meta.env.VITE_DISCORD_REDIRECT_URI || `${window.location.origin}/admin`
@@ -67,6 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Dev-only bypass — set VITE_DEV_AUTH=true in .env to enable
   function devLogin() {
+    if (import.meta.env.VITE_DEV_AUTH !== 'true') return
     user.value = { uid: 'dev-user', discordUsername: 'dev', photoURL: null }
     loading.value = false
   }

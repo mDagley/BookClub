@@ -27,8 +27,8 @@
         <span class="admin-user">{{ authStore.user.discordUsername }}</span>
       </div>
 
-      <!-- Tab navigation -->
-      <nav class="admin-tabs" role="tablist">
+      <!-- Tab navigation: button row on desktop, select on mobile -->
+      <nav ref="tabsNav" class="admin-tabs" role="tablist">
         <button
           v-for="tab in tabs"
           :key="tab.id"
@@ -36,11 +36,14 @@
           class="tab-btn"
           :class="{ active: activeTab === tab.id }"
           :aria-selected="activeTab === tab.id"
-          @click="activeTab = tab.id"
+          @click="switchTab(tab.id, $event)"
         >
           {{ tab.label }}
         </button>
       </nav>
+      <select class="admin-tab-select" :value="activeTab" @change="activeTab = $event.target.value">
+        <option v-for="tab in tabs" :key="tab.id" :value="tab.id">{{ tab.label }}</option>
+      </select>
 
       <!-- Tab panels -->
       <div class="tab-panel">
@@ -62,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 import AdminCurrentBook from '../components/admin/AdminCurrentBook.vue'
@@ -74,7 +77,8 @@ import AdminMembers from '../components/admin/AdminMembers.vue'
 const authStore = useAuthStore()
 const route = useRoute()
 const authError = ref(null)
-const isDev = import.meta.env.VITE_DEV_AUTH === 'true'
+const isDev = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true'
+const tabsNav = ref(null)
 
 const tabs = [
   { id: 'current', label: 'Current Book' },
@@ -87,9 +91,18 @@ const tabs = [
 const activeTab = ref('current')
 const currentBookPrefill = ref(null)
 
+function switchTab(id, event) {
+  activeTab.value = id
+  nextTick(() => event?.target?.scrollIntoView({ inline: 'nearest', block: 'nearest' }))
+}
+
 function onPromote(bookData) {
   currentBookPrefill.value = bookData
   activeTab.value = 'current'
+  nextTick(() => {
+    const btn = tabsNav.value?.querySelector('.tab-btn.active')
+    btn?.scrollIntoView({ inline: 'nearest', block: 'nearest' })
+  })
 }
 
 onMounted(async () => {
@@ -211,5 +224,47 @@ onMounted(async () => {
 
 .tab-panel {
   min-height: 400px;
+}
+
+.admin-tab-select {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .admin-page {
+    margin: 0.75rem auto;
+    padding: 0 1.25rem 3rem;
+  }
+
+  .admin-content {
+    gap: 1.5rem;
+  }
+
+  .tab-panel {
+    min-height: unset;
+  }
+
+  .admin-tabs {
+    display: none;
+  }
+
+  .admin-tab-select {
+    display: block;
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a0a0b0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    padding-right: 2.5rem;
+  }
 }
 </style>
