@@ -23,12 +23,12 @@
       </button>
     </div>
 
-    <button class="nav-hamburger" :aria-expanded="menuOpen" aria-label="Toggle menu" @click="menuOpen = !menuOpen">
+    <button type="button" class="nav-hamburger" :aria-expanded="menuOpen" aria-controls="nav-mobile-menu" aria-label="Toggle menu" @click="menuOpen = !menuOpen">
       <span></span><span></span><span></span>
     </button>
 
     <!-- Mobile dropdown -->
-    <div v-if="menuOpen" class="nav-mobile-menu">
+    <div v-if="menuOpen" id="nav-mobile-menu" class="nav-mobile-menu">
       <RouterLink to="/" @click="menuOpen = false">Home</RouterLink>
       <RouterLink to="/book" @click="menuOpen = false">Current Book</RouterLink>
       <RouterLink to="/suggestions" @click="menuOpen = false">Suggestions</RouterLink>
@@ -39,10 +39,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
 const authStore = useAuthStore()
 const menuOpen = ref(false)
+const route = useRoute()
+watch(route, () => { menuOpen.value = false })
 </script>
 
 <style scoped>

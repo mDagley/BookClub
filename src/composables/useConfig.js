@@ -34,7 +34,7 @@ export function useConfig() {
       console.error('useConfig snapshot error:', error)
       loading.value = false
     })
-  } else {
+  } else if (import.meta.env.DEV) {
     currentBook.value = {
       title: 'The Way of Kings', author: 'Brandon Sanderson',
       coverUrl: 'https://covers.openlibrary.org/b/id/8391136-L.jpg',
@@ -58,6 +58,9 @@ export function useConfig() {
       { name: 'Melissa', handle: 'melly2024' },
       { name: 'Dad', handle: 'dadreads' },
     ]
+    loading.value = false
+  } else {
+    console.error('Firestore is not configured')
     loading.value = false
   }
 

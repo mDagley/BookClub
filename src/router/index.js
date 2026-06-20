@@ -21,8 +21,8 @@ const router = createRouter({
 
 router.beforeEach(async (to, _from, next) => {
   if (to.meta.requiresAuth) {
-    // In dev mode (no Firebase credentials), auto-login and proceed.
-    if (import.meta.env.VITE_DEV_AUTH === 'true') {
+    // In local dev (no Firebase credentials), auto-login and proceed.
+    if (import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true') {
       const { useAuthStore } = await import('../stores/auth.js')
       useAuthStore().devLogin()
       next()
